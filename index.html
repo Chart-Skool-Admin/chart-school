@@ -458,13 +458,16 @@ function trendRound(el,done,opts={}){
     done(ok,type)}
   return{type,bars}}
 
+/* fingers are wider than candles: a tap snaps to the highest high (or lowest low) of the candles right around it */
+const snapR=slot=>Math.max(0,Math.min(3,Math.round((matchMedia("(pointer:coarse)").matches?16:5)/Math.max(1,slot))));
+function snapI(bars,i,t,r,lo,hi){let best=i;for(let k=Math.max(lo,i-r);k<=Math.min(hi,i+r);k++){if(!bars[k])continue;if(t==="H"?bars[k].h>bars[best].h:bars[k].l<bars[best].l)best=k}return best}
 function pivotRound(el,done,opts={}){
   const type=opts.type||pick(["up","down","side"]);const rw=opts.bars?(opts.meta?{meta:opts.meta}:null):rwFind("any",60,60,{piv:[6,14]});const bars=opts.bars||(rw?rw.bars:genSwing(type,60));const N=3;const truth=pivots(bars,N);let user=[];let checked=false;
   const cv=h("canvas",{class:"chart clickable","aria-label":"Click candles to mark swing highs and lows"});const f=h("div",{hidden:""});const sc=h("span",{class:"score"},"0 marked");
   const args=()=>{let marks=user.map(m=>({...m}));if(checked){marks=user.map(m=>({...m,c:m.ok?tok("--good"):tok("--bad")})).concat(truth.filter(t=>!t.hit).map(t=>({...t,ring:true,c:tok("--mark")})))}return[bars,{marks}]};
   mountChart(cv,args);
-  cv.addEventListener("click",ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);const g=cv._g;const i=g.idx(p.x);const b=bars[i];const mid=(g.Y(b.h)+g.Y(b.l))/2;const t=p.y<mid?"H":"L";
-    const ex=user.findIndex(m=>m.i===i&&m.t===t);if(ex>=0){user.splice(ex,1);sfx("untap")}else{user.push({i,t});sfx("tap")}sc.textContent=user.length+" marked";rerenderAll()});
+  cv.addEventListener("click",ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);const g=cv._g;let i=g.idx(p.x);const b=bars[i];const mid=(g.Y(b.h)+g.Y(b.l))/2;const t=p.y<mid?"H":"L";const r=snapR(g.slot);
+    const ex=user.findIndex(m=>m.t===t&&Math.abs(m.i-i)<=r);if(ex>=0){user.splice(ex,1);sfx("untap")}else{i=snapI(bars,i,t,r,0,bars.length-1);user.push({i,t});sfx("tap")}sc.textContent=user.length+" marked";rerenderAll()});
   const chk=h("button",{class:"primary",on:{click:check}},"Check my marks");const clr=h("button",{on:{click:()=>{if(checked)return;user=[];sc.textContent="0 marked";rerenderAll()}}},"Clear");
   el.append(h("p",{class:"task"},opts.prompt||"Click every swing high (above a candle) and swing low (below a candle). A swing high is a candle whose high is above the 3 candles on each side. Click a mark again to remove it."),
     cv,h("div",{class:"legend"},h("span",{style:"--c:var(--mark)"},"your marks / missed pivots (rings)"),h("span",{style:"--c:var(--good)"},"correct"),h("span",{style:"--c:var(--bad)"},"wrong")),
@@ -1519,8 +1522,8 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   const tEnd=ev=>{touches.delete(ev.pointerId);if(touches.size<2&&pinch){pinch=null;pan=null;sync&&sync()}};cv.addEventListener("pointerup",tEnd,true);cv.addEventListener("pointercancel",tEnd,true);
   ["gesturestart","gesturechange"].forEach(t=>cv.addEventListener(t,e=>e.preventDefault()));
   cv.addEventListener("pointerdown",ev=>{if(pinch)return;if(!G)return;const p=pt(ev);if(p.x>G.pw)return;
-    if(prac&&prac.kind==="swings"&&!prac.checked){const i=Math.round(G.I(p.x));const b=bars[i];if(!b||i>i1v())return;const t=p.y<(G.Y(b.h)+G.Y(b.l))/2?"H":"L";
-      const ex=prac.user.findIndex(m=>m.i===i&&m.t===t);if(ex>=0){prac.user.splice(ex,1);sfx("untap")}else{prac.user.push({i,t});sfx("tap")}prac.count.textContent=prac.user.length+" marked";draw();return}
+    if(prac&&prac.kind==="swings"&&!prac.checked){let i=Math.round(G.I(p.x));const b=bars[i];if(!b||i>i1v())return;const t=p.y<(G.Y(b.h)+G.Y(b.l))/2?"H":"L";const r=snapR(G.slot);
+      const ex=prac.user.findIndex(m=>m.t===t&&Math.abs(m.i-i)<=r);if(ex>=0){prac.user.splice(ex,1);sfx("untap")}else{i=snapI(bars,i,t,r,i0v(),i1v());prac.user.push({i,t});sfx("tap")}prac.count.textContent=prac.user.length+" marked";draw();return}
     if(tool==="cursor"){const hd=handleAt(p);const hitD=hd?sel:hitTest(p);
       if(hitD){sel=hitD;selUI();drag={d:hitD,w:hd&&hd.w!==0?hd.w:null,x:p.x,y:p.y,o:JSON.parse(JSON.stringify(hitD)),moved:false};cv.setPointerCapture(ev.pointerId);draw();return}
       if(sel){sel=null;selUI()}pan={x:p.x,s:view.start,id:ev.pointerId};cv.setPointerCapture(ev.pointerId);sync();draw();return}
