@@ -1867,7 +1867,12 @@ function renderStep(){live.clear();app.innerHTML="";const S_=SESSION;const st=S_
 let sfxCtx=null;
 /* iPhone: let sounds play like media (not muted by the ring switch) and unlock audio on the first tap */
 try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
-function sfxUnlock(){try{sfxCtx=sfxCtx||new (window.AudioContext||window.webkitAudioContext)();const c=sfxCtx;if(c.state!=="running")c.resume();
+/* iPhone pauses ("interrupts") web audio when you switch apps or lock the phone, and it often never resumes.
+   So close the audio when the page is hidden and build a fresh one on the next tap. This also saves battery. */
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&sfxCtx){try{sfxCtx.close()}catch(e){}sfxCtx=null}});
+function sfxUnlock(){try{if(sfxCtx&&(sfxCtx.state==="closed"||sfxCtx.state==="interrupted")){try{sfxCtx.close()}catch(e){}sfxCtx=null}
+  try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
+  sfxCtx=sfxCtx||new (window.AudioContext||window.webkitAudioContext)();const c=sfxCtx;if(c.state!=="running")c.resume();
   const b=c.createBuffer(1,1,22050),src=c.createBufferSource();src.buffer=b;src.connect(c.destination);src.start(0)}catch(e){}}
 ["pointerdown","touchend","keydown"].forEach(t=>document.addEventListener(t,sfxUnlock,{capture:true,passive:true}));
 function sfx(kind){if(state.sound===false)return;try{sfxUnlock();const c=sfxCtx;if(c.state!=="running"){c.resume().then(()=>sfxPlay(kind)).catch(()=>{});return}sfxPlay(kind)}catch(e){}}
