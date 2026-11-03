@@ -2571,6 +2571,9 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     if(pend&&!hover){x.fillStyle=C.acc;x.beginPath();x.arc(tX(pend.t),Y(pend.p),4,0,6.283);x.fill()}
     if(ov&&ov.hideFrom!=null){const hx=X(ov.hideFrom)-slot/2;x.fillStyle=C.bg;x.globalAlpha=.6;x.fillRect(hx,T,pw-hx,ph);x.globalAlpha=1;x.strokeStyle=C.muted;x.setLineDash([4,4]);x.beginPath();x.moveTo(hx,T);x.lineTo(hx,T+ph);x.stroke();x.setLineDash([]);
       x.fillStyle=C.muted;x.fillText("future hidden",hx+8,T+14)}
+    /* phone swing marking: the selected candle is highlighted until it gets a mark */
+    if(prac&&prac.kind==="swings"&&!prac.checked&&prac.aim!=null&&bars[prac.aim]){const b=bars[prac.aim],px=X(prac.aim),bw=Math.max(slot,8);x.globalAlpha=.16;x.fillStyle=C.acc;x.fillRect(px-bw/2,T,bw,ph);x.globalAlpha=1;
+      x.strokeStyle=C.acc;x.lineWidth=1.5;x.strokeRect(px-bw/2-1,Y(b.h)-5,bw+2,Y(b.l)-Y(b.h)+10)}
     const mk=(prac&&prac.user?prac.user:[]).concat(ov&&ov.marks?ov.marks:[]);x.font="600 12px "+tok("--f-body");x.textAlign="center";
     mk.forEach(m=>{const b=bars[m.i];if(!b||m.i<i0-1||m.i>i1+1)return;const col=m.c?(m.c.startsWith("--")?tok(m.c):m.c):C.mark;const px=X(m.i),py=m.t==="H"?Y(b.h)-10:Y(b.l)+10;
       x.beginPath();x.arc(px,py,m.ring?7:5,0,6.283);if(m.ring){x.strokeStyle=col;x.lineWidth=2;x.stroke()}else{x.fillStyle=col;x.fill()}
@@ -2619,7 +2622,8 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     const onY=p.x>G.pw,onX=!onY&&p.y>G.T+G.ph;
     if(onY||onX){const k=onY?"y":"x",now=Date.now();if(axTap.k===k&&now-axTap.t<320){axTap.t=0;if(onY){view.ys=1;view.yo=0}else{fit()}draw();return}axTap={t:now,k};
       if(onY)axisY={y:p.y,ys:view.ys};else axisX={x:p.x,n:view.n,end:view.start+view.n};cv.setPointerCapture(ev.pointerId);return}
-    if(prac&&prac.kind==="swings"&&!prac.checked){let i=Math.round(G.I(p.x));const b=bars[i];if(!b||i>i1v())return;const t=p.y<(G.Y(b.h)+G.Y(b.l))/2?"H":"L";const r=snapR(G.slot);
+    if(prac&&prac.kind==="swings"&&!prac.checked&&IS_PHONE()){prac.aim=Math.max(i0v(),Math.min(i1v(),Math.round(G.I(p.x))));prac.aimUI();draw()}
+    else if(prac&&prac.kind==="swings"&&!prac.checked){let i=Math.round(G.I(p.x));const b=bars[i];if(!b||i>i1v())return;const t=p.y<(G.Y(b.h)+G.Y(b.l))/2?"H":"L";const r=snapR(G.slot);
       const ex=prac.user.findIndex(m=>m.t===t&&Math.abs(m.i-i)<=r);if(ex>=0){prac.user.splice(ex,1);sfx("untap")}else{i=snapI(bars,i,t,r,i0v(),i1v());prac.user.push({i,t});sfx("tap")}prac.count.textContent=prac.user.length+" marked";draw();return}
     if(tool==="cursor"){const hd=handleAt(p);const hitD=hd?sel:hitTest(p);
       if(hitD){sel=hitD;selUI();drag={d:hitD,w:hd&&hd.w!==0?hd.w:null,x:p.x,y:p.y,o:JSON.parse(JSON.stringify(hitD)),moved:false};cv.setPointerCapture(ev.pointerId);draw();return}
@@ -2705,12 +2709,19 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     ask("Look at the candles on screen right now. Which way is the trend? (Zoom or move the chart first if you like.)",(k,btns)=>{const r=classify(i0v(),i1v());const ok=k===r.type;
       btns[k].classList.add(ok?"pick-good":"pick-bad");btns[r.type].classList.add("pick-good");ov={marks:r.marks};draw();
       fb(pfb,ok?"good":"bad",(ok?"Correct. ":"Not quite, it's <b>"+names[r.type].toLowerCase()+"</b>. ")+r.why+" The labels on the chart show the swings I used.");record(ok)})}
-  function exSwings(){if(!bars.length)return;reset();setTool("cursor");const count=h("span",{class:"score"},"0 marked");prac={kind:"swings",user:[],count};
-    const chk=h("button",{class:"primary",on:{click:()=>{if(prac.checked)return;prac.checked=true;chk.disabled=true;const N=pvN();const truth=swingsIn(i0v(),i1v(),N);let hits=0;truth.forEach(q=>q.hit=false);
+  function exSwings(){if(!bars.length)return;reset();setTool("cursor");const count=h("span",{class:"score"},"0 marked");prac={kind:"swings",user:[],count,aim:null,aimUI:()=>{}};
+    /* phone: a finger can't hit a thin candle, so a tap selects a candle, ◀ ▶ nudge it one candle, and ▲ High / ▼ Low place the mark (same as the lessons) */
+    const phone=IS_PHONE();const ab=h("div",{class:"aimbar",hidden:""}),bL=h("button",{"aria-label":"One candle left"},"◀"),bR=h("button",{"aria-label":"One candle right"},"▶"),bH=h("button",{class:"primary"}),bLo=h("button",{class:"primary"});ab.append(bL,bH,bLo,bR);
+    const pr=prac;const hasM=t=>pr.user.findIndex(m=>m.t===t&&m.i===pr.aim);
+    pr.aimUI=()=>{ab.hidden=pr.aim==null||!!pr.checked;if(ab.hidden)return;bH.textContent=hasM("H")>=0?"✕ High":"▲ High";bLo.textContent=hasM("L")>=0?"✕ Low":"▼ Low";bL.disabled=pr.aim<=i0v();bR.disabled=pr.aim>=i1v()};
+    const nudge=d=>{if(pr.aim==null)return;pr.aim=Math.max(i0v(),Math.min(i1v(),pr.aim+d));pr.aimUI();draw()};bL.addEventListener("click",()=>nudge(-1));bR.addEventListener("click",()=>nudge(1));
+    const tog=t=>{if(pr.aim==null||pr.checked)return;const k=hasM(t);if(k>=0){pr.user.splice(k,1);sfx("untap")}else{pr.user.push({i:pr.aim,t});sfx("tap")}count.textContent=pr.user.length+" marked";pr.aimUI();draw()};
+    bH.addEventListener("click",()=>tog("H"));bLo.addEventListener("click",()=>tog("L"));
+    const chk=h("button",{class:"primary",on:{click:()=>{if(prac.checked)return;prac.checked=true;prac.aim=null;prac.aimUI();chk.disabled=true;const N=pvN();const truth=swingsIn(i0v(),i1v(),N);let hits=0;truth.forEach(q=>q.hit=false);
       prac.user.forEach(m=>{const q=truth.find(q=>!q.hit&&q.t===m.t&&Math.abs(q.i-m.i)<=2);if(q){q.hit=true;m.c="--good";hits++}else m.c="--bad"});
       ov={marks:truth.filter(q=>!q.hit).map(q=>({...q,ring:true,c:"--mark"}))};const prec=prac.user.length?hits/prac.user.length:0,rec=truth.length?hits/truth.length:1;const f1=prec+rec?2*prec*rec/(prec+rec):0;const ok=f1>=.65;draw();
       fb(pfb,ok?"good":"bad",`You found <b>${hits} of ${truth.length}</b> swing points with <b>${prac.user.length-hits}</b> extra. Score ${Math.round(f1*100)}%. `+(ok?"Good swing reading on a real chart.":"Purple rings are the ones you missed. On this zoom, a swing is a candle that sticks out past the "+N+" candles on each side."));record(ok)}}},"Check my marks");
-    pbox.append(h("p",{class:"task",style:"margin:0 0 8px"},"Click every clear swing high (click above the candle) and swing low (below it) on screen. Click a mark again to remove it."),h("div",{class:"row",style:"margin:0"},chk,h("button",{on:{click:()=>{if(prac.checked)return;prac.user=[];count.textContent="0 marked";draw()}}},"Clear marks"),count))}
+    pbox.append(h("p",{class:"task",style:"margin:0 0 8px"},phone?"Mark every clear swing on screen: tap a candle, nudge with ◀ ▶, then ▲ High or ▼ Low (✕ removes). Drag to move the chart.":"Click every clear swing high (click above the candle) and swing low (below it) on screen. Click a mark again to remove it."),phone?ab:null,h("div",{class:"row",style:"margin:0"},chk,h("button",{on:{click:()=>{if(prac.checked)return;prac.user=[];count.textContent="0 marked";draw()}}},"Clear marks"),count))}
   function exLevels(){if(!bars.length)return;reset();const ds=drawsOf().filter(d=>d.k==="h"||d.k==="z");
     if(!ds.length){pbox.append(h("p",{class:"task",style:"margin:0"},"First draw your support and resistance: a horizontal line (Alt+H) or a zone (Alt+Shift+R). Then press Rate my levels again."));setTool("h");return}
     const rng=bars.slice(-100).map(b=>b.h-b.l).sort((a,b)=>a-b);const tol=(rng[rng.length>>1]||0)*.5;const pv=swingsIn(0,bars.length-1,3);const marks=[];
