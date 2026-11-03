@@ -462,7 +462,7 @@ html.is-phone .sbar{padding:4px 0}
 html.is-phone .sheet .badge .bn{display:none}html.is-phone .sheet .shelf{grid-template-columns:repeat(4,1fr);gap:6px}html.is-phone .sheet .badge{padding:6px 2px}html.is-phone .sheet .badge .bi{font-size:22px}html.is-phone .badge .bt{font-size:10px}
 /* lesson steps on phone: charts sized to the screen so a step fits without scrolling */
 html.is-phone .step{padding:16px 14px;min-height:0;gap:10px}html.is-phone .step h2{font-size:21px}
-html.is-phone canvas.chart{height:min(260px,30vh)}html.is-phone canvas.chart.clickable{height:min(380px,46vh)}
+html.is-phone .pair{gap:4px}html.is-phone .pair figure{position:relative}html.is-phone .pair figcaption{position:absolute;top:2px;right:60px;z-index:1;font-size:11px;margin:0;background:var(--panel);padding:0 4px;border-radius:4px}html.is-phone canvas.chart{height:min(260px,30vh)}html.is-phone canvas.chart.clickable{height:min(380px,46vh)}
 html.is-phone .step textarea{min-height:0}html.is-phone .lead{font-size:16px}
 html.is-phone .mapintro h2{font-size:15px!important}html.is-phone .mapintro .row{margin-top:2px}
 html.is-phone details.mapdet{padding:8px 12px}
@@ -600,9 +600,9 @@ function drawChart(cv,bars,o={}){
   const tint=(v,a)=>{const c=tok(v);if(/^#[0-9a-f]{6}$/i.test(c)){const n=parseInt(c.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`}return C.zone};
   x.fillStyle=C.panel;x.fillRect(0,0,w,h);
   const vis=o.visible??bars.length;const sb=o.scaleAll?bars:bars.slice(0,vis);
-  let lo=Math.min(...sb.map(b=>b.l)),hi=Math.max(...sb.map(b=>b.h));(o.hlines||[]).forEach(l=>{lo=Math.min(lo,l.p);hi=Math.max(hi,l.p)});
+  let lo=Math.min(...sb.map(b=>b.l)),hi=Math.max(...sb.map(b=>b.h));(o.hlines||[]).forEach(l=>{lo=Math.min(lo,l.p);hi=Math.max(hi,l.p)});(o.ovl||[]).forEach(l=>{for(let i=0;i<vis;i++){const v=l.v[i];if(v!=null){lo=Math.min(lo,v);hi=Math.max(hi,v)}}});
   const log=!!o.log;const f=log?Math.log:v=>v,fi=log?Math.exp:v=>v;const pad=(f(hi)-f(lo))*.07;const top=f(hi)+pad,bot=f(lo)-pad;
-  const L=8,Rp=54,T=10,B=12;const VH=o.vol?Math.round((h-T-B)*.2):0;const pw=w-L-Rp,ph=h-T-B-VH;const slot=pw/bars.length;
+    const L=8,Rp=54,T=10,B=12;const VH=o.vol?Math.round((h-T-B)*.2):0;const OH=o.osc?Math.round((h-T-B)*.4):0;const pw=w-L-Rp,ph=h-T-B-VH-OH;const slot=pw/bars.length;
   const X=i=>L+(i+.5)*slot,Y=p=>T+(top-f(p))/(top-bot)*ph;
   cv._g={X,Y,slot,L,inv:py=>fi(top-(py-T)/ph*(top-bot)),idx:px=>Math.max(0,Math.min(vis-1,Math.floor((px-L)/slot)))};
   // grid
@@ -619,6 +619,8 @@ function drawChart(cv,bars,o={}){
   if(VH){let vm=0;for(let i=0;i<vis;i++)vm=Math.max(vm,bars[i].v||0);const bw=Math.max(1,Math.min(10,slot*.62));x.globalAlpha=.45;
     for(let i=0;i<vis;i++){const b=bars[i];const vh=vm?(b.v||0)/vm*(VH-6):0;x.fillStyle=b.c>=b.o?C.up:C.down;x.fillRect(X(i)-bw/2,h-B-vh,bw,vh)}x.globalAlpha=1;
     x.fillStyle=C.muted;x.fillText("volume",L+4,h-B-VH+8)}
+  if(o.ovl)drawOvl(x,o.ovl,vis,{X,Y,L,T,pw,ph,rc,C});
+  if(OH)drawOsc(x,o.osc,vis,{X,L,T:T+ph+10,pw,ph:OH-10,rc,C,slot});
   (o.tlines||[]).forEach(l=>{if(l.b.i===l.a.i)return;const sl=(l.b.p-l.a.p)/(l.b.i-l.a.i);const i2=l.ext?bars.length-1:l.b.i;const lc=rc(l.c)||C.accent;
     x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();x.strokeStyle=lc;x.lineWidth=l.w||2.2;x.setLineDash(l.dash?[6,4]:[]);x.beginPath();x.moveTo(X(l.a.i),Y(l.a.p));x.lineTo(X(i2),Y(l.a.p+sl*(i2-l.a.i)));x.stroke();x.setLineDash([]);x.restore();
     if(l.label){x.fillStyle=lc;x.fillText(l.label,Math.min(X(l.a.i)+4,L+pw-120),Y(l.a.p)+(sl>0?12:-10))}});
@@ -641,6 +643,22 @@ function drawChart(cv,bars,o={}){
     x.fillStyle=C.panel;x.globalAlpha=.92;x.beginPath();x.roundRect?x.roundRect(cx-tw/2,cy-th/2,tw,th,6):x.rect(cx-tw/2,cy-th/2,tw,th);x.fill();x.globalAlpha=1;
     x.strokeStyle=col;x.lineWidth=1.2;x.stroke();x.fillStyle=col;x.textAlign="center";x.fillText(l.text,cx,cy+.5);x.textAlign="start"});
 }
+/* indicator lines over the price, with a small legend top-left */
+function drawOvl(x,ovl,vis,g){x.save();x.beginPath();x.rect(g.L,g.T,g.pw,g.ph);x.clip();let k=0;
+  ovl.forEach(l=>{const col=g.rc(l.c)||g.C.accent;x.strokeStyle=col;x.lineWidth=l.w||1.8;x.setLineDash(l.dash?[5,4]:[]);x.beginPath();let on=false;
+    for(let i=0;i<vis;i++){const v=l.v[i];if(v==null){on=false;continue}const px=g.X(i),py=g.Y(v);on?x.lineTo(px,py):x.moveTo(px,py);on=true}x.stroke();x.setLineDash([]);
+    if(l.label){x.fillStyle=col;x.fillRect(g.L+6,g.T+8+k*15,12,2.5);x.fillText(l.label,g.L+22,g.T+9+k*15);k++}});x.restore()}
+/* oscillator pane under the price: RSI, stochastics, MACD or breadth */
+function drawOsc(x,os,vis,g){const y0=g.T,y1=g.T+g.ph;let lo=os.lo,hi=os.hi;
+  if(lo==null){lo=Infinity;hi=-Infinity;[...(os.series||[]).map(s=>s.v),os.hist||[]].forEach(a=>{for(let i=0;i<vis;i++){const v=a[i];if(v!=null){lo=Math.min(lo,v);hi=Math.max(hi,v)}}});if(os.zero){const m=Math.max(Math.abs(lo),Math.abs(hi))||1;lo=-m;hi=m}const p=(hi-lo)*.08||1;lo-=p;hi+=p}
+  const OY=v=>y1-(v-lo)/(hi-lo)*(y1-y0);x.strokeStyle=g.C.grid;x.lineWidth=1;x.beginPath();x.moveTo(g.L,y0-5);x.lineTo(g.L+g.pw,y0-5);x.stroke();
+  (os.levels||[]).forEach(v=>{x.strokeStyle=g.C.muted;x.setLineDash([4,4]);x.beginPath();x.moveTo(g.L,OY(v));x.lineTo(g.L+g.pw,OY(v));x.stroke();x.setLineDash([]);x.fillStyle=g.C.muted;x.fillText(String(v),g.L+g.pw+6,OY(v))});
+  if(os.zero){x.strokeStyle=g.C.muted;x.beginPath();x.moveTo(g.L,OY(0));x.lineTo(g.L+g.pw,OY(0));x.stroke();x.fillStyle=g.C.muted;x.fillText("0",g.L+g.pw+6,OY(0))}
+  if(os.hist){const bw=Math.max(1,Math.min(10,g.slot*.62));x.globalAlpha=.5;for(let i=0;i<vis;i++){const v=os.hist[i];if(v==null)continue;x.fillStyle=v>=0?g.C.up:g.C.down;const a=OY(0),b=OY(v);x.fillRect(g.X(i)-bw/2,Math.min(a,b),bw,Math.max(1,Math.abs(b-a)))}x.globalAlpha=1}
+  x.save();x.beginPath();x.rect(g.L,y0-4,g.pw,y1-y0+8);x.clip();
+  (os.series||[]).forEach(s=>{x.strokeStyle=g.rc(s.c)||g.C.accent;x.lineWidth=s.w||1.8;x.setLineDash(s.dash?[5,4]:[]);x.beginPath();let on=false;for(let i=0;i<vis;i++){const v=s.v[i];if(v==null){on=false;continue}on?x.lineTo(g.X(i),OY(v)):x.moveTo(g.X(i),OY(v));on=true}x.stroke();x.setLineDash([])});
+  (os.lines||[]).forEach(l=>{x.strokeStyle=g.rc(l.c)||g.C.mark;x.lineWidth=2.4;x.beginPath();x.moveTo(g.X(l.a.i),OY(l.a.v));x.lineTo(g.X(l.b.i),OY(l.b.v));x.stroke();[l.a,l.b].forEach(p=>{x.beginPath();x.arc(g.X(p.i),OY(p.v),4,0,6.283);x.fillStyle=g.rc(l.c)||g.C.mark;x.fill()})});
+  x.restore();x.fillStyle=g.C.muted;x.fillText(os.label||"",g.L+4,y0+6)}
 function mountChart(cv,getArgs){const draw=()=>{const [b,o]=getArgs();drawChart(cv,b,o)};draw._cv=cv;live.add(draw);const ro=new ResizeObserver(()=>{if(!cv.isConnected){ro.disconnect();live.delete(draw);return}draw()});ro.observe(cv);draw();return draw}
 function rerenderAll(){live.forEach(d=>{if(d._cv&&!d._cv.isConnected){live.delete(d);return}d()})}
 try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",rerenderAll)}catch(e){}
@@ -1426,6 +1444,292 @@ LESSONS.push(
   {q:"Crypto volume numbers are best used…",o:["To compare rising and falling volume on one big exchange, not as exact truth","As exact totals for the whole market","Not at all"],a:0,e:"Volume is spread over many exchanges and some of it is inflated. Look at the pattern, not the exact number."}],chart:["vol"]}
 );
 
+/* ---------- Level 3 lessons: indicators and structure ---------- */
+LESSONS.push(
+{id:"l18",n:18,lv:3,t:"Moving averages",min:10,steps:[
+ S("hook",{text:"A moving average turns a messy chart into one smooth line. It can't predict anything, but it shows the trend at a glance."}),
+ S("guess",{q:"The last 5 closes are 10, 11, 12, 13 and 14. What is the 5-period simple moving average?",o:["12","14","10"],a:0,e:"Add them up (60) and divide by 5 = 12. Next candle, the oldest close drops out and the newest comes in, so the average \"moves\"."}),
+ S("learn",{title:"Smoothing, with a delay",svg:"ma",text:"A simple MA (SMA) averages the last N closes equally. An exponential MA (EMA) gives the newest closes more weight, so it turns sooner. Both lag: they confirm a move after it has started."}),
+ S("guess",{q:"Which line turns first when price changes direction?",o:["A 20-period EMA","A 20-period SMA","A 200-period SMA"],a:0,e:"The EMA weights the newest closes most, so it reacts first. The longer the average, the slower it turns."}),
+ S("tool",{kind:"ma"}),
+ S("guess",{q:"Price is above a rising 50-day MA and keeps dipping to it and bouncing. What is the MA doing?",o:["Acting as moving support in an uptrend","Giving a sell signal at each touch","Nothing: MAs are only for crossovers"],a:0,e:"In a healthy trend, traders buy pullbacks to a well-watched average. A clear close below it is the first warning.",ex:"ma"}),
+ S("drill",{kind:"ma",n:2}),
+ S("guess",{q:"The 50-day MA crosses above the 200-day MA. Traders call this…",o:["A golden cross: a slow, late sign the trend has turned up","A death cross","A guaranteed rally"],a:0,e:"Golden cross (50 above 200) and death cross (50 below 200) are famous but late. By the time they happen, a good part of the move is often done.",ex:"gcross"}),
+ S("guess",{q:"In a sideways market, moving average crossovers usually…",o:["Whipsaw: buy high, sell low, again and again","Work best","Never happen"],a:0,e:"Flat, tangled averages cross back and forth, and each cross is a false signal. MAs are trend tools; ranges beat them."}),
+ S("drill",{kind:"ma",n:1}),
+ S("explain",{q:"Why does a moving average always lag, and when does that hurt?",model:"It's an average of past prices, so it can only turn after price has. That's fine in a long trend, but at a sharp turn it's late, and in a range it whipsaws.",ex:"ma"})],
+ cards:[{q:"The most watched moving average lengths are…",o:["20 (short), 50 (medium) and 200 (long-term trend)","5, 10 and 15","Only the 9"],a:0,e:"Because so many traders watch the 20, 50 and 200, price often reacts near them."},
+  {q:"The most useful thing a moving average tells you is…",o:["Its slope, and which side of it price is on","The exact price to buy","How many trades happened"],a:0,e:"Rising MA with price above: uptrend. Falling MA with price below: downtrend. Flat MA: no trend."}],chart:["ma"]},
+
+{id:"l19",n:19,lv:3,t:"RSI and stochastics",min:10,steps:[
+ S("hook",{text:"Oscillators measure speed, not direction. A car can still be moving forward while it slows down, and that slowdown is the warning they give."}),
+ S("guess",{q:"RSI runs from 0 to 100. The classic readings are…",o:["Over 70 overbought, under 30 oversold","Over 50 sell, under 50 buy","Over 100 means a crash"],a:0,e:"RSI (usually 14 periods) compares the size of recent up closes with recent down closes. Above 70, price rose fast. Below 30, it fell fast."}),
+ S("guess",{q:"BTC is in a strong uptrend and RSI has been over 70 for two weeks. Should you short it?",o:["No: in a strong trend RSI can stay overbought for a long time","Yes: it's overbought","Yes, with double size"],a:0,e:"Overbought is not a sell signal on its own. In strong uptrends RSI often lives between 40 and 80. Use it with the trend: buy dips when RSI cools to about 40 to 50.",ex:"rsiob"}),
+ S("learn",{title:"Divergence",svg:"div",text:"Price makes a higher high, but RSI makes a lower high: the second push had less force. That's bearish divergence. The mirror image at a low is bullish divergence. It's a warning; the swings still have to break."}),
+ S("drill",{kind:"rsi",n:2}),
+ S("guess",{q:"Price makes a lower low, but RSI makes a higher low. This is…",o:["Bullish divergence: selling is losing force","Bearish divergence","A confirmed new downtrend"],a:0,e:"The new low came with less downside force. Wait for price to confirm, for example a break above the last lower high.",ex:"rsidiv"}),
+ S("learn",{title:"Stochastics",svg:"stoch",text:"Stochastics shows where the close sits inside the recent high-low range: 100 means at the very top, 0 at the bottom. Over 80 is overbought, under 20 oversold. The signal is the fast line (%K) crossing the slow line (%D) in those zones."}),
+ S("guess",{q:"Where do oscillators like RSI and stochastics work best?",o:["In ranges, near the edges","In strong trends, against the trend","Everywhere equally"],a:0,e:"In a range, overbought and oversold readings near the edges line up with real turns. In a strong trend they give early, losing signals against it."}),
+ S("drill",{kind:"rsi",n:1}),
+ S("explain",{q:"Why is an overbought RSI not enough reason to sell?",model:"It only says price rose fast, and strong trends stay overbought. I'd want a divergence plus a break in the swing structure, ideally at resistance.",ex:"rsiob"})],
+ cards:[{q:"A stochastic reading of 95 means…",o:["The close is near the top of the recent high-low range","95% of traders are buying","Price will fall 95%"],a:0,e:"Stochastics measures where the close sits in the last 14 candles' high-low range."},
+  {q:"A divergence is best treated as…",o:["A warning that needs price to confirm","A signal to trade right away","Proof the trend is over"],a:0,e:"Divergences can repeat several times before a turn. Wait for the swing structure to break."}],chart:["rsi"]},
+
+{id:"l20",n:20,lv:3,t:"MACD and momentum",min:10,steps:[
+ S("hook",{text:"MACD turns two moving averages into one picture of momentum. It often shows a move slowing before the price turns."}),
+ S("guess",{q:"The MACD line is…",o:["The 12 EMA minus the 26 EMA","An average of RSI","Volume times price"],a:0,e:"When the fast EMA pulls away from the slow one, momentum is building. The signal line is a 9-period EMA of the MACD line."}),
+ S("learn",{title:"Three parts",svg:"macd",text:"MACD line (12 EMA − 26 EMA), signal line (9 EMA of the MACD line), histogram (MACD minus signal). Above zero: the fast average is above the slow one, an up bias. A shrinking histogram: momentum is fading."}),
+ S("guess",{q:"The 12 EMA is 105, the 26 EMA is 100, and the signal line is 6. What is the histogram?",o:["−1: MACD (5) is under its signal, momentum is slowing","+5: strong momentum","+11"],a:0,e:"MACD = 105 − 100 = 5. Histogram = 5 − 6 = −1. A negative histogram means the MACD line has dipped under its signal line."}),
+ S("drill",{kind:"macd",n:2}),
+ S("guess",{q:"Price keeps making new highs, but each histogram bar is smaller. That suggests…",o:["The rally is losing momentum: watch for a pause or a turn","The rally is speeding up","A short you must take now"],a:0,e:"The histogram usually shrinks before price turns. It's an early warning, not a reason to short on its own.",ex:"macd"}),
+ S("guess",{q:"10-period momentum compares…",o:["Today's close with the close 10 candles ago","Today's high with today's low","Two different coins"],a:0,e:"Momentum = close now − close 10 candles ago. Above zero and rising: the move is speeding up. It tends to peak before price does."}),
+ S("guess",{q:"In a long downtrend, the MACD line crosses above its signal line far below zero. Best read?",o:["Downside momentum is easing, but the trend is still down","A strong new uptrend has started","Nothing at all"],a:0,e:"Crosses in the trend's direction are more reliable. A cross against a big trend is often just a bounce."}),
+ S("drill",{kind:"macd",n:1}),
+ S("explain",{q:"Why can the MACD histogram warn you before the MACD lines cross?",model:"The histogram is the gap between MACD and its signal line. It starts shrinking as soon as momentum slows, before the lines actually cross.",ex:"macd"})],
+ cards:[{q:"MACD above zero means…",o:["The 12 EMA is above the 26 EMA: an up bias","Price is above zero","RSI is over 50"],a:0,e:"The zero line is where the two averages cross. Above it, the faster average is on top."},
+  {q:"The standard MACD settings are…",o:["12, 26, 9","14, 3, 3","20, 2"],a:0,e:"12 and 26 EMAs, 9 for the signal. 14,3,3 is stochastics and 20,2 is Bollinger Bands."}],chart:["macd"]},
+
+{id:"l21",n:21,lv:3,t:"The market cycle and the four trades",min:10,steps:[
+ S("hook",{text:"Every trade you'll ever take is one of just four kinds. Knowing which one you're in tells you where your stop belongs."}),
+ S("guess",{q:"Remember the market cycle. After markup comes…",o:["Distribution: early buyers sell to late ones","Accumulation","Another markup, always"],a:0,e:"Accumulation (flat after a fall), markup (uptrend), distribution (flat after a rise), markdown (downtrend). Then it starts again.",svg:"cycle"}),
+ S("drill",{kind:"phase",n:1}),
+ S("learn",{title:"The four trades",svg:"four",text:"1. Trend continuation: join a trend on a pullback. 2. Trend termination: bet a trend is ending. 3. Support or resistance holds: trade back from a range edge. 4. Support or resistance breaks: trade the breakout."}),
+ S("guess",{q:"BTC is in a clear uptrend and pulls back to a rising 20 EMA near old support. Buying there is which trade?",o:["Trend continuation","Trend termination","Breakout"],a:0,e:"You're betting the trend carries on after a pause. If the pullback's low breaks, the idea is wrong."}),
+ S("drill",{kind:"trade4",n:2}),
+ S("guess",{q:"Which of the four trades usually wins least often?",o:["Trend termination: trends tend to keep going","Trend continuation","They all win equally often"],a:0,e:"Picking tops and bottoms fights the trend. It can pay well, but needs strong evidence: a climax, a divergence, a lower high and a broken low."}),
+ S("guess",{q:"Which two trades belong to a range?",o:["The edge holds (fade it) or the edge breaks (breakout)","Only trend continuation","Only trend termination"],a:0,e:"In a range you either bet the edges hold or that one finally gives way. Remember: most breakouts fail."}),
+ S("drill",{kind:"trade4",n:1}),
+ S("explain",{q:"Pick one of the four trades and say where its stop goes, and why.",model:"Trend continuation: under the pullback's low, because if that breaks the trend may not be continuing. Range edge: just outside the edge. Breakout: back inside the range."})],
+ cards:[{q:"In the markup stage, which trade fits best?",o:["Trend continuation: buy pullbacks","Short every new high","Short the breakouts"],a:0,e:"In markup the trend is your friend. Buy pullbacks to support or a moving average."},
+  {q:"You bought a breakout, and price closes back inside the range. You should…",o:["Get out: the breakout trade has failed","Buy more","Wait a month"],a:0,e:"A breakout trade is wrong once price is back in the range. Failed breakouts often run to the other side."}],chart:["trade4"]},
+
+{id:"l22",n:22,lv:3,t:"Trends, ranges and the shift between them",min:10,steps:[
+ S("hook",{text:"Markets switch between calm and wild. The calm usually comes before the big move, and you can see it coming."}),
+ S("guess",{q:"A market has gone quiet: the candles have been shrinking for weeks. What often comes next?",o:["A bigger move, but you can't know which way yet","More quiet forever","A crash, always"],a:0,e:"Volatility comes in cycles: quiet spells tend to be followed by bursts. A squeeze says a move is coming, not its direction.",ex:"bb"}),
+ S("learn",{title:"Bollinger Bands",svg:"bb",text:"A 20-period average with bands 2 standard deviations above and below. They narrow when price is calm (a squeeze) and widen when it moves fast. Price riding the upper band is strength in a trend, not \"too high\"."}),
+ S("drill",{kind:"squeeze",n:2}),
+ S("guess",{q:"A range breaks out and the bands suddenly widen as price runs. The read?",o:["Volatility is expanding: a trend move has likely started","The breakout has failed","Sell: price is outside the band"],a:0,e:"Expansion after a squeeze is how new trends start. Fading it just because price is outside the band fights fresh momentum."}),
+ S("guess",{q:"How do trends usually end?",o:["Either a climax spike, or slowly rolling over into a range","Always with a perfect head and shoulders","They never end"],a:0,e:"Some trends end in a blow-off: a sudden huge move and a sharp reversal. Others lose steam and go sideways; that range then becomes a top or just a pause."}),
+ S("guess",{q:"Which tools fit which market?",o:["Trends: moving averages and pullbacks. Ranges: edges and oscillators","Oscillators for trends, MAs for ranges","The same tools everywhere"],a:0,e:"Match the tool to the market. MAs whipsaw in ranges; oscillators fight strong trends."}),
+ S("guess",{q:"ADX measures trend strength. ADX above 25 and rising means…",o:["A strong trend: favour trend tools","A range: trade the edges","Price is going up"],a:0,e:"ADX shows how strong a trend is, not which way. Under about 20 there's no real trend."}),
+ S("drill",{kind:"trend",n:1}),
+ S("drill",{kind:"squeeze",n:1}),
+ S("explain",{q:"Why does a quiet, tight market often come before a big move?",model:"Buyers and sellers are in balance and orders pile up just outside the range. When one side wins, stops and breakout orders fire together, so the move comes fast.",ex:"bb"})],
+ cards:[{q:"A Bollinger squeeze tells you…",o:["A bigger move is likely, not which way","Price will go up","Price will go down"],a:0,e:"Wait for the break, and use the other side of the squeeze for your stop."},
+  {q:"Price keeps closing near the upper Bollinger Band for weeks. That's…",o:["A strong uptrend, not a sell signal on its own","An automatic short","A squeeze"],a:0,e:"In strong trends price \"walks the band\". Only a break of the swing structure says the trend is over."}],chart:["squeeze"]},
+
+{id:"l23",n:23,lv:3,t:"Multiple timeframe analysis",min:10,steps:[
+ S("hook",{text:"The same coin can be in an uptrend and a downtrend at once. It depends on the timeframe, so good traders always check more than one."}),
+ S("guess",{q:"The daily chart is in a strong uptrend. The 1-hour chart is falling. That 1-hour fall is most likely…",o:["A pullback inside the daily uptrend","A new long-term downtrend","Unrelated to the daily"],a:0,e:"The higher timeframe is the tide, the lower one the waves. A falling 1-hour chart in a daily uptrend is usually a dip to buy, once it ends."}),
+ S("learn",{title:"Tide, waves and ripples",svg:"mtf",text:"Pick your trading chart, then one about 4 to 6 times higher for the trend and one 4 to 6 times lower for timing. Trade in the higher chart's direction; use the lower one to time the entry and place a tight stop."}),
+ S("guess",{q:"You trade the 4-hour chart. With a factor of about 4 to 6, your trend chart is the…",o:["Daily","15-minute","Monthly"],a:0,e:"4 hours × 6 = 24 hours: the daily. For timing you'd drop to about the 1-hour."}),
+ S("drill",{kind:"mtf",n:2}),
+ S("guess",{q:"The daily is in an uptrend, but the 4-hour just made a lower high and a lower low. What now?",o:["Wait: buy once the 4-hour turns back up","Short it with full size","Buy right now"],a:0,e:"Let the lower timeframe finish its pullback. A higher low and a break above its last lower high is the turn."}),
+ S("guess",{q:"Support on the weekly chart or support on the 15-minute chart: which matters more?",o:["The weekly","The 15-minute","They're equal"],a:0,e:"Higher-timeframe levels were built by more trading over more time, so more traders care about them."}),
+ S("drill",{kind:"mtf",n:1}),
+ S("explain",{q:"Why trade in the direction of the higher timeframe?",model:"Its trend carries more weight, so pullbacks against it usually end and the trend resumes. Trading with it puts the bigger flow on my side."})],
+ cards:[{q:"Timeframes disagree and you can't tell which way the bigger trend points. Best plan?",o:["Stand aside, or trade smaller","Trade bigger to make up for it","Flip a coin"],a:0,e:"No clear tide means no trend edge. Waiting is a position too."},
+  {q:"Your stop is usually placed using…",o:["The lower timeframe's swing points, so it can be tight","The monthly chart","A fixed 10%, always"],a:0,e:"The higher chart picks the direction; the lower chart shows the exact spot where the idea is wrong."}],chart:["mtf"]},
+
+{id:"l24",n:24,lv:3,t:"Long-term charts",min:9,steps:[
+ S("hook",{text:"Zoom out. Weekly and monthly charts show the trend that daily noise hides, and the levels everyone remembers."}),
+ S("guess",{q:"BTC drops 25% in three weeks, but it's still above a rising 40-week MA after a year of gains. On the big picture this is…",o:["A pullback in a long-term uptrend","Surely the start of a bear market","Nothing worth noticing"],a:0,e:"Crypto bull markets have had several 20 to 35% drops along the way. The big trend only turns when the major swings break and the long average rolls over.",ex:"big"}),
+ S("tool",{kind:"log"}),
+ S("learn",{title:"Reading the big picture",svg:"lt",text:"Use log scale on long charts so equal % moves look equal. A long average like the 40-week splits bull from bear. Weekly levels and trendlines outrank anything on a daily chart."}),
+ S("drill",{kind:"big",n:2}),
+ S("guess",{q:"BTC's past cycle tops came about 12 to 18 months after its halvings (2013, 2017, 2021). How much should you trust that?",o:["A little: three cycles is a tiny sample, and it can change","Completely: it's a law","Not at all: it never happened"],a:0,e:"It's held so far, but three or four cycles could be partly luck, and a pattern everyone knows tends to get traded early."}),
+ S("guess",{q:"BTC's 200-week MA has often been near past bear-market lows, but in 2022 price fell well below it. The lesson?",o:["Treat it as an area of interest, not a guaranteed floor","It always holds","It's useless"],a:0,e:"Long averages show where long-term buyers have stepped in before. No level is a promise."}),
+ S("drill",{kind:"big",n:1}),
+ S("explain",{q:"Why look at the weekly chart before trading the daily?",model:"The weekly shows the main trend and the levels that matter most. A daily setup that agrees with the weekly has the bigger flow behind it."})],
+ cards:[{q:"For stocks, the 200-day MA is roughly the…",o:["40-week MA","20-week MA","200-week MA"],a:0,e:"Stocks trade about 5 days a week: 200 ÷ 5 = 40 weeks. Crypto trades all 7 days, so for coins the 200-day is closer to a 29-week average."},
+  {q:"A support level that held on the monthly chart for years…",o:["Matters far more than one from the 1-hour chart","Is weaker because it's old","Only matters to investors"],a:0,e:"Higher-timeframe levels have more trading, and more memory, behind them."},
+  {q:"Why use log scale on a 10-year BTC chart?",o:["So a 50% move looks the same size at $1,000 and at $60,000","It makes price look higher","Log only works for stocks"],a:0,e:"On a normal scale early moves look flat and recent ones huge. Log shows the % changes that matter to your money."}],chart:["big"]},
+
+{id:"l25",n:25,lv:3,t:"Intermarket analysis and breadth",min:10,steps:[
+ S("hook",{text:"No market moves alone. Money flows between the dollar, bonds, stocks, commodities and crypto, and those flows leave clues."}),
+ S("guess",{q:"The US dollar is rising strongly. For crypto and commodities this has often been…",o:["A headwind","A big tailwind","Irrelevant"],a:0,e:"A stronger dollar tightens money worldwide. It's a tendency, not a law: these links come and go."}),
+ S("learn",{title:"The classic links",svg:"inter",text:"Dollar up, commodities tend to fall. Rising bond yields (falling bond prices) tend to weigh on stocks. Since about 2020, BTC has often moved with tech stocks. These links strengthen and fade, so check them; don't assume them."}),
+ S("guess",{q:"The ETH/BTC chart is falling, but ETH is up 10% in dollars. What's true?",o:["ETH rose less than BTC: BTC was the stronger buy","ETH fell in dollars","ETH beat BTC"],a:0,e:"A ratio chart shows relative strength. Falling ETH/BTC means BTC did better, even though both went up.",ex:"ratio"}),
+ S("drill",{kind:"rel",n:2}),
+ S("learn",{title:"Breadth",svg:"breadth",text:"Breadth asks how many are joining the move. If an index or BTC makes a new high while fewer stocks or coins join in, the rally is narrowing. It's a warning, like a divergence."}),
+ S("guess",{q:"An index makes a new high, but the advance-decline line makes a lower high. That's…",o:["Narrowing breadth: fewer stocks are carrying the rally","Very healthy","A buy signal"],a:0,e:"Strong rallies are broad. When a few leaders carry the index alone, it's more fragile."}),
+ S("guess",{q:"In past crypto bull markets, money has often moved in which order?",o:["BTC first, then ETH, then smaller coins","Small coins first, then BTC","All at once"],a:0,e:"Often, not always. BTC dominance and ETH/BTC show whether money is moving out toward riskier coins."}),
+ S("drill",{kind:"rel",n:1}),
+ S("explain",{q:"Why look at ratio charts, not just each coin's own chart?",model:"A ratio shows which one is stronger. If I'm going to buy something, I want what's beating the rest, not something that's only rising because everything is."})],
+ cards:[{q:"BTC dominance rising means…",o:["BTC is gaining share of the total crypto market","BTC's price is rising","Altcoins are doing better"],a:0,e:"Dominance is BTC's share of total market cap. It can rise in a falling market if altcoins fall faster."},
+  {q:"A link between BTC and the Nasdaq is best treated as…",o:["Something that changes: check the recent relationship","A fixed law","Always zero"],a:0,e:"Correlations shift with the market. Look at what's happening now, not an old headline."}],chart:["rel"]},
+
+{id:"l26",n:26,lv:3,t:"Point and figure, Elliott Wave, cycles",min:10,steps:[
+ S("hook",{text:"Three older methods many traders still use. Each has a useful idea inside it, and a trap."}),
+ S("learn",{title:"Point and figure",svg:"pf",text:"Only price moves count, not time. A column of X's for rises, O's for falls. Each box is a set amount (say $1,000 for BTC). A new column starts only when price turns by 3 boxes. That filters out noise."}),
+ S("guess",{q:"Box size $1,000, 3-box reversal. BTC's X column tops at $64,000, then price falls to $61,500. New O column?",o:["No: it needs a fall to $61,000 (3 boxes)","Yes","Only on a Monday"],a:0,e:"3 boxes × $1,000 = $3,000 below the top, so $61,000. A fall to $61,500 is only 2.5 boxes. The X column stays.",svg:"pf"}),
+ S("guess",{q:"A point and figure \"double top buy\" signal happens when…",o:["An X column rises above the top of the previous X column","Two O columns line up","Price touches a moving average"],a:0,e:"It's a breakout above the last high, with the noise filtered out by the box size. Simple and clear."}),
+ S("learn",{title:"Elliott Wave",svg:"ew",text:"Trends move in 5 waves (1 to 5), corrections in 3 (A, B, C). Three rules: wave 2 never goes below the start of wave 1, wave 3 is never the shortest of 1, 3 and 5, and wave 4 never drops into wave 1's price area."}),
+ S("drill",{kind:"ew",n:2}),
+ S("guess",{q:"What's the biggest problem with Elliott Wave?",o:["Counts are subjective: experts often disagree until after the fact","It has no rules at all","It only works on gold"],a:0,e:"The rules help, but in real time there are usually several valid counts. Use it as a map of possibilities, never as proof."}),
+ S("guess",{q:"An analyst finds tops roughly every 40 days over the past year. Best use?",o:["A loose timing hint, confirmed by price","Sell exactly on day 40","Ignore price and follow the cycle"],a:0,e:"Cycles stretch and shrink, and even random data shows cycles that look real. Let price confirm before acting."}),
+ S("drill",{kind:"coin",n:1}),
+ S("explain",{q:"What useful idea can you keep from point and figure, Elliott Wave and cycles, and what's the trap?",model:"P&F: filter noise to see clean breakouts. Elliott: trends move in pushes and pullbacks. Cycles: rough timing windows. The trap is treating any of them as certain. Price has the final say."})],
+ cards:[{q:"In Elliott Wave, which wave is often the longest and strongest?",o:["Wave 3","Wave 2","Wave B"],a:0,e:"Wave 3 is often the longest, and it can never be the shortest of 1, 3 and 5."},
+  {q:"Point and figure charts ignore…",o:["Time: a column only grows when price moves at least one box","Price","Highs and lows"],a:0,e:"Quiet days add nothing to the chart. Only moves of at least one box count."}],chart:["ew"]}
+);
+
+/* ---------- Level 3 study notes ---------- */
+Object.assign(NOTES,{
+l18:`
+<section><h4>What a moving average is</h4>
+<p>The average closing price of the last N candles, recalculated every candle. It smooths out the noise so you can see the trend.</p>
+<ul><li><b>Simple (SMA):</b> every close counts the same.</li>
+<li><b>Exponential (EMA):</b> newer closes count more, so it turns sooner.</li></ul>
+<figure class="dg">${svgMA()}<figcaption>The average follows price, but always a little behind.</figcaption></figure></section>
+<section><h4>The lengths people watch</h4>
+<div class="tw"><table><tr><th>Length</th><th>Job</th></tr>
+<tr><td>20</td><td>Short-term trend; strong trends pull back to it</td></tr>
+<tr><td>50</td><td>Medium-term trend</td></tr>
+<tr><td>200</td><td>Long-term trend; bull above, bear below</td></tr></table></div>
+<p>Short averages are quick but give many false signals. Long ones are smooth but late. There's no perfect length.</p></section>
+<section><h4>How to read them</h4>
+<ul><li><b>Slope first:</b> rising MA = up, falling = down, flat = no trend.</li>
+<li><b>Price above a rising MA:</b> uptrend. Dips to the MA are often bought.</li>
+<li><b>Fast above slow</b> (20 over 50): up bias. <b>Golden cross</b>: 50 crosses above 200. <b>Death cross</b>: 50 below 200. Both are slow and late.</li>
+<li><b>In ranges</b> the lines go flat and tangle, and every crossover is a whipsaw.</li></ul></section>
+<div class="remember"><b>Remember</b>A moving average describes the trend; it doesn't predict it. Use it in trending markets and ignore its crossovers in ranges.</div>`,
+
+l19:`
+<section><h4>What an oscillator does</h4>
+<p>An oscillator measures the <b>speed</b> of price, squeezed into a fixed scale. It answers "how hard is price pushing?", not "which way is the trend?".</p></section>
+<section><h4>RSI (Relative Strength Index)</h4>
+<ul><li>Usually 14 periods, scale 0 to 100.</li>
+<li><b>Over 70</b> overbought (rose fast), <b>under 30</b> oversold (fell fast).</li>
+<li>In strong uptrends RSI often stays between 40 and 80; in downtrends between 20 and 60. Overbought in an uptrend is strength, not a sell.</li></ul></section>
+<section><h4>Divergence</h4>
+<figure class="dg">${svgDiv()}<figcaption>Higher high in price, lower high in RSI: bearish divergence.</figcaption></figure>
+<ul><li><b>Bearish:</b> price higher high, RSI lower high. The push up is weakening.</li>
+<li><b>Bullish:</b> price lower low, RSI higher low. The selling is weakening.</li>
+<li>A divergence is a warning. Wait for the swing structure to break before acting.</li></ul></section>
+<section><h4>Stochastics</h4>
+<p>%K = where the close sits in the last 14 candles' high-low range (0 = at the low, 100 = at the high). %D is a 3-period average of %K.</p>
+<ul><li>Over 80 overbought, under 20 oversold.</li><li>Signal: %K crossing %D inside those zones.</li></ul>
+<figure class="dg">${svgStoch()}<figcaption>A cross in the overbought zone near a range top.</figcaption></figure></section>
+<div class="remember"><b>Remember</b>Oscillators shine in ranges. In trends, use them in the trend's direction: buy oversold dips in an uptrend, don't short overbought.</div>`,
+
+l20:`
+<section><h4>The three parts of MACD</h4>
+<ul><li><b>MACD line</b> = 12 EMA − 26 EMA.</li>
+<li><b>Signal line</b> = 9-period EMA of the MACD line.</li>
+<li><b>Histogram</b> = MACD line − signal line.</li></ul>
+<figure class="dg">${svgMACD()}<figcaption>Bars shrink as the rise slows, before the lines cross.</figcaption></figure></section>
+<section><h4>How to read it</h4>
+<ul><li><b>Above zero:</b> the fast average is above the slow one, an up bias. Below zero: down bias.</li>
+<li><b>MACD crossing its signal</b> is a momentum shift. Crosses in the trend's direction are the better ones.</li>
+<li><b>Shrinking histogram:</b> momentum is fading. It turns before the lines cross, and often before price turns.</li>
+<li><b>Divergence</b> works like RSI: new price high, lower MACD high.</li></ul></section>
+<section><h4>Momentum (rate of change)</h4>
+<p>Momentum = close now − close N candles ago. Above zero and rising: the move is speeding up. Momentum tends to peak <b>before</b> price, which is what makes it an early warning.</p>
+<p>Worked example: 12 EMA 105, 26 EMA 100, signal 6. MACD = 5, histogram = 5 − 6 = −1, so momentum is slowing.</p></section>
+<div class="remember"><b>Remember</b>All of these are built from price. They help you see the speed of a move, but the swings and levels on the chart still decide the trade.</div>`,
+
+l21:`
+<section><h4>The cycle, again</h4>
+<figure class="dg">${svgCycle()}<figcaption>Accumulation, markup, distribution, markdown.</figcaption></figure>
+<p>Each stage favours different trades. Markup and markdown favour going with the trend. Accumulation and distribution are ranges.</p></section>
+<section><h4>The four trades</h4>
+<figure class="dg">${svgFour()}<figcaption>Every trade is one of these four.</figcaption></figure>
+<div class="tw"><table><tr><th>Trade</th><th>Bet</th><th>Stop</th></tr>
+<tr><td>Trend continuation</td><td>The trend carries on after a pullback</td><td>Under the pullback low</td></tr>
+<tr><td>Trend termination</td><td>The trend is ending</td><td>Beyond the extreme</td></tr>
+<tr><td>Level holds</td><td>A range edge holds again</td><td>Just outside the edge</td></tr>
+<tr><td>Level breaks</td><td>The edge finally gives way</td><td>Back inside the range</td></tr></table></div></section>
+<section><h4>Which ones win most?</h4>
+<ul><li>Trends tend to continue, so continuation trades are the bread and butter.</li>
+<li>Termination trades win least often. They need a climax, a divergence, a lower high and a broken low.</li>
+<li>Most breakouts fail, so a breakout needs pressure building first (tight range, rising lows, volume).</li></ul></section>
+<div class="remember"><b>Remember</b>Before any trade, say which of the four it is. That tells you what has to happen for you to be wrong, and where the stop goes.</div>`,
+
+l22:`
+<section><h4>Calm, then wild</h4>
+<p>Volatility (how much price moves) comes in waves. Quiet spells tend to be followed by bursts, and bursts by calm. A tight, quiet market is often building up to a move.</p></section>
+<section><h4>Bollinger Bands</h4>
+<p>A 20-period SMA with a band <b>2 standard deviations</b> above and below. About 95% of closes sit inside.</p>
+<figure class="dg">${svgBB()}<figcaption>Squeeze, then expansion.</figcaption></figure>
+<ul><li><b>Squeeze:</b> bands at their narrowest in months. A bigger move is likely; the direction isn't known.</li>
+<li><b>Expansion:</b> bands widening fast as price runs. A trend move is underway.</li>
+<li><b>Walking the band:</b> in a strong trend price can hug the upper band for weeks. That's strength.</li></ul></section>
+<section><h4>How trends end</h4>
+<ul><li><b>Climax:</b> a sudden, huge move and a sharp reversal.</li>
+<li><b>Rolling over:</b> the pushes get weaker, price goes sideways, and the range becomes a top or a pause.</li></ul></section>
+<section><h4>Match the tool to the market</h4>
+<div class="tw"><table><tr><th>Market</th><th>Use</th><th>Avoid</th></tr>
+<tr><td>Trend</td><td>MAs, pullbacks, breakouts in the trend's direction</td><td>Shorting "overbought"</td></tr>
+<tr><td>Range</td><td>Edges, oscillators</td><td>MA crossovers</td></tr></table></div>
+<p><b>ADX</b> measures trend strength (not direction): over 25 and rising = strong trend, under 20 = no trend.</p></section>
+<div class="remember"><b>Remember</b>A squeeze tells you to get ready, not which way to bet. Let the break show the direction.</div>`,
+
+l23:`
+<section><h4>Tide, waves and ripples</h4>
+<figure class="dg">${svgMTF()}<figcaption>The higher chart sets the direction; the lower chart times the entry.</figcaption></figure>
+<ul><li><b>Trend chart</b> (higher): which way to trade.</li>
+<li><b>Trading chart</b>: your setups.</li>
+<li><b>Timing chart</b> (lower): the exact entry and a tight stop.</li></ul>
+<p>Use a factor of about <b>4 to 6</b> between them.</p>
+<div class="tw"><table><tr><th>You trade</th><th>Trend chart</th><th>Timing chart</th></tr>
+<tr><td>15-minute</td><td>1-hour</td><td>~3-minute</td></tr>
+<tr><td>1-hour</td><td>4-hour</td><td>15-minute</td></tr>
+<tr><td>4-hour</td><td>Daily</td><td>1-hour</td></tr>
+<tr><td>Daily</td><td>Weekly</td><td>4-hour</td></tr></table></div></section>
+<section><h4>How to use them together</h4>
+<ul><li>Trade in the direction of the higher chart.</li>
+<li>A move against it on the lower chart is usually a pullback. Wait for it to end: a higher low and a break of its last lower high (in an uptrend).</li>
+<li>Levels on higher charts matter more.</li>
+<li>If the charts disagree and you can't tell the bigger trend, stand aside or trade smaller.</li></ul></section>
+<div class="remember"><b>Remember</b>Direction from above, timing from below.</div>`,
+
+l24:`
+<section><h4>Why zoom out</h4>
+<p>Weekly and monthly charts show the main trend without daily noise. Their levels and trendlines were built over years and outrank anything on a daily chart.</p>
+<figure class="dg">${svgLT()}<figcaption>A 25% drop inside a long uptrend is a pullback on the weekly chart.</figcaption></figure></section>
+<section><h4>Tools for long charts</h4>
+<ul><li><b>Log scale:</b> equal % moves look equal. Always use it for multi-year crypto charts.</li>
+<li><b>Long averages:</b> the 40-week (about the 200-day for stocks) splits bull from bear. BTC's 200-week MA has often been near past bear-market lows, but price fell well below it in 2022, so treat it as an area, not a floor.</li>
+<li>Crypto bull markets have had several 20 to 35% drops on the way up. The big trend turns only when the major swings break and the long average rolls over.</li></ul></section>
+<section><h4>The four-year pattern, with care</h4>
+<p>BTC's past tops came about 12 to 18 months after its halvings (2013, 2017, 2021). That's three or four examples: a tiny sample. It may not repeat, and a pattern everyone knows tends to get traded early.</p></section>
+<div class="remember"><b>Remember</b>Start every analysis on the weekly chart. Then zoom in.</div>`,
+
+l25:`
+<section><h4>The classic links</h4>
+<figure class="dg">${svgInter()}<figcaption>Tendencies, not laws.</figcaption></figure>
+<ul><li><b>Dollar up</b> → commodities and risk assets tend to struggle.</li>
+<li><b>Bond yields up</b> (bond prices down) → tends to weigh on stocks, especially tech.</li>
+<li><b>Crypto:</b> since about 2020, BTC has often moved with tech stocks. The link comes and goes, so check it.</li></ul></section>
+<section><h4>Ratio charts (relative strength)</h4>
+<p>Divide one price by another: ETH/BTC, SOL/ETH, a stock vs its index. <b>Rising ratio:</b> the first one is beating the second. It says nothing about whether either rose in dollars.</p>
+<p><b>BTC dominance</b> is BTC's share of the total crypto market cap. Falling dominance while the market rises often means money is moving into altcoins.</p></section>
+<section><h4>Breadth</h4>
+<figure class="dg">${svgBreadth()}<figcaption>Index makes a new high; fewer members join in.</figcaption></figure>
+<ul><li><b>Advance-decline line:</b> running total of rising minus falling stocks.</li>
+<li><b>% above the 50-day MA</b>: how many members are in their own uptrend.</li>
+<li>New high with weaker breadth = a narrow rally, like a divergence. Healthy rallies are broad.</li></ul></section>
+<div class="remember"><b>Remember</b>Buy the strongest thing in the strongest group, and check that the whole market agrees.</div>`,
+
+l26:`
+<section><h4>Point and figure</h4>
+<figure class="dg">${svgPF()}<figcaption>X columns for rises, O columns for falls. Time is ignored.</figcaption></figure>
+<ul><li><b>Box size:</b> how much price each X or O stands for (for example $1,000 on BTC).</li>
+<li><b>3-box reversal:</b> a new column only starts when price turns by 3 boxes.</li>
+<li><b>Double top buy:</b> an X column rises above the previous X column's top. Double bottom sell: the mirror.</li>
+<li>Worked example: top at $64,000, box $1,000. A new O column needs $61,000 or lower.</li></ul></section>
+<section><h4>Elliott Wave</h4>
+<figure class="dg">${svgEW()}<figcaption>Five waves with the trend, three against.</figcaption></figure>
+<p>The three rules of a 5-wave move:</p>
+<ol><li>Wave 2 never goes past the start of wave 1.</li><li>Wave 3 is never the shortest of 1, 3 and 5.</li><li>Wave 4 never enters wave 1's price area.</li></ol>
+<p>The trap: in real time there are several valid counts, and experts disagree. Use it as a map of what could happen, never as proof.</p></section>
+<section><h4>Cycles</h4>
+<p>Markets show rough rhythms, like BTC's four-year pattern. But cycles stretch and shrink, and even random data shows cycles that look real. Use them as loose timing windows and let price confirm.</p></section>
+<div class="remember"><b>Remember</b>Every method here is a lens, not a crystal ball. If price disagrees with your count or your cycle, price wins.</div>`
+});
+
+
 const SVGS={edge:svgEdge,cycle:svgCycle,candle:svgCandle,log:svgLog,book:svgBook,pivot:svgPivot,swings:svgSwings,trends:svgTrends,failure:svgFailure,flip:svgFlip,drawdown:svgDrawdown};
 Object.assign(SVGS,{tline:svgTline,channel:svgChannel,retr:svgRetr,fake:svgFake,c12:svgC12,c13:svgC13,conf:svgConf,hs:svgHS,cont:svgCont,vol:svgVol});
 const lessons=LESSONS; // for program map
@@ -1616,7 +1920,7 @@ function gate2(m){if(testLock(m,2))return;
 }
 
 /* ---------- levels: what's unlocked, and how long each one took ---------- */
-const LEVELS=[{n:1,gate:"gate",lessons:8},{n:2,gate:"gate2",lessons:9}];
+const LEVELS=[{n:1,gate:"gate",lessons:8},{n:2,gate:"gate2",lessons:9},{n:3,gate:"gate3",lessons:9}];
 const lvlLessons=n=>LESSONS.filter(L=>L.lv===n);
 const lvlLessonsDone=n=>lvlLessons(n).every(L=>state.done[L.id]);
 /* a level opens once every lesson of the level before has been finished and its test passed */
@@ -1634,7 +1938,7 @@ function lvlTimeText(n){const t=(state.lvT||{})[n];const mins=(state.mins||{})[n
 const PROGRAM=[
  {n:1,time:"3 to 4 weeks",t:"Foundations",sub:"How markets and charts work, trend, support and resistance, risk",gate:"20 questions: 12 theory questions from every lesson plus 8 charts (trend, swings, levels). Pass with 17.",ls:lessons.filter(l=>l.lv===1).map(l=>[l.n,l.t])},
  {n:2,time:"about 4 weeks",t:"Core chart reading",sub:"Trendlines, ranges, candlesticks, classical patterns, volume",gate:"20 questions: 12 theory questions from all nine lessons plus 8 charts (trendlines, pullbacks, candles, patterns, location, volume). Pass with 17.",ls:lessons.filter(l=>l.lv===2).map(l=>[l.n,l.t])},
- {n:3,time:"about 4 weeks",t:"Indicators and structure",sub:"Moving averages, oscillators, the market cycle, timeframes, intermarket",gate:"Write a full top-down analysis of BTC, ETH and a stock index, then grade it 4 weeks later.",ls:[[18,"Moving averages"],[19,"RSI and stochastics"],[20,"MACD and momentum"],[21,"The market cycle and the four trades"],[22,"Trends, ranges and the shift between them"],[23,"Multiple timeframe analysis"],[24,"Long-term charts"],[25,"Intermarket analysis and breadth"],[26,"Point and figure, Elliott Wave, cycles"]]},
+ {n:3,time:"about 4 weeks",t:"Indicators and structure",sub:"Moving averages, oscillators, the market cycle, timeframes, intermarket",gate:"20 questions: 12 theory questions from all nine lessons plus 8 charts (moving averages, RSI, MACD, the four trades, squeezes, two timeframes, the big picture or ratios, Elliott counts). Pass with 17.",ls:lessons.filter(l=>l.lv===3).map(l=>[l.n,l.t])},
  {n:4,time:"3 to 4 weeks",t:"Auction and order flow",sub:"Market Profile, volume profile, order flow, failed moves",gate:"Call the day type on 10 profile days before the close. Pass with 7.",ls:[[27,"The market as an auction"],[28,"Market Profile basics"],[29,"Day types and the four steps"],[30,"Volume profile"],[31,"Profile setups"],[32,"Order book, footprint and delta"],[33,"Fake moves and failed patterns"],[34,"Liquidity, volatility and coin character"]]},
  {n:5,time:"4 to 6 weeks, plus your 50 paper trades",t:"Edge and mastery",sub:"Setups, trade management, sizing, backtesting, your plan, psychology",gate:"50 paper trades by your plan with positive expectancy, then go live at quarter size.",ls:[[35,"The four trade templates"],[36,"Trade management and exits"],[37,"Position sizing and risk of ruin"],[38,"Record keeping and statistics"],[39,"Backtesting ideas"],[40,"Crypto-specific trading"],[41,"Trading psychology and biases"],[42,"Your trading plan and going live"]]}];
 /* mapView lives with homeView */
@@ -1953,6 +2257,364 @@ Object.assign(EX,{
 Object.assign(ROUNDS,{tline:(el,d)=>tlineRound(el,d),retr:(el,d)=>retrRound(el,d),brk:(el,d)=>brkRound(el,d),vol:(el,d)=>volRound(el,d),ctx:(el,d)=>ctxRound(el,d),
   cdl12:(el,d)=>cdlRound(el,d,SET12,{pool:SET12}),cdl13:(el,d)=>cdlRound(el,d,SET13,{pool:SET13}),pat15:(el,d)=>patRound(el,d,SET15),pat16:(el,d)=>patRound(el,d,SET16)});
 
+/* =====================================================================
+   Level 3: indicators and structure. Indicator maths, drills, example charts.
+   ===================================================================== */
+function smaA(c,n){const o=Array(c.length).fill(null);let s=0;for(let i=0;i<c.length;i++){s+=c[i];if(i>=n)s-=c[i-n];if(i>=n-1)o[i]=s/n}return o}
+function emaA(c,n){const o=Array(c.length).fill(null);const k=2/(n+1);let e=null;for(let i=0;i<c.length;i++){if(i===n-1){let s=0;for(let j=0;j<n;j++)s+=c[j];e=s/n}else if(i>=n)e=c[i]*k+e*(1-k);if(i>=n-1)o[i]=e}return o}
+function rsiA(c,n){n=n||14;const o=Array(c.length).fill(null);let g=0,l=0;const rs=()=>l?100-100/(1+g/l):100;
+  for(let i=1;i<c.length;i++){const d=c[i]-c[i-1],up=Math.max(d,0),dn=Math.max(-d,0);if(i<=n){g+=up;l+=dn;if(i===n){g/=n;l/=n;o[i]=rs()}}else{g=(g*(n-1)+up)/n;l=(l*(n-1)+dn)/n;o[i]=rs()}}return o}
+function stochA(b,n,d){n=n||14;d=d||3;const k=b.map((x,i)=>{if(i<n-1)return null;let hh=-Infinity,ll=Infinity;for(let j=i-n+1;j<=i;j++){hh=Math.max(hh,b[j].h);ll=Math.min(ll,b[j].l)}return hh>ll?(x.c-ll)/(hh-ll)*100:50});
+  const dd=k.map((v,i)=>{if(i<n+d-2)return null;let s=0;for(let j=i-d+1;j<=i;j++)s+=k[j];return s/d});return{k,d:dd}}
+function macdA(c){const ef=emaA(c,12),es=emaA(c,26);const m=c.map((_,i)=>ef[i]!=null&&es[i]!=null?ef[i]-es[i]:null);const st=m.findIndex(v=>v!=null);const sig=Array(c.length).fill(null);
+  if(st>=0)emaA(m.slice(st),9).forEach((v,j)=>sig[st+j]=v);return{m,sig,hist:m.map((v,i)=>v!=null&&sig[i]!=null?v-sig[i]:null)}}
+function bollA(c,n,k){n=n||20;k=k||2;const mid=smaA(c,n);const up=[],dn=[];c.forEach((_,i)=>{if(mid[i]==null){up.push(null);dn.push(null);return}let s=0;for(let j=i-n+1;j<=i;j++)s+=(c[j]-mid[i])**2;const sd=Math.sqrt(s/n);up.push(mid[i]+k*sd);dn.push(mid[i]-k*sd)});return{mid,up,dn}}
+/* geometric path: start price, then [bars, target] legs, noise in % per bar */
+function gBars(start,legs,vol,wick){const c=[start];const ends=[];for(const [n,t] of legs){const a=c[c.length-1];for(let k=1;k<=n;k++)c.push(a*Math.pow(t/a,k/n)*(k<n?1+gauss()*vol/100:1));ends.push(c.length-2)}return{bars:barsFromCloses(c,wick||.004),ends}}
+/* chart with indicators: computes on all bars, then drops the warm-up so every line starts at the left edge */
+function indChart(all,warm,spec){const c=all.map(b=>b.c);const cut=a=>a.slice(warm);const o={ovl:[]};const raw={};
+  (spec.ma||[]).forEach(([n,type,col,lab])=>{const v=(type==="ema"?emaA:smaA)(c,n);raw["ma"+n]=v;o.ovl.push({v:cut(v),c:col,label:lab||((type==="ema"?"EMA ":"MA ")+n)})});
+  if(spec.bb){const b=bollA(c);raw.bb=b;o.ovl.push({v:cut(b.up),c:"--muted",w:1.3,label:"Bollinger 20, 2"},{v:cut(b.mid),c:"--muted",w:1,dash:true},{v:cut(b.dn),c:"--muted",w:1.3})}
+  if(spec.osc==="rsi"){const v=rsiA(c);raw.rsi=v;o.osc={label:"RSI 14",lo:0,hi:100,levels:[70,30],series:[{v:cut(v),c:"--accent"}]}}
+  if(spec.osc==="stoch"){const s=stochA(all);raw.st=s;o.osc={label:"Stochastic 14, 3",lo:0,hi:100,levels:[80,20],series:[{v:cut(s.k),c:"--accent"},{v:cut(s.d),c:"--mark",dash:true}]}}
+  if(spec.osc==="macd"){const m=macdA(c);raw.macd=m;o.osc={label:"MACD 12, 26, 9",zero:true,hist:cut(m.hist),series:[{v:cut(m.m),c:"--accent"},{v:cut(m.sig),c:"--mark",w:1.3}]}}
+  return{bars:all.slice(warm),o,raw,warm}}
+const closes=b=>b.map(x=>x.c);
+/* real BTC/ETH windows when the live feed has loaded, else null */
+function rwRaw(len){if(!RW.sets.length)return null;const set=pick(RW.sets);if(set.bars.length<len+2)return null;const s=rint(0,set.bars.length-len);const raw=set.bars.slice(s,s+len);
+  return{bars:raw.map(x=>({o:x.o,h:x.h,l:x.l,c:x.c})),meta:{sym:set.sym,iv:set.iv,t:raw[0].t}}}
+const optRow=(names,keys,answer)=>{const btns={};const row=h("div",{class:"opts"},...keys.map((k,j)=>btns[k]=optB(j,names[k],()=>answer(k))));return{row,btns}};
+function markPick(btns,k,want){Object.values(btns).forEach(x=>x.disabled=true);const ok=k===want;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[want].classList.add("pick-good");return ok}
+
+/* ---------- moving averages: what's the trend? ---------- */
+function maClass(all){const c=closes(all),f=smaA(c,20),s=smaA(c,50),n=c.length-1;if(s[n-30]==null)return null;
+  const above=k=>{let a=0;for(let i=n-39;i<=n;i++)if(c[i]>s[i])a++;return a/40};const ch=(s[n]-s[n-20])/s[n];
+  if(c[n]>f[n]&&f[n]>s[n]&&ch>.02&&above()>=.85)return"up";if(c[n]<f[n]&&f[n]<s[n]&&ch<-.02&&above()<=.15)return"down";
+  let x=0;for(let i=n-59;i<=n;i++)if((c[i]-f[i])*(c[i-1]-f[i-1])<0)x++;let fx=0;for(let i=n-59;i<=n;i++)if((f[i]-s[i])*(f[i-1]-s[i-1])<0)fx++;
+  if(Math.abs((s[n]-s[n-30])/s[n])<.015&&x>=6&&fx>=1)return"side";return null}
+function maFind(want){for(let k=0;k<40;k++){const r=rwRaw(140);if(!r)break;if(maClass(r.bars)===want)return r}
+  let last=null;for(let k=0;k<80;k++){const b=genTrend(want,140);last=b;if(maClass(b)===want)return{bars:b}}return{bars:last}}
+function maRound(el,done,opts={}){const want=pick(["up","down","side"]);const r=maFind(want);const g=indChart(r.bars,50,{ma:[[20,"sma","--accent"],[50,"sma","--mark"]]});
+  const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});mountChart(cv,()=>[g.bars,g.o]);
+  const names={up:"Uptrend: price above rising averages, fast above slow",down:"Downtrend: price below falling averages, fast below slow",side:"No trend: flat, tangled averages that keep crossing"};
+  const {row,btns}=optRow(names,["up","down","side"],k=>{const ok=markPick(btns,k,want);
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(want==="up"?"Price stays <b>above</b> both lines, the 20 is above the 50 and both slope up. Dips toward the averages are the buying spots.":want==="down"?"Price stays <b>below</b> both lines, the 20 is under the 50 and both slope down. Rallies toward the averages are where sellers return.":"The averages are <b>flat and keep crossing</b>, and price whips from one side to the other. Every crossover here would have been a losing signal: this is a range.")+rwTag(r));done(ok)});
+  el.append(h("p",{class:"task"},opts.prompt||"The lines are the 20 and 50 moving averages. What do they say?"),cv,row,f)}
+
+/* ---------- RSI divergence ---------- */
+function divGen(kind){/* kind: bear | bull | none */
+  for(let t=0;t<60;t++){const base=100,warm=[[16,base+jit(0,2)]];const a=rint(14,20),pb=rint(6,9);
+    const legs=kind==="none"?[[rint(9,12),base+a*.7],[pb,base+a*.7-rint(4,6)],[rint(6,8),base+a*1.25],[3,base+a*1.15]]
+      :[[rint(6,8),base+a],[pb,base+a-rint(6,8)],[rint(13,17),base+a+rint(1,3)],[3,base+a-2]];
+    const r=pathBars(base,warm.concat(legs),.35,.003);let b=r.bars;const mir=kind==="bull"||(kind==="none"&&R()<.5);if(mir)b=mirrorBars(b,2*base);
+    const p1=r.ends[1],p2=r.ends[3];const ext=(i,hiSide)=>{let best=i;for(let k=Math.max(0,i-2);k<=Math.min(b.length-1,i+2);k++)if(hiSide?b[k].h>b[best].h:b[k].l<b[best].l)best=k;return best};
+    const top=!mir;const i1=ext(p1,top),i2=ext(p2,top);const rs=rsiA(closes(b));const v1=rs[i1],v2=rs[i2];if(v1==null||v2==null)continue;
+    const px1=top?b[i1].h:b[i1].l,px2=top?b[i2].h:b[i2].l;const newExt=top?px2>px1:px2<px1;if(!newExt)continue;
+    const momUp=top?v2>v1:v2<v1;/* momentum agrees with price */
+    if(kind==="none"&&momUp&&Math.abs(v2-v1)>3)return{bars:b,i1,i2,top,kind};
+    if(kind!=="none"&&!momUp&&Math.abs(v2-v1)>5)return{bars:b,i1,i2,top,kind}}
+  return null}
+function rsiRound(el,done,opts={}){let want=pick(["bear","bull","none"]);let d=rwDiv(want)||divGen(want);if(!d){want="bear";d=divGen("bear")||divGen("none");want=d.kind}
+  const W=16;const g=indChart(d.bars,W,{osc:"rsi"});const i1=d.i1-W,i2=d.i2-W;let shown=false;
+  const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});
+  mountChart(cv,()=>{const o=Object.assign({},g.o);if(shown){const pv=i=>d.top?g.bars[i].h:g.bars[i].l;const rv=i=>g.o.osc.series[0].v[i];const col=want==="none"?"--good":"--mark";
+    o.tlines=[{a:{i:i1,p:pv(i1)},b:{i:i2,p:pv(i2)},c:col}];o.osc=Object.assign({},g.o.osc,{lines:[{a:{i:i1,v:rv(i1)},b:{i:i2,v:rv(i2)},c:col}]})}return[g.bars,o]});
+  const names={bear:"Bearish divergence: higher price high, lower RSI high",bull:"Bullish divergence: lower price low, higher RSI low",none:"No divergence: RSI agrees with price"};const tag=rwTag(d);
+  const {row,btns}=optRow(names,["bear","bull","none"],k=>{const ok=markPick(btns,k,want);shown=true;rerenderAll();
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(want==="bear"?"Price made a <b>higher high</b>, but RSI peaked <b>lower</b>. The second push had less force. A warning, not yet a sell: the last swing low still has to break.":want==="bull"?"Price made a <b>lower low</b>, but RSI bottomed <b>higher</b>. The selling is running out of force. Wait for price to confirm with a break of the last lower high.":"Price made a new "+(d.top?"high":"low")+" and RSI made a new "+(d.top?"high":"low")+" with it. Momentum <b>agrees</b> with the move, so there's no warning here.")+tag);done(ok)});
+  el.append(h("p",{class:"task"},opts.prompt||"Compare the last two "+(d.top?"peaks":"dips")+" in price with RSI underneath. What do you see?"),cv,row,f)}
+
+/* ---------- MACD: is momentum growing or fading? ---------- */
+function macdGen(kind){for(let t=0;t<60;t++){const legs=kind==="fade"?[[30,100+jit(0,1)],[rint(10,13),116+rint(0,4)],[rint(6,8),121+rint(0,2)],[rint(8,10),124+rint(0,2)]]:[[30,100+jit(0,1)],[rint(10,13),104+rint(0,2)],[rint(8,10),107+rint(0,2)],[rint(8,10),121+rint(0,4)]];
+    const r=pathBars(100,legs,.3,.003);let b=r.bars;const down=R()<.5;if(down)b=mirrorBars(b,200);const m=macdA(closes(b));const n=b.length-1;const H=m.hist;if(H[n-6]==null)continue;
+    const s=down?-1:1;const grow=s*H[n]>s*H[n-6]&&s*H[n]>0&&s*m.m[n]>0;const fade=s*H[n]<s*H[n-6]-.05&&s*m.m[n]>0;
+    let ext=true;for(let i=n-10;i<n;i++)if(down?b[i].c<b[n].c-.6:b[i].c>b[n].c+.6)ext=false;
+    if(kind==="grow"&&grow&&ext)return{bars:b,down,kind};if(kind==="fade"&&fade&&ext)return{bars:b,down,kind}}return null}
+function macdRound(el,done,opts={}){let want=pick(["grow","fade"]);let d=rwMacd(want)||macdGen(want);if(!d){want=want==="grow"?"fade":"grow";d=macdGen(want)}if(!d){d={bars:genTrend("up",90),down:false};want="grow"}
+  const W=30;const g=indChart(d.bars,W,{osc:"macd"});const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});const n=g.bars.length-1;let shown=false;
+  mountChart(cv,()=>[g.bars,shown?Object.assign({},g.o,{span:{from:n-6,to:n}}):g.o]);
+  const names={grow:"Growing: the move is speeding up",fade:"Fading: the move is slowing down"};
+  const {row,btns}=optRow(names,["grow","fade"],k=>{const ok=markPick(btns,k,want);shown=true;rerenderAll();
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(want==="grow"?"The histogram bars are <b>getting taller</b> in the move's direction: the MACD line is pulling away from its signal. Momentum backs the move.":"Price is still "+(d.down?"falling":"rising")+", but the histogram bars are <b>shrinking</b>. The MACD line is closing in on its signal: the move is losing force. Expect a pause or a turn; it's not a signal to fight the trend on its own.")+rwTag(d));done(ok)});
+  el.append(h("p",{class:"task"},opts.prompt||"Price is still "+(d.down?"falling":"rising")+". Look at the MACD histogram (the bars) in the last few candles. What is momentum doing?"),cv,row,f)}
+
+/* ---------- the four trades ---------- */
+function trade4Gen(kind){const lo=100,hi=110;const rng=[[7,hi-R()],[6,lo+R()],[7,hi-R()],[6,lo+R()],[7,hi-R()*.8]];let legs,mark;
+  if(kind==="cont")legs=[[9,108],[5,103.5],[9,113],[5,108.5],[9,119],[6,113.5+R()]];
+  else if(kind==="term")legs=[[9,108],[5,103.5],[9,113],[5,108.5],[6,124],[5,114],[5,119],[5,108.5-R()]];
+  else if(kind==="hold")legs=[[4,104]].concat(rng,[[6,lo+.4],[2,lo+2.4]]);
+  else legs=[[4,104]].concat(rng,[[5,lo+4],[4,hi-.3],[3,hi+3.2+R()]]);
+  const r=pathBars(102,legs,.35,.003);let b=r.bars;const down=R()<.5;if(down)b=mirrorBars(b,212);const n=b.length;
+  const span=kind==="term"?{from:r.ends[4]-1,to:n-1}:{from:n-(kind==="cont"?6:kind==="hold"?7:4),to:n-1};
+  const P=v=>down?212-v:v;const extra=kind==="hold"||kind==="brk"?{hlines:[{p:P(hi),c:"--muted",dash:true,w:1.5},{p:P(lo),c:"--muted",dash:true,w:1.5}]}:{};
+  return{bars:b,span,down,extra}}
+function trade4Round(el,done,opts={}){const want=pick(["cont","term","hold","brk"]);const g=trade4Gen(want);let shown=false;const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});
+  mountChart(cv,()=>[g.bars,Object.assign({span:g.span},shown?g.extra:{})]);
+  const names={cont:"Trend continuation: join the trend after a pullback",term:"Trend termination: the trend looks like it's ending",hold:"Level holds: trade back from a range edge",brk:"Level breaks: a breakout from the range"};
+  const why={cont:"The trend is intact (higher highs and higher lows"+(g.down?", mirrored here as lower lows and lower highs":"")+") and price is in a <b>normal pullback</b>. The bet: the trend carries on. Stop beyond the pullback's extreme.",
+    term:"A climax push, then a <b>weaker push that fails</b> and a <b>break of the last swing</b>. That's the trend ending. The hardest of the four: trends usually continue, so it needs exactly this kind of evidence.",
+    hold:"Price is back at the <b>edge of a range</b> that has held several times, and it's turning. The bet: the edge holds again. Stop just outside it.",
+    brk:"Pressure built at the edge, then price <b>closed outside the range</b>. The bet: the level has broken. Stop back inside the range, since most breakouts fail."};
+  const {row,btns}=optRow(names,["cont","term","hold","brk"],k=>{const ok=markPick(btns,k,want);shown=true;rerenderAll();fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+why[want]);done(ok)});
+  el.append(h("p",{class:"task"},opts.prompt||"Which of the four trades is set up in the shaded part?"),cv,row,f)}
+
+/* ---------- squeeze or expansion ---------- */
+function bbGen(kind){for(let t=0;t<40;t++){const c=[100];const N1=70;for(let i=1;i<=N1;i++){const p=c[i-1];c.push(p*(1+(gauss()*1+(100-p)/p*100*.1)/100))}
+    if(kind==="sq"){for(let i=0;i<rint(26,32);i++){const p=c[c.length-1];c.push(p*(1+(gauss()*.28+(c[N1]-p)/p*100*.15)/100))}}
+    else{const d=R()<.5?1:-1;for(let i=0;i<rint(8,12);i++){const p=c[c.length-1];c.push(p*(1+(gauss()*.25+(c[N1]-p)/p*100*.15)/100))}for(let i=0;i<rint(9,12);i++){const p=c[c.length-1];c.push(p*(1+(d*1.5+gauss()*1.1)/100))}}
+    const b=barsFromCloses(c,.004);const bb=bollA(closes(b));const n=b.length-1;const bw=i=>(bb.up[i]-bb.dn[i])/bb.mid[i];const w=[];for(let i=20;i<=n;i++)w.push(bw(i));const med=w.slice().sort((x,y)=>x-y)[w.length>>1];
+    if(kind==="sq"&&bw(n)<.55*med&&bw(n)<=Math.min(...w)*1.15)return b;if(kind==="ex"&&bw(n)>1.6*med&&bw(n)>2*bw(n-10))return b}return null}
+function squeezeRound(el,done,opts={}){let want=pick(["sq","ex"]);const rr=rwBB(want);let b=rr?rr.bars:bbGen(want);if(!b){want=want==="sq"?"ex":"sq";b=bbGen(want)}
+  const g=indChart(b,20,{bb:true});const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});mountChart(cv,()=>[g.bars,g.o]);
+  const names={sq:"Squeeze: calm, tight bands. A bigger move is likely soon, direction unknown",ex:"Expansion: bands widening fast. A strong move is already underway"};
+  const {row,btns}=optRow(names,["sq","ex"],k=>{const ok=markPick(btns,k,want);
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(want==="sq"?"The bands are the <b>narrowest on the chart</b>: price has gone quiet. Quiet spells tend to end in bursts. Plan: wait for a close outside the squeeze and put the stop on the other side.":"The bands <b>blew wide open</b> as price ran. Volatility is expanding with a fresh move. Fading it just because price is outside the band means fighting new momentum.")+rwTag(rr));done(ok)});
+  el.append(h("p",{class:"task"},opts.prompt||"The grey lines are Bollinger Bands. What state is this market in at the right edge?"),cv,row,f)}
+
+/* ---------- multiple timeframes ---------- */
+function aggBars(b,k){const out=[];for(let i=0;i+k<=b.length;i+=k){const g=b.slice(i,i+k);out.push({o:g[0].o,c:g[k-1].c,h:Math.max(...g.map(x=>x.h)),l:Math.min(...g.map(x=>x.l))})}return out}
+function mtfGen(kind){const legs=[[36,112],[18,106],[36,124],[18,117],[36,136]];if(kind==="pull")legs.push([rint(20,26),127+R()*2]);else legs.push([rint(16,20),127+R()*2],[rint(4,6),130+R()],[3,128.5],[rint(6,8),134.5+R()]);
+  const r=pathBars(100,legs,.55,.0025);let b=r.bars;const down=R()<.5;if(down)b=mirrorBars(b,240);const cut=b.length%6;if(cut)b=b.slice(cut);return{ltf:b.slice(-60),htf:aggBars(b,6),down}}
+function mtfRound(el,done,opts={}){const want=pick(["pull","go"]);const g=mtfGen(want);const ca=h("canvas",{class:"chart"}),cb=h("canvas",{class:"chart"});const f=h("div",{hidden:""});
+  mountChart(ca,()=>[g.htf,{span:{from:g.htf.length-10,to:g.htf.length-1}}]);mountChart(cb,()=>[g.ltf,{}]);const dir=g.down?"sell":"buy",tr=g.down?"downtrend":"uptrend",cm=g.down?"bounce":"pullback";
+  const names={go:(g.down?"Sell":"Buy")+" now: the 4H "+cm+" has ended",pull:"Wait: the 4H "+cm+" is still running",against:(g.down?"Buy":"Sell")+": follow the 4H move against the daily"};
+  const {row,btns}=optRow(names,["go","pull","against"],k=>{const ok=markPick(btns,k,want);
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+"The daily is in a <b>"+tr+"</b>: only look to "+dir+". "+(want==="pull"?"The 4H "+cm+" is <b>still running</b>. Wait for a "+(g.down?"lower high, then a break of its last low":"higher low, then a break of its last high")+".":"The 4H "+cm+" <b>ended</b>: price broke back "+(g.down?"down":"up")+" through its last swing. Stop beyond the "+cm+"'s extreme."));done(ok)});
+  el.append(h("p",{class:"task"},opts.prompt||"Same coin. The shaded days on the daily are the 4-hour chart below. Best plan?"),h("div",{class:"pair"},h("figure",{},h("figcaption",{},"Daily (trend)"),ca),h("figure",{},h("figcaption",{},"4-hour (timing)"),cb)),row,f)}
+
+/* ---------- the big picture on a weekly chart ---------- */
+function bigGen(kind){for(let t=0;t<60;t++){const legs=kind==="bull"?[[40,180+rint(0,40)],[12,150],[36,420+rint(0,80)],[12,330],[36,900+rint(0,200)],[rint(5,7),900*(.68+R()*.08)]]
+      :[[30,300],[12,240],[36,900+rint(0,200)],[16,560],[14,760],[28,300+rint(0,60)],[rint(5,7),400+rint(0,40)]];
+    const r=gBars(100,legs,2.6,.012);const b=r.bars;const m=smaA(closes(b),40);const n=b.length-1;const sl=(m[n]-m[n-8])/m[n];
+    if(bigTest(b,kind))return b}return null}
+function bigRound(el,done,opts={}){let want=pick(["bull","bear"]);const rr=rwBig(want);let b=rr?rr.bars:bigGen(want);if(!b){want=want==="bull"?"bear":"bull";b=bigGen(want)}
+  const g=indChart(b,40,{ma:[[40,"sma","--mark","40-week MA"]]});g.o.log=true;const n=g.bars.length-1;const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});
+  const moved=Math.round(Math.abs(g.bars[n].c/g.bars[n-6].c-1)*100);mountChart(cv,()=>[g.bars,Object.assign({},g.o,{span:{from:n-6,to:n}})]);
+  const names={bull:"Big-picture uptrend: the recent drop is a pullback",bear:"Big-picture downtrend: the recent rally is a bounce",flip:"The last few weeks have changed the big trend"};
+  const {row,btns}=optRow(names,["bull","bear","flip"],k=>{const ok=markPick(btns,k,want);
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(want==="bull"?"Rising major swings, and price is still near a <b>rising 40-week MA</b>. A "+moved+"% drop is normal inside a crypto bull market. The big trend turns only when the major swings break and the average rolls over.":"Lower major highs and lows, and price is under a <b>falling 40-week MA</b>. A "+moved+"% rally is common in a bear market and often fails near the average. One sharp move doesn't change a trend this size.")+rwTag(rr));done(ok)});
+  el.append(h("p",{class:"task"},opts.prompt||"Weekly chart, log scale, about two years"+(rr?" of real "+rr.meta.sym:"")+". The shaded weeks moved "+moved+"%. What's the big picture?"),cv,row,f)}
+
+/* ---------- ratio charts and breadth ---------- */
+const REL_PAIRS=[["ETH","BTC"],["SOL","ETH"],["SOL","BTC"],["LINK","ETH"]];
+function relRound(el,done,opts={}){const v=R()<.6?"ratio":"breadth";const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});
+  const real=v==="ratio"?rwRatio():null;
+  if(real){const {rat,A,B,pa,pb}=real;const want=rat[rat.length-1].c>rat[0].o?"a":"b";const sg=x=>(x>=0?"+":"")+x+"%";mountChart(cv,()=>[rat,{line:true}]);
+    const names={a:A+" did better than "+B,b:B+" did better than "+A,same:"They did about the same"};
+    const {row,btns}=optRow(names,["a","b","same"],k=>{const ok=markPick(btns,k,want);
+      fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+"The "+A+"/"+B+" ratio "+(want==="a"?"<b>rose</b>":"<b>fell</b>")+", so "+(want==="a"?A:B)+" was stronger. In dollars over these 40 days: "+A+" "+sg(pa)+", "+B+" "+sg(pb)+". A ratio shows who's winning, not whether either went up."+rwTag(real));done(ok)});
+    el.append(h("p",{class:"task"},opts.prompt||"This is the real "+A+"/"+B+" ratio chart ("+A+"'s price divided by "+B+"'s) over 40 days. Which coin did better?"),cv,row,f);return}
+  if(v==="ratio"){const [A,B]=pick(REL_PAIRS);const up=R()<.5;const bothUp=R()<.5;
+    const gb=bothUp?1.25+R()*.2:.7+R()*.08;const ga=up?gb*(1.12+R()*.08):gb/(1.12+R()*.08);
+    const ra=gBars(100,[[40,100*ga]],.9).bars,rb=gBars(100,[[40,100*gb]],.7).bars;const rat=ra.map((x,i)=>({o:x.o/rb[i].o,c:x.c/rb[i].c,h:Math.max(x.o/rb[i].o,x.c/rb[i].c)*1.003,l:Math.min(x.o/rb[i].o,x.c/rb[i].c)*.997}));
+    const want=rat[rat.length-1].c>rat[0].o?"a":"b";const pa=Math.round((ga-1)*100),pb=Math.round((gb-1)*100);const sg=x=>(x>=0?"+":"")+x+"%";
+    mountChart(cv,()=>[rat,{line:true}]);const names={a:A+" did better than "+B,b:B+" did better than "+A,same:"They did about the same"};
+    const {row,btns}=optRow(names,["a","b","same"],k=>{const ok=markPick(btns,k,want);
+      fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+"The "+A+"/"+B+" ratio "+(want==="a"?"<b>rose</b>":"<b>fell</b>")+", so "+(want==="a"?A:B)+" was stronger. In dollars: "+A+" "+sg(pa)+", "+B+" "+sg(pb)+". A ratio shows who's winning, not whether either went up.");done(ok)});
+    el.append(h("p",{class:"task"},opts.prompt||"This is the "+A+"/"+B+" ratio chart (one price divided by the other) over 40 days. "+(bothUp?"Both coins went up in dollars.":"Both coins went down in dollars.")+" Which did better?"),cv,row,f);return}
+  const narrow=R()<.5;let b,br;for(let t=0;t<40;t++){const r=pathBars(100,[[16,100],[14,112],[8,106],[14,117],[3,115.5]],.4,.003);b=r.bars;const e=r.ends;
+    const pts=narrow?[[0,45],[e[0],48],[e[1],78],[e[2],60],[e[3],62],[b.length-1,55]]:[[0,45],[e[0],48],[e[1],70],[e[2],58],[e[3],82],[b.length-1,78]];
+    br=b.map((_,i)=>{let k=1;while(k<pts.length-1&&pts[k][0]<i)k++;const [i0,v0]=pts[k-1],[i1,v1]=pts[k];return Math.max(2,Math.min(98,v0+(v1-v0)*Math.min(1,Math.max(0,(i-i0)/Math.max(1,i1-i0)))+gauss()*2.5))});break}
+  mountChart(cv,()=>[b,{osc:{label:"% of coins above their 50-day MA",lo:0,hi:100,levels:[50],series:[{v:br,c:"--accent"}]}}]);
+  const want=narrow?"narrow":"broad";const names={broad:"Broad rally: most coins are joining in, healthy",narrow:"Narrow rally: fewer coins are joining in, a warning",none:"Breadth doesn't matter if price is rising"};
+  const {row,btns}=optRow(names,["broad","narrow","none"],k=>{const ok=markPick(btns,k,want);
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(narrow?"Price made a <b>new high</b>, but fewer coins are above their 50-day MA than at the last high. A few leaders are carrying the market. It's a warning like divergence, not a sell signal by itself.":"The new high in price came with <b>more</b> coins above their 50-day MA. Lots of the market is joining in: a healthy, broad rally."));done(ok)});
+  el.append(h("p",{class:"task"},opts.prompt||"Top: a crypto index. Bottom: the % of coins trading above their own 50-day MA. Price just made a new high. What's the read?"),cv,row,f)}
+
+/* ---------- Elliott Wave: is the count valid? ---------- */
+function ewGen(kind){const a=rint(10,14),p0=100,p1=p0+a;let p2,p3,p4,p5;
+  if(kind==="w2"){p2=p0-rint(2,4);p3=p2+a*1.7;p4=p3-(p3-p2)*.35;p5=p4+a*1.1}
+  else if(kind==="w3"){p2=p1-a*.5;const c=a*1.35;p3=p2+a*.82;p4=Math.max(p1+.8,p3-(p3-p2)*.22);p5=p4+c}
+  else if(kind==="w4"){p2=p1-a*.55;p3=p2+a*1.7;p4=p1-a*.35;p5=p4+a*1.3}
+  else{p2=p1-a*rint(45,62)/100;p3=p2+a*rint(150,180)/100;p4=Math.max(p1+a*.15,p3-(p3-p2)*rint(30,40)/100);p5=p4+a*rint(80,110)/100}
+  const pts=[p1,p2,p3,p4,p5];const r=pathBars(p0-3,[[4,p0]].concat(pts.map((p,k)=>[k%2?rint(5,7):rint(7,10),p])).concat([[4,p5-a*.4]]),.18,.002);let b=r.bars;const down=R()<.5;const M=2*p0+20;if(down)b=mirrorBars(b,M);
+  const idx=[r.ends[0]].concat(r.ends.slice(1,6));const labels=idx.map((i,k)=>{const top=k%2===1;const hiSide=down?!top:top;return{i,p:hiSide?b[i].h:b[i].l,below:!hiSide,text:String(k),c:"--accent"}});
+  return{bars:b,labels,down,P:[p0,p1,p2,p3,p4,p5].map(v=>down?M-v:v)}}
+function ewRound(el,done,opts={}){const want=pick(["ok","ok","w2","w3","w4"]);const g=ewGen(want);const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});let shown=false;
+  mountChart(cv,()=>{const o={labels:g.labels};if(shown&&want!=="ok"){const P=g.P;if(want==="w2")o.hlines=[{p:P[0],c:"--bad",dash:true,w:1.5,label:"start of wave 1"}];if(want==="w4")o.hlines=[{p:P[1],c:"--bad",dash:true,w:1.5,label:"top of wave 1"}]}return[g.bars,o]});
+  const names={ok:"Valid: it follows all three rules",w2:"Broken: wave 2 goes past the start of wave 1",w3:"Broken: wave 3 is the shortest",w4:"Broken: wave 4 enters wave 1's price area"};
+  const P=g.P,L=k=>Math.abs(P[k]-P[k-1]);const len="Lengths: wave 1 ≈ "+L(1).toFixed(1)+", wave 3 ≈ "+L(3).toFixed(1)+", wave 5 ≈ "+L(5).toFixed(1)+".";
+  const {row,btns}=optRow(names,["ok","w2","w3","w4"],k=>{const ok=markPick(btns,k,want);shown=true;rerenderAll();
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(want==="ok"?"Wave 2 stays above the start, wave 3 isn't the shortest, and wave 4 stays clear of wave 1. "+len+" Valid isn't the same as right, though: other counts may fit too.":want==="w2"?"Wave 2 went <b>past the start of wave 1</b> (dashed). That's not a wave 2, so this count is wrong.":want==="w3"?"Wave 3 is the <b>shortest</b> of the three pushes. "+len+" Wave 3 can never be the shortest, so recount.":"Wave 4 dropped <b>into wave 1's price area</b> (below the dashed top of wave 1). In a normal 5-wave move it can't."));done(ok)});
+  el.append(h("p",{class:"task"},opts.prompt||"Someone labelled this move as Elliott waves 0 to 5. Is the count valid?"),cv,row,f)}
+
+Object.assign(ROUNDS,{ma:(el,d)=>maRound(el,d),rsi:(el,d)=>rsiRound(el,d),macd:(el,d)=>macdRound(el,d),trade4:(el,d)=>trade4Round(el,d),squeeze:(el,d)=>squeezeRound(el,d),
+  mtf:(el,d)=>mtfRound(el,d),big:(el,d)=>bigRound(el,d),rel:(el,d)=>relRound(el,d),ew:(el,d)=>ewRound(el,d)});
+
+/* ---------- example charts for the Level 3 questions ---------- */
+Object.assign(EX,{
+ ma(){const r=maFind("up");const g=indChart(r.bars,50,{ma:[[20,"sma","--accent"],[50,"sma","--mark"]]});const c=closes(g.bars),m=g.o.ovl[1].v;let best=-1,gap=1e9;
+   for(let i=10;i<c.length-3;i++){const d=(g.bars[i].l-m[i])/m[i];if(d>-.01&&d<gap&&g.bars[i].l<g.bars[i-1].l&&g.bars[i].l<g.bars[i+1].l){gap=d;best=i}}
+   const o=Object.assign({},g.o);if(best>0)o.labels=[{i:best,p:g.bars[best].l,below:true,text:"dip to the 50 MA",c:"--mark"}];
+   return{bars:g.bars,o,look:"Price stays <b>above</b> both averages and they slope up. Dips toward the averages are where buyers step back in. A close well below the 50 would be the first warning."}},
+ gcross(){for(let t=0;t<40;t++){const r=gBars(100,[[150,70],[40,72],[120,115]],1.1);const g=indChart(r.bars,200,{ma:[[50,"sma","--accent","MA 50"],[200,"sma","--mark","MA 200"]]});
+     const a=g.o.ovl[0].v,b=g.o.ovl[1].v;let x=-1;for(let i=1;i<a.length;i++)if(a[i]!=null&&b[i]!=null&&a[i-1]!=null&&b[i-1]!=null&&a[i-1]<=b[i-1]&&a[i]>b[i])x=i;
+     if(x>0){const lo=Math.min(...g.bars.map(z=>z.l));let li=0;g.bars.forEach((z,i)=>{if(z.l===lo)li=i});
+       return{bars:g.bars,o:Object.assign({},g.o,{marks:[{i:x,t:"L",ring:true,c:"--accent"}],labels:[{i:x,p:a[x],below:true,text:"Golden cross",c:"--accent"},{i:li,p:lo,below:true,text:"The real low",c:"--muted"}]}),
+         look:"The 50 crosses above the 200 <b>long after the low</b>. It confirms the turn, but a big part of the move has already happened."}}}
+   return EX.ma()},
+ rsiob(){const r=gBars(100,[[16,101],[50,160]],1.1);const g=indChart(r.bars,16,{osc:"rsi"});
+   return{bars:g.bars,o:g.o,look:"A strong uptrend: RSI spends <b>much of its time above 70</b> and price keeps climbing anyway. Overbought is a sign of strength here, not a sell signal."}},
+ rsidiv(){const d=divGen(pick(["bear","bull"]))||divGen("bear");const g=indChart(d.bars,16,{osc:"rsi"});const i1=d.i1-16,i2=d.i2-16;const pv=i=>d.top?g.bars[i].h:g.bars[i].l,rv=i=>g.o.osc.series[0].v[i];
+   return{bars:g.bars,o:Object.assign({},g.o,{tlines:[{a:{i:i1,p:pv(i1)},b:{i:i2,p:pv(i2)},c:"--mark"}],osc:Object.assign({},g.o.osc,{lines:[{a:{i:i1,v:rv(i1)},b:{i:i2,v:rv(i2)},c:"--mark"}]})}),
+     look:d.top?"Price: <b>higher high</b>. RSI: <b>lower high</b>. The second push had less force. That's bearish divergence.":"Price: <b>lower low</b>. RSI: <b>higher low</b>. The selling is running out of force. That's bullish divergence."}},
+ macd(){const d=macdGen("fade")||{bars:genTrend("up",90),down:false};const g=indChart(d.bars,30,{osc:"macd"});const n=g.bars.length-1;
+   return{bars:g.bars,o:Object.assign({},g.o,{span:{from:n-6,to:n}}),look:"Price is still "+(d.down?"falling":"rising")+", but the <b>histogram bars shrink</b> (shaded). The MACD line is closing in on its signal line: the move is losing force."}},
+ bb(){const b=bbGen("sq")||genTrend("side",100);const g=indChart(b,20,{bb:true});const n=g.bars.length-1;
+   return{bars:g.bars,o:Object.assign({},g.o,{labels:[{i:n-8,p:g.o.ovl[0].v[n-8],text:"Squeeze",c:"--mark"}]}),look:"The bands pinch together as price goes quiet. A squeeze says a <b>bigger move is coming</b>, not which way."}},
+ big(){const b=bigGen("bull")||genTrend("up",160);const g=indChart(b,40,{ma:[[40,"sma","--mark","40-week MA"]]});g.o.log=true;const n=g.bars.length-1;
+   return{bars:g.bars,o:Object.assign({},g.o,{span:{from:n-6,to:n}}),look:"Weekly chart: rising major swings and a rising 40-week MA. The shaded drop looks scary on a daily chart but is a <b>normal pullback</b> in the big uptrend."}},
+ ratio(){const ra=gBars(100,[[40,112]],1.5).bars,rb=gBars(100,[[40,130]],1.1).bars;const rat=ra.map((x,i)=>({o:x.o/rb[i].o,c:x.c/rb[i].c,h:Math.max(x.o/rb[i].o,x.c/rb[i].c),l:Math.min(x.o/rb[i].o,x.c/rb[i].c)}));
+   return{bars:rat,o:{line:true,labels:[{i:30,p:rat[30].c,text:"ETH/BTC falling",c:"--down"}]},look:"ETH rose about 12% and BTC about 30%. Both went up, but the <b>ratio fell</b>: BTC was the stronger one to own."}}});
+
+/* ---------- hands-on: moving average length ---------- */
+TOOLS.ma=function(el){const b=(()=>{const c=[100];for(let i=1;i<=230;i++){const p=c[i-1];const side=i>=130&&i<185;const ph=i<130?.35:side?0:-.4;c.push(p*(1+(ph+gauss()*1.1+(side?(c[129]-p)/p*100*.1:0))/100))}return barsFromCloses(c,.004)})();
+  let n=20,ema=false;const cv=h("canvas",{class:"chart"});const st=h("div",{class:"stats"});const lab=h("b",{},"20");
+  const sl=h("input",{type:"range",min:"5",max:"100",step:"1",value:"20","aria-label":"Moving average length",style:"width:100%;accent-color:var(--accent)"});
+  const bS=h("button",{class:"primary",on:{click:()=>{ema=false;bS.className="primary";bE.className="";upd()}}},"Simple"),bE=h("button",{on:{click:()=>{ema=true;bE.className="primary";bS.className="";upd()}}},"Exponential");
+  el.append(h("p",{class:"task"},"Slide the length. Short averages hug price but cross it all the time. Long ones are smooth but late. Watch the middle part, where the market goes sideways."),cv,
+    h("label",{class:"f"},h("span",{},"Length: ",lab," candles"),sl),h("div",{class:"row"},bS,bE),st);
+  const W=100;let g;function upd(){g=indChart(b,W,{ma:[[n,ema?"ema":"sma","--accent"]]});const c=closes(g.bars),m=g.o.ovl[0].v;let x=0;for(let i=1;i<c.length;i++)if(m[i]!=null&&m[i-1]!=null&&(c[i]-m[i])*(c[i-1]-m[i-1])<0)x++;
+    lab.textContent=String(n);statRow(st,[["Price crossed the line",x+" times"],["Reacts",n<=15?"Fast, noisy":n<=40?"Medium":"Slow, late"]]);rerenderAll()}
+  upd();mountChart(cv,()=>[g.bars,g.o]);sl.addEventListener("input",()=>{n=+sl.value;upd()})};
+
+/* ---------- Level 3 diagrams ---------- */
+function svgMA(){return `<svg viewBox="0 0 580 200" role="img" aria-label="Price with a smoother, lagging moving average">
+<path class="s-ink" style="stroke-width:1.5" d="M20 170 L50 150 L70 160 L100 120 L120 135 L150 95 L170 110 L200 70 L220 85 L250 60 L270 75 L300 55 L330 90 L350 80 L380 120 L400 110 L430 140 L460 130 L490 160 L520 150 L560 175"/>
+<path class="s-acc" d="M20 172 C90 150 150 110 220 85 S320 62 360 85 S460 140 560 160"/>
+<text x="250" y="40" class="ink">price</text><text x="400" y="100" style="fill:var(--accent)" class="b">moving average</text>
+<line x1="300" y1="55" x2="300" y2="190" class="s-mut"/><line x1="355" y1="85" x2="355" y2="190" class="s-mut"/><text x="250" y="196">price tops</text><text x="360" y="196">MA turns: lag</text></svg>`}
+function svgDiv(){return `<svg viewBox="0 0 580 230" role="img" aria-label="Bearish divergence: price higher high, RSI lower high">
+<path class="s-ink" d="M20 120 L120 40 L190 90 L330 25 L380 70"/><line x1="120" y1="40" x2="330" y2="25" class="s-mk"/>
+<text x="110" y="32" class="ink">high 1</text><text x="300" y="18" class="ink b">higher high</text>
+<line x1="10" y1="135" x2="570" y2="135" class="s-mut"/><text x="14" y="150">RSI</text>
+<line x1="10" y1="160" x2="570" y2="160" class="s-mut"/><text x="530" y="156">70</text>
+<path class="s-acc" d="M20 210 L120 150 L190 195 L330 175 L380 205"/><line x1="120" y1="150" x2="330" y2="175" class="s-mk"/>
+<text x="340" y="172" class="ink b">lower high</text><text x="400" y="100" style="fill:var(--mark)" class="b">less force: warning</text></svg>`}
+function svgStoch(){return `<svg viewBox="0 0 580 170" role="img" aria-label="Stochastic lines crossing in the overbought zone">
+<rect x="10" y="10" width="560" height="30" class="zn"/><rect x="10" y="130" width="560" height="30" class="zn"/>
+<text x="16" y="28">over 80: overbought</text><text x="16" y="150">under 20: oversold</text>
+<path class="s-acc" d="M20 140 C80 150 120 60 170 30 S230 20 260 60 S330 150 370 140 S440 40 480 25 S540 60 560 90"/>
+<path class="s-mk" style="stroke-dasharray:6 4" d="M20 145 C90 150 130 80 180 45 S250 25 280 55 S340 140 380 140 S450 55 490 40 S545 50 560 75"/>
+<circle cx="262" cy="60" r="7" class="s-ink"/><text x="272" y="76" class="ink">%K crosses under %D</text><text x="440" y="18" style="fill:var(--accent)">%K fast</text><text x="440" y="70" style="fill:var(--mark)">%D slow</text></svg>`}
+function svgMACD(){const H=[4,9,14,18,20,19,15,11,7,3,-2,-6,-9];let bars="";H.forEach((v,k)=>{const x=40+k*38;bars+=`<rect x="${x-10}" y="${v>=0?150-v*2:150}" width="20" height="${Math.abs(v)*2}" class="${v>=0?"up":"dn"}" opacity=".6"/>`});
+ return `<svg viewBox="0 0 580 210" role="img" aria-label="MACD histogram shrinking while price still rises">
+<path class="s-ink" d="M20 100 L100 70 L180 45 L260 30 L340 22 L420 18 L480 30 L560 60"/><text x="380" y="12" class="ink">price still rising</text>
+<line x1="10" y1="150" x2="570" y2="150" class="s-mut"/><text x="530" y="146">0</text>${bars}
+<text x="200" y="200" class="ink b">histogram shrinks: momentum fading</text><text x="40" y="200">grows</text></svg>`}
+function svgFour(){const box=(x,y,t,d)=>`<rect x="${x}" y="${y}" width="270" height="92" rx="10" class="pn" style="stroke:var(--line)"/><path class="s-ink" d="${d}"/><text x="${x+10}" y="${y+18}" class="ink b">${t}</text>`;
+ return `<svg viewBox="0 0 580 210" role="img" aria-label="The four trades">
+${box(10,6,"1 · Trend continuation","M30 86 L80 50 L105 66 L150 34 L175 52 L200 44")}<circle cx="175" cy="52" r="6" class="acc"/>
+${box(300,6,"2 · Trend termination","M320 86 L370 50 L395 62 L440 28 L470 56 L490 46 L530 84")}<circle cx="490" cy="46" r="6" class="dn"/>
+${box(10,108,"3 · Level holds","M30 140 L60 180 L90 140 L120 180 L150 142 L180 178 L200 160")}<line x1="25" y1="181" x2="270" y2="181" class="s-mut"/><circle cx="180" cy="178" r="6" class="up"/>
+${box(300,108,"4 · Level breaks","M320 180 L350 140 L380 178 L410 140 L440 170 L470 140 L520 120")}<line x1="315" y1="138" x2="560" y2="138" class="s-mut"/><circle cx="480" cy="135" r="6" class="acc"/></svg>`}
+function svgBB(){return `<svg viewBox="0 0 580 200" role="img" aria-label="Bollinger squeeze then expansion">
+<path class="s-mut" style="stroke-dasharray:none" d="M10 40 C80 30 140 60 220 85 S300 92 340 90 S420 60 470 20 L570 5"/>
+<path class="s-mut" style="stroke-dasharray:none" d="M10 170 C80 175 140 140 220 115 S300 108 340 110 S410 110 450 112 L570 120"/>
+<path class="s-ink" style="stroke-width:1.5" d="M10 110 L40 70 L70 140 L100 80 L130 130 L160 95 L190 115 L220 100 L250 106 L280 98 L310 104 L340 100 L370 96 L400 80 L430 60 L460 42 L490 35 L520 25 L560 20"/>
+<rect x="230" y="80" width="120" height="40" class="zn"/><text x="230" y="140" class="ink b">squeeze: calm</text><text x="420" y="150" class="ink b">expansion: the move</text></svg>`}
+function svgMTF(){return `<svg viewBox="0 0 580 216" role="img" aria-label="Higher timeframe trend with a lower timeframe pullback inside it">
+<text x="10" y="18" class="ink b">Daily: the tide (up)</text><path class="s-ink" d="M20 150 L120 100 L160 120 L280 60 L320 80 L420 30"/>
+<rect x="378" y="22" width="60" height="70" class="zn"/>
+<text x="300" y="120" class="ink b">4-hour: the wave</text><rect x="300" y="128" width="270" height="68" rx="8" class="pn" style="stroke:var(--line)"/>
+<path class="s-acc" d="M310 140 L360 170 L380 160 L410 185 L440 175 L470 150 L500 160 L560 134"/><circle cx="470" cy="150" r="6" class="up"/><text x="400" y="212">pullback ends: buy</text></svg>`}
+function svgLT(){return `<svg viewBox="0 0 580 200" role="img" aria-label="Long-term uptrend with normal pullbacks">
+<path class="s-ink" d="M20 180 L80 140 L100 158 L170 110 L200 135 L270 80 L300 105 L380 50 L410 85 L480 25 L520 60"/>
+<path class="s-mk" d="M20 185 C120 165 220 130 320 100 S460 60 560 45"/>
+<text x="400" y="110" class="ink">−25%: just a pullback</text><text x="60" y="196" style="fill:var(--mark)">rising 40-week MA</text></svg>`}
+function svgInter(){const n=(x,y,t)=>`<rect x="${x}" y="${y}" width="140" height="40" rx="10" class="pn" style="stroke:var(--line)"/><text x="${x+70}" y="${y+25}" class="ink b" text-anchor="middle">${t}</text>`;
+ return `<svg viewBox="0 0 580 200" role="img" aria-label="Dollar, commodities, bonds, stocks and crypto links">
+${n(20,20,"Dollar ↑")}${n(220,20,"Commodities ↓")}${n(20,130,"Yields ↑")}${n(220,130,"Stocks ↓")}${n(420,130,"Crypto ↓")}
+<line x1="160" y1="40" x2="215" y2="40" class="s-acc"/><line x1="160" y1="150" x2="215" y2="150" class="s-acc"/><line x1="360" y1="150" x2="415" y2="150" class="s-mut"/>
+<line x1="90" y1="62" x2="90" y2="126" class="s-mut"/><text x="100" y="98">often together</text><text x="370" y="120">often with tech</text><text x="420" y="45">tendencies, not laws</text></svg>`}
+function svgBreadth(){return `<svg viewBox="0 0 580 210" role="img" aria-label="Index higher high while breadth makes a lower high">
+<path class="s-ink" d="M20 110 L130 40 L200 80 L340 25 L390 60"/><line x1="130" y1="40" x2="340" y2="25" class="s-mk"/><text x="290" y="16" class="ink b">index: new high</text>
+<line x1="10" y1="125" x2="570" y2="125" class="s-mut"/>
+<path class="s-acc" d="M20 195 L130 140 L200 180 L340 165 L390 190"/><line x1="130" y1="140" x2="340" y2="165" class="s-mk"/><text x="350" y="160" class="ink b">fewer coins joining</text><text x="14" y="140">breadth</text></svg>`}
+function svgPF(){const col=(x,y0,n,ch)=>{let s="";for(let k=0;k<n;k++)s+=`<text x="${x}" y="${y0-k*18}" class="${ch==="X"?"ink b":"b"}" style="font-size:15px;${ch==="O"?"fill:var(--down)":"fill:var(--up)"}" text-anchor="middle">${ch}</text>`;return s};
+ return `<svg viewBox="0 0 580 210" role="img" aria-label="Point and figure columns with a double top breakout">
+${col(60,180,5,"X")}${col(90,162,3,"O")}${col(120,162,4,"X")}${col(150,126,4,"O")}${col(180,144,7,"X")}
+<line x1="40" y1="96" x2="210" y2="96" class="s-mut"/><text x="200" y="40" class="ink b">X column beats the last top:</text><text x="200" y="58" class="ink b">double top buy</text>
+<text x="300" y="120">each box = a set amount, say $1,000</text><text x="300" y="140">new column only after a 3-box turn</text><text x="300" y="160">time is ignored</text></svg>`}
+function svgEW(){const P=[[20,180],[90,120],[130,150],[250,50],[300,90],[380,30],[430,80],[470,60],[540,120]];const lb=["0","1","2","3","4","5","A","B","C"];
+ return `<svg viewBox="0 0 580 200" role="img" aria-label="Elliott five waves up and three down">
+<path class="s-ink" d="M${P.map(p=>p.join(" ")).join(" L")}"/>${P.map((p,k)=>`<text x="${p[0]-4}" y="${k%2?p[1]-8:p[1]+18}" class="${k<6?"ink b":"b"}" style="${k>=6?"fill:var(--down)":""}">${lb[k]}</text>`).join("")}
+<line x1="90" y1="120" x2="570" y2="120" class="s-mut"/><text x="270" y="140">wave 4 stays above wave 1's top</text><text x="160" y="196">5 waves with the trend, 3 against</text></svg>`}
+Object.assign(SVGS,{ma:svgMA,div:svgDiv,stoch:svgStoch,macd:svgMACD,four:svgFour,bb:svgBB,mtf:svgMTF,lt:svgLT,inter:svgInter,breadth:svgBreadth,pf:svgPF,ew:svgEW});
+
+/* ---------- Level 3 test ---------- */
+const GATE_Q3=[
+ // Lesson 18
+ {l:18,f:()=>{const a=ri(20,60),st=pick([1,2,3]);const cs=[0,1,2,3,4].map(k=>a+k*st+pick([-1,0,1]));const avg=cs.reduce((x,y)=>x+y,0)/5;const r=v=>fmt(v,1);
+   return{q:`The last five closes are ${cs.join(", ")}. What is the 5-period simple moving average?`,...uniqOpts(r(avg),[r(cs[4]),r((cs[0]+cs[4])/2+st),r(avg+st)]),e:`Add them: ${cs.reduce((x,y)=>x+y,0)}. Divide by 5: ${r(avg)}.`}}},
+ {l:18,f:()=>{const r=maFind("side");const g=indChart(r.bars,50,{ma:[[20,"sma","--accent"],[50,"sma","--mark"]]});return{chart:()=>[g.bars,g.o],q:"A trader buys every time the 20 MA crosses above the 50 MA on this chart, and sells on the cross back. How does that go?",o:["Badly: flat, tangled averages give one false signal after another","Very well: crossovers are reliable","It depends only on the coin","Perfectly, if the stop is tight"],a:0,e:"MAs are trend tools. In a range they whipsaw: each cross comes after price has already moved, so you buy high and sell low."}}},
+ {l:18,f:()=>({q:"Price jumps 8% in one candle. Right after, which line is closest to price?",o:["A 10-period EMA","A 10-period SMA","A 50-period SMA","A 200-period SMA"],a:0,e:"The EMA weights the newest close most, so it moves furthest toward the jump. Longer averages barely move."})},
+ // Lesson 19
+ {l:19,f:()=>{const hh=pick([64000,66000,68000]),ll=hh-pick([4000,5000,6000]);const k=pick([.1,.25,.75,.9]);const c=ll+(hh-ll)*k;const pct=Math.round(k*100);const zone=pct>=80?"overbought zone":pct<=20?"oversold zone":"middle";
+   return{q:`Over the last 14 candles BTC's high was ${fmt(hh)} and its low ${fmt(ll)}. It closes at ${fmt(c)}. What is the stochastic %K?`,...uniqOpts(`${pct}: ${zone}`,[`${100-pct}: ${pct>=80?"oversold zone":pct<=20?"overbought zone":"middle"}`,`${Math.round(c/hh*100)}: ${Math.round(c/hh*100)>=80?"overbought zone":"middle"}`,`${pct}: ${pct>=50?"oversold zone":"overbought zone"}`]),
+   e:`%K = (close − low) ÷ (high − low) × 100 = (${fmt(c)} − ${fmt(ll)}) ÷ ${fmt(hh-ll)} × 100 = ${pct}.`}}},
+ {l:19,f:()=>{const d=rwDiv(pick(["bear","none"]))||divGen("bear")||divGen("none");const g=indChart(d.bars,16,{osc:"rsi"});return{chart:()=>[g.bars,g.o],q:"Look at the last two price "+(d.top?"peaks":"dips")+" and RSI. Then price breaks its last swing "+(d.top?"low":"high")+". Best read?",
+   o:d.kind==="none"?["RSI confirmed the last push, so the break is a pullback warning, not a divergence signal","Bearish divergence confirmed: sell","Bullish divergence","RSI is broken"]:["A divergence, now confirmed by the swing break: a real warning","No divergence","Bullish divergence","Divergences never matter"],a:0,
+   e:d.kind==="none"?"RSI made a new extreme with price, so momentum agreed. A swing break still matters, but there was no divergence before it.":"Price made a new extreme that RSI didn't confirm. On its own that's a warning; with the swing break it becomes a setup."}}},
+ {l:19,f:()=>({q:"BTC has been in a strong downtrend for months. RSI drops to 22. Best response?",o:["Don't buy just for that: oversold can stay oversold in a downtrend","Buy: RSI under 30 is a buy signal","Short more: RSI is falling","Sell everything you own"],a:0,e:"In downtrends RSI often lives between 20 and 60. Wait for a bullish divergence and a break of the down structure."})},
+ // Lesson 20
+ {l:20,f:()=>{const s=pick([100,200,50]),d=pick([3,4,5,6]),sg=d+pick([-2,-1,1,2]);const m=d,hh=m-sg;
+   return{q:`The 12 EMA is ${s+d}, the 26 EMA is ${s}, and the MACD signal line is ${sg}. What do you have?`,...uniqOpts(`MACD ${m}, histogram ${hh>0?"+":""}${hh}: momentum ${hh>0?"rising":"slowing"}`,[`MACD ${m}, histogram ${hh>0?"+":""}${hh}: momentum ${hh>0?"slowing":"rising"}`,`MACD ${s+d+s}, histogram ${sg}: momentum rising`,`MACD ${-m}, histogram ${-hh}: momentum ${hh>0?"slowing":"rising"}`]),
+   e:`MACD = ${s+d} − ${s} = ${m}. Histogram = ${m} − ${sg} = ${hh}. ${hh>0?"Above its signal line: momentum is building.":"Below its signal line: momentum is slowing."}`}}},
+ {l:20,f:()=>{const d=rwMacd(pick(["fade","grow"]))||macdGen("fade")||macdGen("grow");const g=indChart(d.bars,30,{osc:"macd"});return{chart:()=>[g.bars,g.o],q:"What is the MACD histogram saying at the right edge?",
+   o:d.kind==="fade"?["The move is losing momentum","The move is speeding up","A signal to trade against the trend now","Nothing: the histogram is random"]:["The move is speeding up","The move is losing momentum","The trend has reversed","Nothing: the histogram is random"],a:0,e:d.kind==="fade"?"Price keeps going, but the bars shrink: MACD is closing in on its signal. A warning to tighten up, not a reason to fight the trend.":"The bars grow in the move's direction: MACD is pulling away from its signal. Momentum backs the move."}}},
+ {l:20,f:()=>({q:"Which is the stronger MACD buy signal?",o:["A signal-line cross up after a pullback, while MACD stays above zero in an uptrend","A cross up far below zero in a long downtrend","Any cross, anywhere","A cross on a flat, sideways chart"],a:0,e:"Crosses in the direction of the bigger trend are the more reliable ones. Crosses against it are often just bounces."})},
+ // Lesson 21
+ {l:21,f:()=>{const S=pick([["Price has bounced off the same floor three times. It's back at that floor and a hammer forms.","Level holds"],["After weeks pressing against resistance with rising lows, price closes well above it on strong volume.","Level breaks"],["In a clean uptrend, price pulls back half of the last swing to a rising 20 EMA and turns up.","Trend continuation"],["After a long rally, a climax spike is followed by a lower high and a break of the last swing low.","Trend termination"]]);
+   return{q:S[0]+" Which of the four trades is this?",...uniqOpts(S[1],["Trend continuation","Trend termination","Level holds","Level breaks"].filter(x=>x!==S[1])),e:"Continuation = join the trend after a pullback. Termination = the trend is ending. Holds = a range edge holds again. Breaks = a level gives way."}}},
+ {l:21,f:()=>({q:"You buy a breakout above a range. Where does the stop belong?",o:["Back inside the range: if price returns there, the breakout has failed","Far below the range's floor","At the breakout price exactly","No stop: breakouts always work"],a:0,e:"A breakout trade is proven wrong when price is back inside. A stop at the floor risks far more than the idea needs."})},
+ {l:21,f:()=>({q:"Price has gone sideways for months after a big rally, and each push to new highs is weaker. Which stage is this, and which trade is the trap?",o:["Distribution; buying breakouts to new highs is the trap","Accumulation; selling the lows is the trap","Markup; buying pullbacks is the trap","Markdown; shorting is the trap"],a:0,e:"Flat after a rise is distribution. Breakouts here often fail as early buyers sell into them."})},
+ // Lesson 22
+ {l:22,f:()=>{const m=pick([100,250,40]),sd=pick([2,3,4,5]);return{q:`A 20-period average is at ${m} and the standard deviation of the last 20 closes is ${sd}. Where are the Bollinger Bands?`,...uniqOpts(`${m-2*sd} and ${m+2*sd}`,[`${m-sd} and ${m+sd}`,`${m-4*sd} and ${m+4*sd}`,`${m} and ${m+2*sd}`]),e:`2 standard deviations each side: ${m} ± ${2*sd}.`}}},
+ {l:22,f:()=>{const rr=rwBB("sq");const b=rr?rr.bars:(bbGen("sq")||genTrend("side",100));const g=indChart(b,20,{bb:true});return{chart:()=>[g.bars,g.o],q:"The bands on this chart are at their narrowest in months. What's the plan?",o:["Get ready: wait for a close outside the squeeze, stop on the other side","Buy now: squeezes always break up","Sell now: squeezes always break down","Ignore it: quiet markets stay quiet"],a:0,e:"A squeeze says a bigger move is likely, not which way. Let the break decide."}}},
+ {l:22,f:()=>({q:"ADX has dropped to 14 and keeps falling. Which approach fits?",o:["Range tools: trade the edges, skip MA crossovers","Trend tools: buy every new high","Use only moving average crossovers","Double your size"],a:0,e:"ADX under about 20 means no real trend. Crossovers whipsaw; the edges and oscillators work better."})},
+ // Lesson 23
+ {l:23,f:()=>{const T=pick([["15-minute","1-hour"],["1-hour","4-hour"],["4-hour","daily"],["daily","weekly"]]);return{q:`You trade the ${T[0]} chart. Using a factor of about 4 to 6, which chart sets your trend?`,...uniqOpts(`The ${T[1]}`,["The 5-minute","The monthly","The same "+T[0]+" chart"]),e:`The ${T[1]} is about 4 to 6 times the ${T[0]}. It sets the direction; your own chart finds the setup.`}}},
+ {l:23,f:()=>({q:"The weekly chart is in a downtrend. The daily rallies up into weekly resistance. Best plan?",o:["Look for a short when the daily rally fails at resistance","Buy the daily breakout","Short now, before the daily turns","No plan: timeframes don't mix"],a:0,e:"The weekly gives the direction (down), the resistance gives the place, and a failing daily rally gives the timing."})},
+ {l:23,f:()=>({q:"The 15-minute chart gives a perfect buy signal, but the 4-hour and daily are in clear downtrends. What's true?",o:["The odds are worse: you're buying against the bigger flow","It's the best kind of trade","Lower timeframes always win","The higher charts are out of date"],a:0,e:"A buy against the higher timeframes is a countertrend trade. If you take it at all: smaller size, quick target."})},
+ // Lesson 24
+ {l:24,f:()=>{const a=pick([1000,2000,5000]),b=pick([30000,40000,60000]),k=pick([1.5,1.6,1.8]);return{q:`On a log chart, which move looks bigger: ${fmt(a)} → ${fmt(a*2)} or ${fmt(b)} → ${fmt(b*k)}?`,...uniqOpts(`${fmt(a)} → ${fmt(a*2)} (+100%)`,[`${fmt(b)} → ${fmt(b*k)} (+${Math.round((k-1)*100)}%)`,"They look the same","It depends on the timeframe"]),e:`Log scale shows % change. +100% beats +${Math.round((k-1)*100)}%, even though the second move is far more dollars.`}}},
+ {l:24,f:()=>{const rr=rwBig("bull");const b=rr?rr.bars:(bigGen("bull")||genTrend("up",160));const g=indChart(b,40,{ma:[[40,"sma","--mark","40-week MA"]]});g.o.log=true;return{chart:()=>[g.bars,g.o],q:"Weekly chart. The last few weeks fell hard. What does the big picture say?",o:["A pullback in a long-term uptrend: the 40-week MA is still rising","A new bear market, confirmed","Nothing: weekly charts are too slow","Sell everything: drops like this always continue"],a:0,e:"Rising major swings and a rising long average. Sharp drops are normal inside crypto bull markets."}}},
+ {l:24,f:()=>({q:"Someone says BTC must top exactly 18 months after the next halving. The best answer?",o:["Maybe roughly, but three cycles is a tiny sample; let price confirm","It's guaranteed","Halvings have no history at all","Buy on that day with everything"],a:0,e:"The pattern held so far, but few examples and lots of attention make it weak evidence."})},
+ // Lesson 25
+ {l:25,f:()=>{const [A,B]=pick(REL_PAIRS);const pa=pick([5,10,15,20,-5,-10]),pb=pa+pick([-12,-8,8,12]);const ratio=(1+pa/100)/(1+pb/100);const up=ratio>1;
+   return{q:`This month ${A} is ${pa>=0?"up":"down"} ${Math.abs(pa)}% and ${B} is ${pb>=0?"up":"down"} ${Math.abs(pb)}%. What did the ${A}/${B} ratio chart do?`,...uniqOpts(`${up?"Rose":"Fell"}: ${up?A:B} was stronger`,[`${up?"Fell":"Rose"}: ${up?B:A} was stronger`,"Stayed flat: both moved","Can't tell without volume"]),e:`(1 ${pa>=0?"+":"−"} ${Math.abs(pa)}%) ÷ (1 ${pb>=0?"+":"−"} ${Math.abs(pb)}%) = ${ratio.toFixed(2)}. ${up?"Above":"Below"} 1, so the ratio ${up?"rose":"fell"}.`}}},
+ {l:25,f:()=>({q:"BTC makes a new high, but fewer and fewer altcoins are above their own 50-day MA. What does that say?",o:["Narrowing breadth: a warning that the rally is fragile","A very healthy, broad rally","Altcoins are about to beat BTC for sure","Nothing: breadth only works for stocks"],a:0,e:"Healthy rallies are broad. A new high carried by fewer members is like a divergence."})},
+ {l:25,f:()=>({q:"BTC dominance falls while the total crypto market rises. Most likely?",o:["Altcoins are rising faster than BTC","BTC is falling in dollars","Stablecoins are crashing","The market is about to top for sure"],a:0,e:"Dominance is BTC's share. If the whole market rises and BTC's share falls, altcoins are doing better."})},
+ // Lesson 26
+ {l:26,f:()=>{const bx=pick([500,1000,2000]),top=pick([60000,64000,70000]),k=pick([2,2.5,3,3.5]);const p=top-bx*k;const yes=k>=3;
+   return{q:`Point and figure: box size $${fmt(bx)}, 3-box reversal. The X column tops at $${fmt(top)}. Price falls to $${fmt(p)}. Does an O column start?`,o:yes?[`Yes: that's ${k} boxes down, at least 3`,`No: it needs a ${k+1}-box fall`,"Only if volume is high","P&F ignores falls"]:[`No: it needs a fall to $${fmt(top-3*bx)}`,"Yes","Only if volume is high","P&F ignores falls"],a:0,e:`3 boxes × $${fmt(bx)} = $${fmt(3*bx)}, so an O column starts at $${fmt(top-3*bx)} or lower. The fall was ${k} boxes.`}}},
+ {l:26,f:()=>{const w0=pick([100,200,50]),a=pick([20,30,40]);const w2=w0-pick([2,5,8]);return{q:`An Elliott count: wave 1 runs from ${w0} to ${w0+a}. Wave 2 falls to ${w2}. Valid?`,o:[`No: wave 2 went below the start of wave 1 (${w0})`,"Yes: wave 2 can go anywhere","Yes, if wave 3 is long","No: wave 2 must be exactly 61.8%"],a:0,e:"Wave 2 can never go past the start of wave 1. This count is wrong; recount."}}},
+ {l:26,f:()=>{const p1=pick([120,150,200]),a=p1-100;const p4=p1-pick([3,6,9]);return{q:`Wave 1 runs from 100 to ${p1}, wave 3 tops at ${p1+a*2}, and wave 4 falls to ${p4}. Is it a valid 5-wave count?`,o:[`No: wave 4 entered wave 1's price area (below ${p1})`,"Yes","Yes, wave 4 can overlap freely","No: wave 3 is the shortest"],a:0,e:`Wave 4 must stay above the top of wave 1 (${p1}). At ${p4} it overlaps, so this isn't a normal impulse.`}}}
+];
+function gate3(m){if(testLock(m,3))return;
+  const NCH=20,PASS=17,NTH=12;const ready=lvlLessonsDone(3);
+  const intro=h("section",{class:"card"},h("div",{class:"eyebrow"},"Level 3 test"),h("h2",{},"20 questions, pass with 17"),
+    h("p",{class:"task"},"12 theory questions covering all nine lessons, many with fresh numbers each time, mixed with 8 charts: read moving averages, spot RSI divergence, judge MACD momentum, name the trade, read a squeeze, combine two timeframes, read the weekly picture or a ratio chart, and check an Elliott count. You need 17 of 20 (85%) to finish Level 3."),
+    h("p",{class:"score"},state.best.g3!=null?`Your best so far: ${state.best.g3} of ${NCH}`:(ready?"Not attempted yet":"Finish all nine Level 3 lessons first, so every question is something you've learned.")));
+  const area=h("section",{class:"card"});m.append(intro,area);
+  const tname={ma:"Moving averages",rsi:"RSI",macd:"MACD",trade4:"Four trades",squeeze:"Volatility",mtf:"Timeframes",big:"Big picture",rel:"Relative strength",ew:"Elliott Wave",theory:"Theory"};
+  let idx=0,passed=0,plan=[],theory=[];
+  function start(){idx=0;passed=0;if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q3);plan=shuffle(["ma","rsi","macd","trade4","squeeze","mtf",pick(["big","rel"]),"ew"].concat(Array(NTH).fill("theory")));nextQ()}
+  function nextQ(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
+    const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
+    const body=h("div");area.append(head,body);
+    const nb=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextQ()}}},idx===NCH-1?"See my result":"Next question");
+    const after=ok=>{pop(ok);if(ok)passed++;head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nb()))};
+    if(task==="theory"){const tq=theory.shift();const q=tq.f();const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
+      body.append(h("p",{class:"task"},q.q));if(q.chart){const cv=h("canvas",{class:"chart qchart"});body.append(cv);mountChart(cv,q.chart)}mcq(body,q,ok=>{fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+q.e);after(ok)});body.append(f)}
+    else ROUNDS[task](body,after)}
+  function finish(){const ok=passed>=PASS;state.best.g3=Math.max(state.best.g3||0,passed);if(ok){state.done.gate3=true;lvlEnd(3)}save();renderNav();sfx(ok?"lesson":"wrong");
+    area.append(h("h3",{},ok?"Level 3 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You can read moving averages, oscillators, MACD, volatility, several timeframes, the big picture and ratio charts, and you know which of the four trades you're taking. Level 3 is done. ${lvlTimeText(3)}`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions change every time.`),
+      lvlNextRow(3,ok,start))}
+  area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
+}
+
 /* the pattern's candles for a question that describes them: a few bars of lead-in plus the pattern, boxed, no name */
 /* ---------- question pictures: a small chart drawn before you answer, so a described situation can be seen ---------- */
 function picChart(bars,o,cap){const cv=h("canvas",{class:"chart qchart qpc","aria-label":cap||"The situation in the question"});mountChart(cv,()=>[bars,o||{}]);return cap?h("figure",{class:"qpanel"},cv,h("figcaption",{},cap)):cv}
@@ -2032,7 +2694,7 @@ function buildSession(kind,lid){const steps=[];let reviewEnd=0;
       /* throwbacks: questions from earlier lessons that aren't 100% remembered yet keep turning up inside new lessons */
       const tb=throwbacks(L.id,steps,2);tb.forEach(c=>{const at=rint(ls0+2,Math.max(ls0+2,steps.length-1));steps.splice(at,0,{t:"review",card:c,retry:true,throw:true})});
       steps.push({t:"lessonDone",lesson:L.id})}
-    else if(kind==="today"){const lv=curLevel();const passed=state.done[LEVELS[lv-1].gate];const pool=lv===1?["trend","sr","pivot","phase"]:["tline","retr","cdl12","cdl13","pat15","pat16","ctx","vol"];
+    else if(kind==="today"){const lv=curLevel();const passed=state.done[LEVELS[lv-1].gate];const pool=lv===1?["trend","sr","pivot","phase"]:lv===2?["tline","retr","cdl12","cdl13","pat15","pat16","ctx","vol"]:["ma","rsi","macd","trade4","squeeze","mtf","big","rel","ew"];
       steps.push({t:"label",eyebrow:"All Level "+lv+" lessons done",text:"Mixed chart practice",sub:passed?"Level "+(lv+1)+" is on its way. Keep your skills sharp meanwhile.":"Keep your skills sharp, then take the Level "+lv+" test."});shuffle(pool).slice(0,4).forEach(k=>steps.push({t:"round",kind:k}));
       throwbacks(null,steps,3).forEach(c=>steps.splice(rint(2,steps.length),0,{t:"review",card:c,retry:true,throw:true}))}}
   steps.push({t:"summary"});
@@ -2202,7 +2864,7 @@ function floorView(m){const done=tvDone();const nTv=TV_LESSONS.filter(L=>done[L.
 function tvLocked(m){m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"TradingView school"),h("h2",{},"🔒 Not yet"),h("p",{class:"task"},"This opens when you pass the Level 1 test, once you can read trend and levels."),h("div",{class:"row"},h("a",{href:"#floor"},"‹ Trading floor"))))}
 /* ---------- Achievements: stars, trophies and a rank title. Earned ones live in state.ach {id: time} ---------- */
 const RANKS=["Chart Rookie","Trend Reader","Pattern Hunter","Market Analyst","Flow Reader","Master Trader"];
-const BEST_KEY={gate:"g20",gate2:"g2"};
+const BEST_KEY={gate:"g20",gate2:"g2",gate3:"g3"};
 function rankNow(){let k=0;while(k<LEVELS.length&&state.done[LEVELS[k].gate]&&lvlLessonsDone(k+1))k++;return k}
 function achList(){const a=[];const sN=(state.streak&&state.streak.n)||0;
   a.push({id:"first",i:"🌱",t:"First step",d:"Finish your first lesson",ok:LESSONS.some(L=>state.done[L.id])});
@@ -2878,7 +3540,39 @@ function rwFind(want,len,clsLen,opt={}){if(!RW.sets.length)return null;
     return{bars:b,type,meta:{sym:set.sym,iv:set.iv,t:raw[0].t}}}
   return null}
 function rwTag(rw){if(!rw||!rw.meta)return"";const d=new Date(rw.meta.t);const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()];
-  return ` <span class="realtag">Real ${rw.meta.sym} · ${rw.meta.iv==="D"?"daily":"4-hour"} · ${M} ${d.getUTCFullYear()}</span>`}
+  return ` <span class="realtag">Real ${rw.meta.sym} · ${rw.meta.iv==="D"?"daily":rw.meta.iv==="W"?"weekly":"4-hour"} · ${M} ${d.getUTCFullYear()}</span>`}
+/* ---------- Level 3: real price action for the indicator drills ----------
+   Extra live data (SOL daily, BTC and ETH weekly), then finders that pick a real window
+   which shows the thing being asked about. Every drill falls back to a made-up chart offline. */
+RW.wk=[];
+(async()=>{if(mcOnline()){let ok=false;try{const pm=await window.claude.use("permissions");ok=pm&&(await pm.state("mcp"))==="granted"}catch(e){}if(!ok)return}
+  [["SOL","D"],["BTC","W"],["ETH","W"]].forEach(([s,iv],k)=>setTimeout(()=>mcLoad(s,iv).then(r=>{if(!r||!r.bars)return;if(iv==="W"){if(r.bars.length>160)RW.wk.push({sym:s,iv,bars:r.bars})}else if(r.bars.length>200)RW.sets.push({sym:s,iv,bars:r.bars})}).catch(()=>{}),2600+k*600))})();
+function rwWin(sets,len){const ok=sets.filter(s=>s.bars.length>=len+2);if(!ok.length)return null;const set=pick(ok);const s=rint(0,set.bars.length-len);const raw=set.bars.slice(s,s+len);
+  return{bars:raw.map(x=>({o:x.o,h:x.h,l:x.l,c:x.c})),meta:{sym:set.sym,iv:set.iv,t:raw[0].t}}}
+/* RSI divergence (or agreement) at the latest swing in a real window */
+function rwDiv(want){for(let k=0;k<160;k++){const r=rwWin(RW.sets,96);if(!r)return null;const b=r.bars,n=b.length-1;const rs=rsiA(closes(b));
+    const top=want==="bear"?true:want==="bull"?false:R()<.5;const pv=pivots(b,3).filter(p=>p.t===(top?"H":"L")&&p.i>=24);if(pv.length<2)continue;
+    const p2=pv[pv.length-1],p1=pv[pv.length-2];if(p2.i<n-10||p2.i-p1.i<6||p2.i-p1.i>40)continue;
+    const x1=top?b[p1.i].h:b[p1.i].l,x2=top?b[p2.i].h:b[p2.i].l;if(top?x2<=x1:x2>=x1)continue;
+    const v1=rs[p1.i],v2=rs[p2.i];const agree=top?v2>v1:v2<v1;
+    if(want==="none"&&agree&&Math.abs(v2-v1)>3)return{bars:b,i1:p1.i,i2:p2.i,top,kind:"none",meta:r.meta};
+    if(want!=="none"&&!agree&&Math.abs(v2-v1)>5)return{bars:b,i1:p1.i,i2:p2.i,top,kind:want,meta:r.meta}}return null}
+function rwMacd(kind){for(let k=0;k<160;k++){const r=rwWin(RW.sets,110);if(!r)return null;const b=r.bars,n=b.length-1;const m=macdA(closes(b));const H=m.hist;if(H[n-6]==null)continue;
+    const s=m.m[n]>=0?1:-1;const down=s<0;let ext=true;const tol=Math.abs(b[n].c)*.004;for(let i=n-10;i<n;i++)if(down?b[i].c<b[n].c-tol:b[i].c>b[n].c+tol)ext=false;if(!ext)continue;
+    const grow=s*H[n]>s*H[n-6]&&s*H[n]>0,fade=s*H[n]<s*H[n-6]*.6&&s*H[n-6]>0;
+    if(kind==="grow"&&grow||kind==="fade"&&fade)return{bars:b,down,kind,meta:r.meta}}return null}
+function bbTest(b,kind){const bb=bollA(closes(b));const n=b.length-1;const bw=i=>(bb.up[i]-bb.dn[i])/bb.mid[i];const w=[];for(let i=20;i<=n;i++)w.push(bw(i));const med=w.slice().sort((x,y)=>x-y)[w.length>>1];
+  return kind==="sq"?bw(n)<.55*med&&bw(n)<=Math.min(...w)*1.15:bw(n)>1.6*med&&bw(n)>2*bw(n-10)}
+function rwBB(kind){for(let k=0;k<200;k++){const r=rwWin(RW.sets,110);if(!r)return null;if(bbTest(r.bars,kind))return r}return null}
+function bigTest(b,kind){const m=smaA(closes(b),40);const n=b.length-1;const sl=(m[n]-m[n-8])/m[n];const mv=b[n].c/b[n-6].c;
+  return kind==="bull"?sl>.03&&b[n].c>m[n]*.92&&mv<.9:sl<-.03&&b[n].c<m[n]&&mv>1.1}
+function rwBig(kind){for(let k=0;k<200;k++){const r=rwWin(RW.wk,140);if(!r)return null;if(bigTest(r.bars,kind))return r}return null}
+/* a real ratio chart from two daily sets with the same dates */
+function rwRatio(){const ds=RW.sets.filter(s=>s.iv==="D");if(ds.length<2)return null;for(let k=0;k<30;k++){const [x,y]=shuffle(ds);if(x.sym===y.sym)continue;
+    const A=x.sym==="BTC"?y:x,B=x.sym==="BTC"?x:(y.sym==="BTC"?y:(x.sym==="ETH"?x:y));if(A===B)continue;const mb=new Map(B.bars.map(z=>[z.t,z]));const pairs=A.bars.filter(z=>mb.has(z.t)).map(z=>[z,mb.get(z.t)]);if(pairs.length<60)continue;
+    const s=rint(0,pairs.length-41);const w=pairs.slice(s,s+40);const rat=w.map(([a,b])=>({o:a.o/b.o,c:a.c/b.c,h:Math.max(a.o/b.o,a.c/b.c),l:Math.min(a.o/b.o,a.c/b.c)}));
+    const ch=rat[rat.length-1].c/rat[0].o;if(Math.abs(ch-1)<.06)continue;
+    return{rat,A:A.sym,B:B.sym,pa:Math.round((w[w.length-1][0].c/w[0][0].o-1)*100),pb:Math.round((w[w.length-1][1].c/w[0][1].o-1)*100),meta:{sym:A.sym+"/"+B.sym,iv:"D",t:w[0][0].t}}}return null}
 
 /* real-chart pattern finder: scans real candles for classical patterns that actually happened, with the breakout */
 /* the main swings: a zigzag that only turns once price has moved back k times the average candle range */
@@ -3065,7 +3759,7 @@ const top=document.getElementById("topnav");
 function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";const fl=["floor","chart","tv"].includes(cur);[["home","Today"],["map","Program"],["floor","Trading"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id||(id==="floor"&&fl)?"on":""},l)));
   const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
 function route(){if(SESSION||TVS)return;document.body.classList.remove("mcfull");live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();document.body.classList.toggle("wide",id==="chart");
-  if(id==="gate"){gate(app)}else if(id==="gate2"){gate2(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="floor"){floorView(app)}else if(id==="tv"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));tvOpen()?tvView(app):tvLocked(app)}else if(id==="chart"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));chartView(app)}
+  if(id==="gate"){gate(app)}else if(id==="gate2"){gate2(app)}else if(id==="gate3"){gate3(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="floor"){floorView(app)}else if(id==="tv"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));tvOpen()?tvView(app):tvLocked(app)}else if(id==="chart"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));chartView(app)}
   else if(LESSONS.find(x=>x.id===id)){history.replaceState(null,"","#home");startSession("lesson",id);return}
   else homeView(app);window.scrollTo(0,0)}
 document.addEventListener("keydown",e=>{if(SESSION)return;if(e.key==="Enter"&&document.activeElement&&document.activeElement.id==="start"){e.preventDefault();startSession("today")}});
