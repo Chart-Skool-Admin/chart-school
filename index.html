@@ -1602,19 +1602,20 @@ function rwTag(rw){if(!rw||!rw.meta)return"";const d=new Date(rw.meta.t);const M
   return ` <span class="realtag">Real ${rw.meta.sym} · ${rw.meta.iv==="D"?"daily":"4-hour"} · ${M} ${d.getUTCFullYear()}</span>`}
 
 
+const SB_DOM="@users.chartschool.app";const sbName=e=>String(e||"").replace(SB_DOM,"");
 function sbView(m){const card=h("section",{class:"card"});m.append(card);
   if(SB.sess){const lab={on:"Synced",start:"Connecting…",wait:"Offline right now",err:"Sync problem"}[SY.mode]||"Synced";
-    card.append(h("div",{class:"eyebrow"},"Phone + Mac sync"),h("h2",{},lab),h("p",{class:"lead"},"Signed in as "+(SB.sess.email||"you")+". Your progress saves to your account, so every device where you sign in picks up where you stopped."),
+    card.append(h("div",{class:"eyebrow"},"Phone + Mac sync"),h("h2",{},lab),h("p",{class:"lead"},"Signed in as "+(sbName(SB.sess.email)||"you")+". Your progress saves to your account, so every device where you sign in picks up where you stopped."),
       h("h3",{style:"margin-top:10px"},"Install it like an app"),
       h("ol",{class:"syncsteps"},h("li",{},"iPhone: in Safari tap ",h("b",{},"Share")," then ",h("b",{},"Add to Home Screen"),"."),h("li",{},"Mac: in Safari choose ",h("b",{},"File → Add to Dock"),".")),
       h("div",{class:"row"},h("button",{on:{click:()=>{sbSaveSess(null);SY.ref=null;SY.ready=false;setSync("signin");route()}}},"Sign out")))}
-  else{const em=h("input",{type:"email",autocomplete:"username",placeholder:"Email"}),pw=h("input",{type:"password",autocomplete:"current-password",placeholder:"Password (at least 8 characters)"});const f=h("div",{hidden:""});
-    const go=async up=>{const e=em.value.trim(),p=pw.value;if(!e||p.length<8){fb(f,"bad","Enter your email and a password of at least 8 characters.");return}
+  else{const em=h("input",{type:"text",autocomplete:"username",autocapitalize:"none",autocorrect:"off",spellcheck:"false",placeholder:"Username"}),pw=h("input",{type:"password",autocomplete:"current-password",placeholder:"Password (at least 8 characters)"});const f=h("div",{hidden:""});
+    const go=async up=>{const u=em.value.trim().toLowerCase(),p=pw.value;if(!/^[a-z0-9._-]{3,30}$/.test(u)){fb(f,"bad","Usernames are 3 to 30 letters or numbers (dots, dashes and underscores are fine too).");return}if(p.length<8){fb(f,"bad","Passwords need at least 8 characters.");return}const e=u+SB_DOM;
       try{if(up){const j=await sbAuth("signup",{email:e,password:p});if(j.access_token){sbKeep(j);sbStart();route();return}fb(f,"info","Check your email and tap the confirmation link. Then come back here and press <b>Sign in</b>.");return}
         sbKeep(await sbAuth("token?grant_type=password",{email:e,password:p}));sbStart();route()}
-      catch(err){fb(f,"bad",/confirm/i.test(err.message)?"Please tap the confirmation link in your email first, then sign in.":"That didn't work: "+err.message.replace(/[<>&]/g,""))}};
-    card.append(h("div",{class:"eyebrow"},"Phone + Mac sync"),h("h2",{},"Sign in to sync your progress"),h("p",{class:"lead"},"Use the same email and password on your phone and your Mac."),
-      h("div",{class:"fields",style:"grid-template-columns:1fr"},h("label",{class:"f"},"Email",em),h("label",{class:"f"},"Password",pw)),
+      catch(err){const msg=err.message||"";fb(f,"bad",/already|registered|exists/i.test(msg)?"That username is taken. Pick another, or press Sign in if it's yours.":/invalid/i.test(msg)?"Wrong username or password.":"That didn't work: "+msg.replace(/[<>&]/g,""))}};
+    card.append(h("div",{class:"eyebrow"},"Phone + Mac sync"),h("h2",{},"Sign in to sync your progress"),h("p",{class:"lead"},"Use the same username and password on your phone and your Mac."),
+      h("div",{class:"fields",style:"grid-template-columns:1fr"},h("label",{class:"f"},"Username",em),h("label",{class:"f"},"Password",pw)),
       h("div",{class:"row"},h("button",{class:"primary",on:{click:()=>go(false)}},"Sign in"),h("button",{on:{click:()=>go(true)}},"Create account")),f)}
   const card2=h("section",{class:"card"});m.append(card2);const ta=h("textarea",{class:"synccode",rows:"3",placeholder:"Paste the code that starts with CS1."});const f2=h("div",{hidden:""});
   const out=h("textarea",{class:"synccode",readonly:"",rows:"3",hidden:""});const f3=h("div",{hidden:""});
