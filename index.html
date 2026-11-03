@@ -431,7 +431,7 @@ const live=new Set();
 function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
 function drawChart(cv,bars,o={}){
   const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
-  cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);const x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);
+  const W_=Math.round(w*dpr),H_=Math.round(h*dpr);if(cv.width!==W_||cv.height!==H_){cv.width=W_;cv.height=H_}const x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);
   const C={grid:tok("--grid"),muted:tok("--muted"),up:tok("--up"),down:tok("--down"),ink:tok("--ink"),mark:tok("--mark"),zone:tok("--zone"),accent:tok("--accent"),good:tok("--good"),bad:tok("--bad"),panel:tok("--panel")};
   const rc=v=>typeof v==="string"&&v.startsWith("--")?tok(v):v;
   const tint=(v,a)=>{const c=tok(v);if(/^#[0-9a-f]{6}$/i.test(c)){const n=parseInt(c.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`}return C.zone};
@@ -477,8 +477,8 @@ function drawChart(cv,bars,o={}){
     x.fillStyle=C.panel;x.globalAlpha=.92;x.beginPath();x.roundRect?x.roundRect(cx-tw/2,cy-th/2,tw,th,6):x.rect(cx-tw/2,cy-th/2,tw,th);x.fill();x.globalAlpha=1;
     x.strokeStyle=col;x.lineWidth=1.2;x.stroke();x.fillStyle=col;x.textAlign="center";x.fillText(l.text,cx,cy+.5);x.textAlign="start"});
 }
-function mountChart(cv,getArgs){const draw=()=>{const [b,o]=getArgs();drawChart(cv,b,o)};live.add(draw);const ro=new ResizeObserver(draw);ro.observe(cv);draw();return draw}
-function rerenderAll(){live.forEach(d=>d())}
+function mountChart(cv,getArgs){const draw=()=>{const [b,o]=getArgs();drawChart(cv,b,o)};draw._cv=cv;live.add(draw);const ro=new ResizeObserver(()=>{if(!cv.isConnected){ro.disconnect();live.delete(draw);return}draw()});ro.observe(cv);draw();return draw}
+function rerenderAll(){live.forEach(d=>{if(d._cv&&!d._cv.isConnected){live.delete(d);return}d()})}
 try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",rerenderAll)}catch(e){}
 new MutationObserver(rerenderAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
@@ -1496,7 +1496,7 @@ const TOOLS={
     if(r>2)fb(warn,"bad","Over 2% per trade. Ten losses in a row would cost about "+Math.round((1-Math.pow(1-r/100,10))*100)+"%.");else warn.hidden=true};el.addEventListener("input",calc);calc()},
  sim(el){const cv=h("canvas",{class:"chart"});const st=h("div",{class:"stats"});let paths=[[10000]];
   el.append(h("p",{class:"task"},"20 traders, same rules, 100 trades each. Tap Run a few times."),h("div",{class:"fields"},field("s-win","Win rate (%)",40),field("s-rr","Reward : risk",2)),h("div",{class:"row"},h("button",{class:"primary",on:{click:run}},"Run")),cv,st);
-  const draw=()=>{const dpr=devicePixelRatio||1,w=cv.clientWidth,hh=cv.clientHeight;if(!w)return;cv.width=w*dpr;cv.height=hh*dpr;const x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);
+  const draw=()=>{const dpr=devicePixelRatio||1,w=cv.clientWidth,hh=cv.clientHeight;if(!w)return;const W_=Math.round(w*dpr),H_=Math.round(hh*dpr);if(cv.width!==W_||cv.height!==H_){cv.width=W_;cv.height=H_}const x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);
     x.fillStyle=tok("--panel");x.fillRect(0,0,w,hh);const all=paths.flat();const lo=Math.min(...all)*.97,hi=Math.max(...all)*1.03;const L=8,Rp=60,T=10,B=12;const n=Math.max(...paths.map(p=>p.length))-1||1;
     const X=i=>L+i/n*(w-L-Rp),Y=v=>T+(hi-v)/(hi-lo)*(hh-T-B);x.font="11px "+tok("--f-mono");x.textBaseline="middle";
     for(let k=0;k<=4;k++){const v=hi-(hi-lo)*k/4,py=Y(v);x.strokeStyle=tok("--grid");x.beginPath();x.moveTo(L,py);x.lineTo(w-Rp,py);x.stroke();x.fillStyle=tok("--muted");x.fillText("$"+Math.round(v).toLocaleString(),w-Rp+6,py)}
@@ -2241,7 +2241,7 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
 
   /* geometry, rebuilt on every draw */
   let G=null;
-  function draw(){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,hh=cv.clientHeight;if(!w||!hh)return;cv.width=Math.round(w*dpr);cv.height=Math.round(hh*dpr);
+  function draw(){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,hh=cv.clientHeight;if(!w||!hh)return;const W_=Math.round(w*dpr),H_=Math.round(hh*dpr);if(cv.width!==W_||cv.height!==H_){cv.width=W_;cv.height=H_}
     const x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);
     const C={bg:tok("--panel"),grid:tok("--grid"),muted:tok("--muted"),up:tok("--up"),down:tok("--down"),ink:tok("--ink"),acc:tok("--accent"),mark:tok("--mark"),zone:tok("--zone"),line:tok("--line")};
     x.fillStyle=C.bg;x.fillRect(0,0,w,hh);if(!bars.length){G=null;return}
@@ -2351,7 +2351,9 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   live.add(draw);new ResizeObserver(draw).observe(cv);
   /* real-time: stream every trade into the newest candle */
   const BI={M:"1M",W:"1w","3D":"3d",D:"1d","720":"12h","240":"4h","60":"1h","30":"30m","15":"15m","5":"5m"};
-  function redrawSoon(){if(rafQ)return;rafQ=true;requestAnimationFrame(()=>{rafQ=false;if(!cv.isConnected)return;upd();draw()})}
+  /* battery: the stream can send many updates a second; redraw at most once a second, and never while hidden */
+  let lastPaint=0;
+  function redrawSoon(){if(!cv.isConnected){wsClose();return}if(rafQ)return;rafQ=true;const wait=Math.max(0,1000-(Date.now()-lastPaint));setTimeout(()=>requestAnimationFrame(()=>{rafQ=false;if(!cv.isConnected||document.hidden)return;lastPaint=Date.now();upd();draw()}),wait)}
   function applyBar(k){if(!bars.length||ov)return;const L=bars[bars.length-1];lastTick=Date.now();
     if(k.t===L.t){L.o=k.o;L.h=k.h;L.l=k.l;L.c=k.c;L.v=k.v}
     else if(k.t>L.t){const atEnd=view.start+view.n>=bars.length-2;bars.push(k);if(atEnd)view.start+=1}redrawSoon()}
@@ -2369,10 +2371,12 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     if(!sock){wsHost++;return}
     ws=sock;let got=false;const om=sock.onmessage;sock.onmessage=e=>{if(!got){got=true;wsTry=0}om(e)};
     sock.onclose=sock.onerror=()=>{if(ws!==sock)return;ws=null;wsKey="";if(!got)wsHost++;if(!cv.isConnected)return;
-      setTimeout(()=>{if(cv.isConnected&&!document.hidden)wsOpen()},Math.min(30000,1000*2**Math.min(5,wsTry++)))}}
-  document.addEventListener("visibilitychange",()=>{if(!cv.isConnected)return;if(document.hidden)wsClose();else{wsKey="";wsOpen();reload(true)}});
+      setTimeout(()=>{if(cv.isConnected&&!document.hidden&&onScreen)wsOpen()},Math.min(30000,1000*2**Math.min(5,wsTry++)))}}
+  let onScreen=true;
+  document.addEventListener("visibilitychange",()=>{if(!cv.isConnected)return;if(document.hidden)wsClose();else if(onScreen){wsKey="";wsOpen();reload(true)}});
+  try{const io=new IntersectionObserver(es=>{if(!cv.isConnected){io.disconnect();wsClose();return}const v=es[es.length-1].isIntersecting;if(v===onScreen)return;onScreen=v;if(!v)wsClose();else if(!document.hidden){wsKey="";wsOpen()}});io.observe(cv)}catch(e){}
   /* backup: re-fetch candles every minute in case the stream drops */
-  const tick=setInterval(()=>{if(!cv.isConnected){clearInterval(tick);return}if(document.hidden||pan||pend)return;
+  const tick=setInterval(()=>{if(!cv.isConnected){clearInterval(tick);wsClose();return}if(document.hidden||!onScreen||pan||pend||(ws&&Date.now()-lastTick<90000))return;
     mcLoad(cfg.sym,cfg.iv).then(r=>{if(!cv.isConnected)return;const atEnd=view.start+view.n>=bars.length-2;const grow=r.bars.length-bars.length;bars=r.bars;src=r.src;if(atEnd&&grow>0)view.start+=grow;upd();draw()}).catch(()=>{})},60000);
     /* ---------- practice on the real chart: the app checks your answers ---------- */
   const i0v=()=>Math.max(0,Math.ceil(view.start)),i1v=()=>Math.min(bars.length-1,Math.floor(view.start+view.n)-1,ov&&ov.hideFrom!=null?ov.hideFrom-1:1e9);
