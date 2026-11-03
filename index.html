@@ -265,6 +265,29 @@ body{margin:0}
   .mccard{padding:10px}
   .tvbox{height:calc(100svh - 260px)}
 }
+/* notes deck */
+.deck{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start}
+.deckside{position:sticky;top:12px;max-height:calc(100vh - 110px);overflow:auto;padding:12px}
+.deckside-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.deckclose{display:none}
+.deckgroup{margin-bottom:10px}.deckles{font-family:var(--f-display);font-weight:700;font-size:14px;padding:6px 6px;cursor:pointer;display:flex;gap:8px}.deckles .n{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:400}
+.decklink{display:block;width:100%;text-align:left;border:0;background:transparent;padding:6px 8px 6px 30px;font-size:13px;color:var(--muted);border-radius:8px;line-height:1.3}
+.decklink.on{background:var(--grad-soft),var(--bg);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--accent)}
+.deckhead{display:flex;justify-content:space-between;align-items:baseline;margin:0 4px 8px}
+.slide{min-height:460px;display:flex;flex-direction:column;justify-content:center;padding:28px 32px;overflow:auto}
+.slide section{border-top:0;padding-top:0}.slide h4{font-size:24px;margin-bottom:12px}.slide p,.slide li{font-size:17px}
+.slide.cover{background:var(--grad-soft),var(--panel);text-align:left}.slide.cover .hero{font-size:40px!important;margin:6px 0 10px}
+.slide.rem .remember{font-size:18px;padding:20px 22px}
+@keyframes slidein{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}@keyframes slideback{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.deckdots{display:flex;gap:6px;justify-content:center;margin:12px 0 4px;flex-wrap:wrap}.deckdots .dot{width:9px;height:9px;padding:0;border-radius:50%;border:0;background:var(--line)}.deckdots .dot.on{background:var(--accent);width:22px;border-radius:5px}
+.deckbar{display:flex;gap:8px;justify-content:space-between;margin-top:8px}.deckbar button{min-width:96px}.deckidx{display:none}
+@media (max-width:820px){
+  .deck{grid-template-columns:minmax(0,1fr)}
+  .deckside{display:none}.deckside.open{display:block;position:fixed;inset:0;z-index:50;max-height:none;border-radius:0;padding:calc(env(safe-area-inset-top,0px) + 16px) 18px calc(env(safe-area-inset-bottom,0px) + 24px)}
+  .deckclose{display:inline-block;font-size:20px}.deckidx{display:inline-block}
+  .slide{min-height:calc(100svh - 300px);padding:20px 18px;justify-content:flex-start}.slide h4{font-size:21px}.slide p,.slide li{font-size:16px}.slide.cover{justify-content:center}.slide.cover .hero{font-size:32px!important}
+  .deckbar button{min-width:0;flex:1}
+}
+.ltime{margin:0 0 10px;font-size:14px;color:var(--muted,inherit)}
 /* sync */
 a.chip.sync{text-decoration:none;display:inline-flex;gap:6px;align-items:center}a.chip.sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
 a.chip.sync.on::before{background:var(--good)}a.chip.sync.err::before,a.chip.sync.native::before{background:var(--accent)}a.chip.sync.native{color:var(--accent);border-color:var(--accent)}
@@ -898,11 +921,11 @@ function gate(m){
 }
 
 const PROGRAM=[
- {n:1,t:"Foundations",sub:"How markets and charts work, trend, support and resistance, risk",gate:"Read 10 charts: trend, swings and levels, mixed. Pass with 8.",ls:lessons.map(l=>[l.n,l.t])},
- {n:2,t:"Core chart reading",sub:"Trendlines, ranges, candlesticks, classical patterns, volume",gate:"Name the pattern, its location and your action on 30 charts. Pass with 24.",ls:[[9,"Trendlines and channels"],[10,"Retracements and pullbacks"],[11,"Trading ranges"],[12,"Single and two-candle reversals"],[13,"Stars, harami, doji and continuation candles"],[14,"Candles plus Western tools"],[15,"Classical reversal patterns"],[16,"Continuation patterns"],[17,"Volume and open interest"]]},
- {n:3,t:"Indicators and structure",sub:"Moving averages, oscillators, the market cycle, timeframes, intermarket",gate:"Write a full top-down analysis of BTC, ETH and a stock index, then grade it 4 weeks later.",ls:[[18,"Moving averages"],[19,"RSI and stochastics"],[20,"MACD and momentum"],[21,"The market cycle and the four trades"],[22,"Trends, ranges and the shift between them"],[23,"Multiple timeframe analysis"],[24,"Long-term charts"],[25,"Intermarket analysis and breadth"],[26,"Point and figure, Elliott Wave, cycles"]]},
- {n:4,t:"Auction and order flow",sub:"Market Profile, volume profile, order flow, failed moves",gate:"Call the day type on 10 profile days before the close. Pass with 7.",ls:[[27,"The market as an auction"],[28,"Market Profile basics"],[29,"Day types and the four steps"],[30,"Volume profile"],[31,"Profile setups"],[32,"Order book, footprint and delta"],[33,"Fake moves and failed patterns"],[34,"Liquidity, volatility and coin character"]]},
- {n:5,t:"Edge and mastery",sub:"Setups, trade management, sizing, backtesting, your plan, psychology",gate:"50 paper trades by your plan with positive expectancy, then go live at quarter size.",ls:[[35,"The four trade templates"],[36,"Trade management and exits"],[37,"Position sizing and risk of ruin"],[38,"Record keeping and statistics"],[39,"Backtesting ideas"],[40,"Crypto-specific trading"],[41,"Trading psychology and biases"],[42,"Your trading plan and going live"]]}];
+ {n:1,time:"3 to 4 weeks",t:"Foundations",sub:"How markets and charts work, trend, support and resistance, risk",gate:"Read 10 charts: trend, swings and levels, mixed. Pass with 8.",ls:lessons.map(l=>[l.n,l.t])},
+ {n:2,time:"about 4 weeks",t:"Core chart reading",sub:"Trendlines, ranges, candlesticks, classical patterns, volume",gate:"Name the pattern, its location and your action on 30 charts. Pass with 24.",ls:[[9,"Trendlines and channels"],[10,"Retracements and pullbacks"],[11,"Trading ranges"],[12,"Single and two-candle reversals"],[13,"Stars, harami, doji and continuation candles"],[14,"Candles plus Western tools"],[15,"Classical reversal patterns"],[16,"Continuation patterns"],[17,"Volume and open interest"]]},
+ {n:3,time:"about 4 weeks",t:"Indicators and structure",sub:"Moving averages, oscillators, the market cycle, timeframes, intermarket",gate:"Write a full top-down analysis of BTC, ETH and a stock index, then grade it 4 weeks later.",ls:[[18,"Moving averages"],[19,"RSI and stochastics"],[20,"MACD and momentum"],[21,"The market cycle and the four trades"],[22,"Trends, ranges and the shift between them"],[23,"Multiple timeframe analysis"],[24,"Long-term charts"],[25,"Intermarket analysis and breadth"],[26,"Point and figure, Elliott Wave, cycles"]]},
+ {n:4,time:"3 to 4 weeks",t:"Auction and order flow",sub:"Market Profile, volume profile, order flow, failed moves",gate:"Call the day type on 10 profile days before the close. Pass with 7.",ls:[[27,"The market as an auction"],[28,"Market Profile basics"],[29,"Day types and the four steps"],[30,"Volume profile"],[31,"Profile setups"],[32,"Order book, footprint and delta"],[33,"Fake moves and failed patterns"],[34,"Liquidity, volatility and coin character"]]},
+ {n:5,time:"4 to 6 weeks, plus your 50 paper trades",t:"Edge and mastery",sub:"Setups, trade management, sizing, backtesting, your plan, psychology",gate:"50 paper trades by your plan with positive expectancy, then go live at quarter size.",ls:[[35,"The four trade templates"],[36,"Trade management and exits"],[37,"Position sizing and risk of ruin"],[38,"Record keeping and statistics"],[39,"Backtesting ideas"],[40,"Crypto-specific trading"],[41,"Trading psychology and biases"],[42,"Your trading plan and going live"]]}];
 function mapView(m){
   const n=lessons.filter(l=>state.done[l.id]).length;
   m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"Your program"),h("h2",{},"42 lessons, 5 levels, about 6 to 8 months"),
@@ -910,6 +933,7 @@ function mapView(m){
     h("div",{class:"row"},h("a",{href:"#"+((lessons.find(l=>!state.done[l.id])||{id:"gate"}).id)},n?"Continue where you left off →":"Start Lesson 1 →"))));
   PROGRAM.forEach(L=>{const open=L.n===1;const card=h("section",{class:"card"},h("div",{class:"done-row"},h("div",{},h("div",{class:"eyebrow"},"Level "+L.n+(open?"":" · coming next")),h("h3",{style:"margin:4px 0 2px"},L.t)),h("span",{class:"score"},open?n+" of 8 done":L.ls.length+" lessons")),
       h("p",{class:"read",style:"margin:4px 0 10px"},L.sub),
+      h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},L.time),L.n<5?" (2 to 3 lessons a week, plus the test)":" (2 to 3 lessons a week)"),
       h("div",{class:"maplist"},...L.ls.map(([num,t])=>{const les=lessons.find(x=>x.n===num);const lab=[h("span",{class:"n"},String(num).padStart(2,"0")),h("span",{},t),h("span",{class:"ok"},les&&state.done[les.id]?"✓":"")];
         return les?h("a",{href:"#"+les.id,class:"mapitem"},...lab):h("div",{class:"mapitem locked"},...lab)})),
       h("p",{class:"read"},h("b",{},"Level test: "),L.gate,open?" ":"",open?h("a",{href:"#gate"},"Take it →"):""));m.append(card)})}
@@ -1142,10 +1166,36 @@ function homeView(m){const next=LESSONS.find(x=>!state.done[x.id]);const due=due
   const g=h("div",{class:"lgrid"});LESSONS.forEach(L=>{const p=mastery(L.id);g.append(h("button",{class:"ltile"+(state.done[L.id]?" done":"")+(next&&next.id===L.id?" next":""),on:{click:()=>startSession("lesson",L.id)},title:"Replay lesson "+L.n},
     ring(state.done[L.id]?Math.max(p,.08):0),h("span",{class:"n"},"Lesson "+L.n),h("span",{class:"t"},L.t),h("span",{class:"s"},state.done[L.id]?Math.round(p*100)+"% remembered":(next&&next.id===L.id?"Up next":"Not started"))))});
   m.append(h("section",{class:"card"},h("div",{class:"done-row"},h("h3",{style:"margin:0"},"Level 1 · Foundations"),h("span",{class:"score"},nDone+" of 8 lessons")),
-    h("p",{class:"read",style:"margin:4px 0 12px"},"The ring fills as you keep remembering a lesson over days and weeks, not just when you finish it."),g));
+    h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},PROGRAM[0].time),", about 2 to 3 lessons a week"),h("p",{class:"read",style:"margin:4px 0 12px"},"The ring fills as you keep remembering a lesson over days and weeks, not just when you finish it."),g));
   const sb=document.getElementById("start");if(sb)sb.focus({preventScroll:true})}
-function notesView(m){m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"Look things up"),h("h2",{},"Lesson notes"),h("p",{class:"read"},"Everything from the lessons in one place. Use it to check something, not to reread before a session: testing yourself works better than rereading.")));
-  LESSONS.forEach(L=>{const d=h("details",{class:"card notes"});d.append(h("summary",{},h("span",{class:"n"},String(L.n).padStart(2,"0")),L.t));const body=h("div",{class:"notes",html:NOTES[L.id]});d.append(body);m.append(d)})}
+/* ---------- Lesson notes as a slide deck with an index ---------- */
+function noteSlides(){const out=[];LESSONS.forEach(L=>{out.push({L,title:L.t,cover:true});const tmp=document.createElement("div");tmp.innerHTML=NOTES[L.id]||"";
+  [...tmp.children].forEach(el=>{const h4=el.querySelector("h4");out.push({L,title:h4?h4.textContent:(el.classList.contains("remember")?"Remember":"Notes"),html:el.outerHTML,remember:el.classList.contains("remember")})})});return out}
+function notesView(m){const S=noteSlides();let cur=0;try{cur=Math.min(S.length-1,Math.max(0,+localStorage.getItem("cs-notes-pos")||0))}catch(e){}
+  const side=h("nav",{class:"deckside card","aria-label":"Notes index"}),main=h("div",{class:"deckmain"}),deck=h("div",{class:"deck"},side,main);m.append(deck);
+  const eyebrow=h("div",{class:"eyebrow"}),count=h("span",{class:"score"}),slide=h("section",{class:"card notes slide"}),bar=h("div",{class:"deckbar"});
+  const prev=h("button",{"aria-label":"Previous slide",on:{click:()=>go(cur-1)}},"‹ Back"),next=h("button",{class:"primary","aria-label":"Next slide",on:{click:()=>go(cur+1)}},"Next ›");
+  const idxBtn=h("button",{class:"deckidx",on:{click:()=>side.classList.add("open")}},"☰ Index");
+  const dots=h("div",{class:"deckdots"});
+  main.append(h("div",{class:"deckhead"},eyebrow,count),slide,dots,h("div",{class:"deckbar"},prev,idxBtn,next));
+  /* index: every lesson with its slides */
+  side.append(h("div",{class:"deckside-head"},h("b",{},"Index"),h("button",{class:"ghost deckclose",on:{click:()=>side.classList.remove("open")}},"✕")));
+  const links=[];LESSONS.forEach(L=>{const g=h("div",{class:"deckgroup"});g.append(h("div",{class:"deckles"},h("span",{class:"n"},String(L.n).padStart(2,"0")),L.t));
+    S.forEach((x,k)=>{if(x.L!==L||x.cover)return;const a=h("button",{class:"decklink",on:{click:()=>{go(k);side.classList.remove("open")}}},x.title);links[k]=a;g.append(a)});
+    g.firstChild.addEventListener("click",()=>{go(S.findIndex(x=>x.L===L));side.classList.remove("open")});side.append(g)});
+  function go(k,quiet){if(k<0||k>=S.length)return;const dir=k>cur?1:-1;cur=k;try{localStorage.setItem("cs-notes-pos",k)}catch(e){}
+    const x=S[k];eyebrow.textContent="Lesson "+x.L.n+" · "+x.L.t;const inL=S.filter(y=>y.L===x.L),pos=inL.indexOf(x);count.textContent=(pos+1)+" / "+inL.length;
+    slide.className="card notes slide"+(x.cover?" cover":"")+(x.remember?" rem":"");slide.innerHTML="";
+    if(x.cover)slide.append(h("div",{class:"eyebrow"},"Lesson "+x.L.n),h("h2",{class:"hero"},x.L.t),h("p",{class:"read"},(inL.length-1)+" slides · swipe or use the arrows"));
+    else slide.innerHTML=x.html;
+    if(!quiet&&!matchMedia("(prefers-reduced-motion: reduce)").matches){slide.style.animation="none";void slide.offsetWidth;slide.style.animation=(dir>0?"slidein":"slideback")+" .25s ease-out"}
+    dots.innerHTML="";inL.forEach((y,j)=>dots.append(h("button",{class:"dot"+(y===x?" on":""),"aria-label":"Slide "+(j+1),on:{click:()=>go(S.indexOf(y))}})));
+    prev.disabled=k===0;next.disabled=k===S.length-1;next.textContent=k<S.length-1&&S[k+1].cover?"Next lesson ›":"Next ›";
+    links.forEach((a,j)=>a&&a.classList.toggle("on",j===k));const on=links[k];if(on&&side.scrollHeight>side.clientHeight)on.scrollIntoView({block:"nearest"})}
+  /* swipe on phones, arrow keys on the Mac */
+  let sx=null,sy=0;slide.addEventListener("pointerdown",e=>{sx=e.clientX;sy=e.clientY});slide.addEventListener("pointerup",e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5)go(cur+(dx<0?1:-1))});
+  const key=e=>{if(!deck.isConnected){document.removeEventListener("keydown",key);return}if(e.target.closest&&e.target.closest("input,textarea"))return;if(e.key==="ArrowRight"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowLeft"){go(cur-1);e.preventDefault()}};document.addEventListener("keydown",key);
+  go(cur,true)}
 
 /* =====================================================================
    TradingView section: live TradingView chart + an 8-lesson course on using it.
