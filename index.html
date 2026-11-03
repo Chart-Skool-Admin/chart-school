@@ -2013,7 +2013,8 @@ function mcq(el,q,onAnswer){const order=shuffle(q.o.map((t,i)=>i));const box=h("
   order.forEach((i,k)=>box.append(h("button",{class:"opt","data-key":String(k+1),on:{click:e=>{if(done)return;if(Date.now()-STEP_AT<300)return;/* ignore a tap that carried over from the last screen */done=true;const ok=i===q.a;
     [...box.children].forEach(b=>b.disabled=true);e.currentTarget.classList.add(ok?"pick-good":"pick-bad");box.children[order.indexOf(q.a)].classList.add("pick-good");
     if(IS_PHONE()){[...box.children].forEach(b=>{if(!b.classList.contains("pick-good")&&!b.classList.contains("pick-bad"))b.hidden=true});const cf=el.querySelector(".qpic");if(cf&&q.ex)cf.hidden=true}
-    onAnswer(ok)}}},h("span",{class:"k"},String(k+1)),h("span",{},q.o[i]))));
+    /* paint the pick first, then do the heavier work (feedback, example chart, fitting) on the next frame, so the tap feels instant */
+    requestAnimationFrame(()=>setTimeout(()=>onAnswer(ok),0))}}},h("span",{class:"k"},String(k+1)),h("span",{},q.o[i]))));
   el.append(box)}
 
 function buildSession(kind,lid){const steps=[];let reviewEnd=0;
@@ -2106,10 +2107,11 @@ try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
 /* iPhone pauses ("interrupts") web audio when you switch apps or lock the phone, and it often never resumes.
    So close the audio when the page is hidden and build a fresh one on the next tap. This also saves battery. */
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&sfxCtx){try{sfxCtx.close()}catch(e){}sfxCtx=null}});
-function sfxUnlock(){try{if(sfxCtx&&(sfxCtx.state==="closed"||sfxCtx.state==="interrupted")){try{sfxCtx.close()}catch(e){}sfxCtx=null}
-  try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
-  sfxCtx=sfxCtx||new (window.AudioContext||window.webkitAudioContext)();const c=sfxCtx;if(c.state!=="running")c.resume();
-  const b=c.createBuffer(1,1,22050),src=c.createBufferSource();src.buffer=b;src.connect(c.destination);src.start(0)}catch(e){}}
+/* keep one audio context and only wake it when it isn't running: making a new one, or a silent buffer on every tap, is slow on iPhone */
+function sfxUnlock(){try{if(sfxCtx&&sfxCtx.state==="closed")sfxCtx=null;
+  if(!sfxCtx){try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
+    sfxCtx=new (window.AudioContext||window.webkitAudioContext)();const c=sfxCtx,b=c.createBuffer(1,1,22050),src=c.createBufferSource();src.buffer=b;src.connect(c.destination);src.start(0)}
+  if(sfxCtx.state!=="running")sfxCtx.resume().catch(()=>{})}catch(e){}}
 ["pointerdown","touchend","keydown"].forEach(t=>document.addEventListener(t,sfxUnlock,{capture:true,passive:true}));
 function sfx(kind){if(state.sound===false)return;try{sfxUnlock();const c=sfxCtx;if(c.state!=="running"){c.resume().then(()=>sfxPlay(kind)).catch(()=>{});return}sfxPlay(kind)}catch(e){}}
 function sfxPlay(kind){try{const c=sfxCtx;
