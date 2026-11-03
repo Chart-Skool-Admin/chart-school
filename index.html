@@ -863,34 +863,39 @@ function streakNow(){const s=state.streak;if(!s.last)return 0;return(s.last===to
 
 /* ---------- final test: full analysis on hypothetical charts ---------- */
 function gate(m){
-  const intro=h("section",{class:"card"},h("div",{class:"eyebrow"},"Level 1 gate"),h("h2",{},"Analyse 20 charts"),
-    h("p",{class:"task"},"Each chart is new and made up. For each one you do a full read: call the trend, mark the swing points, and on range charts place support and resistance. A chart passes when every step passes. You need 16 of 20 to finish Level 1."),
-    h("p",{class:"score"},state.best.gate!=null?`Your best so far: ${state.best.gate} of 20`:"Not attempted yet"));
+  const NCH=10,PASS=8;
+  const intro=h("section",{class:"card"},h("div",{class:"eyebrow"},"Level 1 gate"),h("h2",{},"Read 10 charts"),
+    h("p",{class:"task"},"Ten new charts, one question each, in mixed order: call the trend on some, mark the swing points on some, place support and resistance on others. You need 8 of 10 to finish Level 1."),
+    h("p",{class:"score"},state.best.g10!=null?`Your best so far: ${state.best.g10} of ${NCH}`:(state.done.gate?"Already passed (old 20-chart test)":"Not attempted yet")));
   const area=h("section",{class:"card"});m.append(intro,area);
-  let idx=0,passed=0;const steps=h("div",{class:"steps"});
-  function start(){idx=0;passed=0;nextChart()}
-  function nextChart(){live.clear();area.innerHTML="";if(idx>=20)return finish();
-    const want=pick(["up","down","side","side"]);const rw=rwFind(want,60,60,{piv:[6,14]});const type=rw?rw.type:want;const bars=rw?rw.bars:genSwing(type,60);let chartOk=true;
-    const stepNames=["Trend","Swings"].concat(type==="side"?["Levels"]:[]);const head=h("div",{class:"done-row"},h("h3",{},`Chart ${idx+1} of 20`),h("span",{class:"score"},`${passed} passed so far`));
-    const st=h("div",{class:"steps"},...stepNames.map((n,k)=>h("span",{class:k?"":"on"},n)));const body=h("div");area.append(head,st,body);
-    let k=0;const setStep=(ok)=>{st.children[k].className="done";if(!ok)chartOk=false;k++;if(st.children[k])st.children[k].className="on"};
-    // step 1: trend on the same bars
-    const cv=h("canvas",{class:"chart"});mountChart(cv,()=>[bars,{}]);const btns={};const f=h("div",{hidden:""});const names={up:"Uptrend",down:"Downtrend",side:"Sideways"};
-    body.append(h("p",{class:"task"},"Step 1. What is the trend?"),cv,h("div",{class:"row"},...["up","down","side"].map(t=>btns[t]=h("button",{on:{click:()=>{Object.values(btns).forEach(b=>b.disabled=true);const ok=t===type;btns[t].className=ok?"pick-good":"pick-bad";btns[type].className="pick-good";
-      fb(f,ok?"good":"bad",(ok?"Correct.":"It was <b>"+names[type].toLowerCase()+"</b>.")+rwTag(rw));setStep(ok);cont.hidden=false}}},names[t]))),f);
-    const cont=h("button",{class:"primary",hidden:"",on:{click:step2}},"Next step");body.append(h("div",{class:"row"},cont));
-    function step2(){live.clear();body.innerHTML="";pivotRound(body,ok=>{setStep(ok);const b=h("button",{class:"primary",on:{click:type==="side"?step3:end}},type==="side"?"Next step":"Next chart");body.append(h("div",{class:"row"},b))},{bars,type,meta:rw&&rw.meta,prompt:"Step 2. Mark the swing highs and lows on the same chart (3 candles each side)."})}
-    function step3(){live.clear();body.innerHTML="";srRound(body,ok=>{setStep(ok);const b=h("button",{class:"primary",on:{click:end}},"Next chart");body.append(h("div",{class:"row"},b))},{prompt:"Step 3. A new range chart from the same market. Click twice to place support and resistance."})}
-    function end(){if(chartOk)passed++;idx++;nextChart()}
+  const names={up:"Uptrend",down:"Downtrend",side:"Sideways"},tname={trend:"Trend",swings:"Swings",levels:"Levels"};
+  let idx=0,passed=0,plan=[],liveSets=[];
+  function start(){idx=0;passed=0;plan=shuffle(["trend","trend","trend","trend","swings","swings","swings","levels","levels","levels"]);liveSets=shuffle([["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"],["SOL","D"]]);nextChart()}
+  function nextChart(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
+    const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`Chart ${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
+    const body=h("div");area.append(head,body);
+    const nextBtn=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextChart()}}},idx===NCH-1?"See my result":"Next chart");
+    const after=ok=>{if(ok)passed++;head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nextBtn()))};
+    if(task==="trend"){const want=pick(["up","down","side"]);const rw=rwFind(want,60,60,{piv:[6,14]});const type=rw?rw.type:want;const bars=rw?rw.bars:genSwing(type,60);
+      const cv=h("canvas",{class:"chart"});mountChart(cv,()=>[bars,{}]);const btns={};const f=h("div",{hidden:""});
+      body.append(h("p",{class:"task"},"What is the trend? Look at the swing highs and lows, not the last few candles."),cv,h("div",{class:"row"},...["up","down","side"].map(t=>btns[t]=h("button",{on:{click:()=>{Object.values(btns).forEach(b=>b.disabled=true);const ok=t===type;btns[t].className=ok?"pick-good":"pick-bad";btns[type].className="pick-good";
+        fb(f,ok?"good":"bad",(ok?"Correct.":"It was <b>"+names[type].toLowerCase()+"</b>.")+rwTag(rw));after(ok)}}},names[t]))),f)}
+    else if(task==="swings"){const src=liveSets.shift()||["BTC","D"];const ivName=(MC_IVS.find(v=>v[1]===src[1])||[""])[0];
+      body.append(h("p",{class:"score"},"Loading the live "+src[0]+" chart…"));
+      mcLoad(src[0],src[1]).then(r=>{if(plan[idx]!=="swings"||!body.isConnected)return;const bars=r.bars.slice(-60);if(bars.length<40)throw new Error("short");body.innerHTML="";
+        pivotRound(body,after,{bars,type:"any",prompt:"Live chart: "+src[0]+"/USD · "+ivName+" · the latest 60 candles. Mark the swing highs and lows (3 candles each side). The newest 3 candles can't be swings yet."})})
+      .catch(()=>{if(!body.isConnected)return;body.innerHTML="";const rw=rwFind("any",60,60,{piv:[6,14]});const type=rw?rw.type:pick(["up","down","side"]);const bars=rw?rw.bars:genSwing(type,60);
+        pivotRound(body,after,{bars,type,meta:rw&&rw.meta,prompt:"Live prices aren't loading, so this one is from past data. Mark the swing highs and lows (3 candles each side)."})})}
+    else srRound(body,after,{prompt:"Click twice to place support and resistance."})
   }
-  function finish(){const ok=passed>=16;state.best.gate=Math.max(state.best.gate||0,passed);if(ok)state.done.gate=true;save();renderNav();
-    area.append(h("h3",{},ok?"Level 1 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of 20. You can read trend, swings and levels reliably. Move on to Level 2 in the curriculum.`:`${passed} of 20. You need 16. Go back to the lesson where you lost the most charts, practise for a few days, then try again.`),
+  function finish(){const ok=passed>=PASS;state.best.g10=Math.max(state.best.g10||0,passed);if(ok)state.done.gate=true;save();renderNav();
+    area.append(h("h3",{},ok?"Level 1 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You can read trend, swings and levels reliably. Move on to Level 2.`:`${passed} of ${NCH}. You need ${PASS}. Practise the kind of chart you missed most (the live chart's swing switch helps with swings), then try again.`),
       h("div",{class:"row"},h("button",{class:"primary",on:{click:start}},"Take the test again")))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
 }
 
 const PROGRAM=[
- {n:1,t:"Foundations",sub:"How markets and charts work, trend, support and resistance, risk",gate:"Analyse 20 charts: trend, swings and levels. Pass with 16.",ls:lessons.map(l=>[l.n,l.t])},
+ {n:1,t:"Foundations",sub:"How markets and charts work, trend, support and resistance, risk",gate:"Read 10 charts: trend, swings and levels, mixed. Pass with 8.",ls:lessons.map(l=>[l.n,l.t])},
  {n:2,t:"Core chart reading",sub:"Trendlines, ranges, candlesticks, classical patterns, volume",gate:"Name the pattern, its location and your action on 30 charts. Pass with 24.",ls:[[9,"Trendlines and channels"],[10,"Retracements and pullbacks"],[11,"Trading ranges"],[12,"Single and two-candle reversals"],[13,"Stars, harami, doji and continuation candles"],[14,"Candles plus Western tools"],[15,"Classical reversal patterns"],[16,"Continuation patterns"],[17,"Volume and open interest"]]},
  {n:3,t:"Indicators and structure",sub:"Moving averages, oscillators, the market cycle, timeframes, intermarket",gate:"Write a full top-down analysis of BTC, ETH and a stock index, then grade it 4 weeks later.",ls:[[18,"Moving averages"],[19,"RSI and stochastics"],[20,"MACD and momentum"],[21,"The market cycle and the four trades"],[22,"Trends, ranges and the shift between them"],[23,"Multiple timeframe analysis"],[24,"Long-term charts"],[25,"Intermarket analysis and breadth"],[26,"Point and figure, Elliott Wave, cycles"]]},
  {n:4,t:"Auction and order flow",sub:"Market Profile, volume profile, order flow, failed moves",gate:"Call the day type on 10 profile days before the close. Pass with 7.",ls:[[27,"The market as an auction"],[28,"Market Profile basics"],[29,"Day types and the four steps"],[30,"Volume profile"],[31,"Profile setups"],[32,"Order book, footprint and delta"],[33,"Fake moves and failed patterns"],[34,"Liquidity, volatility and coin character"]]},
@@ -1112,7 +1117,7 @@ function homeView(m){const next=LESSONS.find(x=>!state.done[x.id]);const due=due
   m.append(h("div",{class:"quick"},
     h("button",Object.assign({class:"tile",on:{click:()=>startSession("review")}},due?{}:{disabled:""}),h("b",{},"Quick review"),h("span",{},due?due+" due · 3 min":"Nothing due today")),
     h("button",{class:"tile",on:{click:()=>startSession("mixed")}},h("b",{},"Mixed chart practice"),h("span",{},"6 charts · 4 min")),
-    h("a",{class:"tile",href:"#gate"},h("b",{},"Level 1 test"),h("span",{},nDone<8?"Best after all 8 lessons":"20 charts · ready"))));
+    h("a",{class:"tile",href:"#gate"},h("b",{},"Level 1 test"),h("span",{},nDone<8?"Best after all 8 lessons":"10 charts · ready"))));
   const g=h("div",{class:"lgrid"});LESSONS.forEach(L=>{const p=mastery(L.id);g.append(h("button",{class:"ltile"+(state.done[L.id]?" done":"")+(next&&next.id===L.id?" next":""),on:{click:()=>startSession("lesson",L.id)},title:"Replay lesson "+L.n},
     ring(state.done[L.id]?Math.max(p,.08):0),h("span",{class:"n"},"Lesson "+L.n),h("span",{class:"t"},L.t),h("span",{class:"s"},state.done[L.id]?Math.round(p*100)+"% remembered":(next&&next.id===L.id?"Up next":"Not started"))))});
   m.append(h("section",{class:"card"},h("div",{class:"done-row"},h("h3",{style:"margin:0"},"Level 1 · Foundations"),h("span",{class:"score"},nDone+" of 8 lessons")),
