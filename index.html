@@ -1398,7 +1398,7 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     h("div",{class:"mcbar"},coin,pxEl,ivRow,logB,magB,refB,h("span",{style:"flex:1"}),stat),
     h("div",{class:"mcbar"},toolRow,clearB),
     h("div",{class:"mcwrap"},cv,selBar,msg),
-    h("p",{class:"read",style:"margin:8px 0 0"},"Scroll or use +/− to zoom, drag to move. Click a drawing to select it: drag it to move, drag its dots to reshape, Backspace to delete. Drawings save automatically for each coin."),
+    h("p",{class:"read",style:"margin:8px 0 0"},(document.documentElement.classList.contains("is-phone")?"Pinch with two fingers to zoom, drag to move. Tap a drawing to select it, then drag it or its dots. Drawings save automatically for each coin.":"Scroll or use +/− to zoom, drag to move. Click a drawing to select it: drag it to move, drag its dots to reshape, Backspace to delete. Drawings save automatically for each coin.")),
     h("div",{class:"row",style:"margin-top:6px"},h("button",{on:{click:()=>zoom(1/1.15)}},"+"),h("button",{on:{click:()=>zoom(1.15)}},"−"),h("button",{on:{click:()=>{fit();draw()}}},"Reset view (Alt+R)"))));
   function sync(){[...ivRow.children].forEach(b=>b.classList.toggle("on",b.dataset.v===cfg.iv));logB.classList.toggle("on",!!cfg.log);magB.classList.toggle("on",!!cfg.mag);
     [...toolRow.children].forEach(b=>b.classList.toggle("on",b.dataset.v===tool));cv.style.cursor=tool==="cursor"?(pan?"grabbing":"grab"):tool==="erase"?"pointer":"crosshair"}
@@ -1488,7 +1488,14 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   function clamp(){view.start=Math.max(-view.n*.8,Math.min(bars.length-view.n*.2,view.start))}
   const pt=ev=>{const r=cv.getBoundingClientRect();return{x:ev.clientX-r.left,y:ev.clientY-r.top}};
   cv.addEventListener("wheel",ev=>{if(!bars.length)return;ev.preventDefault();const p=pt(ev);if(Math.abs(ev.deltaX)>Math.abs(ev.deltaY)){view.start+=ev.deltaX/G.slot;clamp();draw();return}const dy=ev.deltaY*(ev.deltaMode===1?30:ev.deltaMode===2?300:1);zoom(Math.exp(Math.max(-60,Math.min(60,dy))*.0018),p.x)},{passive:false});
-  cv.addEventListener("pointerdown",ev=>{if(!G)return;const p=pt(ev);if(p.x>G.pw)return;
+  /* two-finger pinch zooms the chart (and never the whole page) */
+  const touches=new Map();let pinch=null;
+  const pinchInfo=()=>{const [a,b]=[...touches.values()];return{d:Math.hypot(a.x-b.x,a.y-b.y)||1,x:(a.x+b.x)/2}};
+  cv.addEventListener("pointerdown",ev=>{if(ev.pointerType==="touch"){touches.set(ev.pointerId,pt(ev));if(touches.size===2){pinch=pinchInfo();pan=null;drag=null;pend=null;return}if(touches.size>2)return}},true);
+  cv.addEventListener("pointermove",ev=>{if(!touches.has(ev.pointerId))return;touches.set(ev.pointerId,pt(ev));if(pinch&&touches.size===2){ev.stopImmediatePropagation();const q=pinchInfo();zoom(pinch.d/q.d,q.x);view.start-=(q.x-pinch.x)/(G?G.slot:1);clamp();draw();pinch=q}},true);
+  const tEnd=ev=>{touches.delete(ev.pointerId);if(touches.size<2&&pinch){pinch=null;pan=null;sync&&sync()}};cv.addEventListener("pointerup",tEnd,true);cv.addEventListener("pointercancel",tEnd,true);
+  ["gesturestart","gesturechange"].forEach(t=>cv.addEventListener(t,e=>e.preventDefault()));
+  cv.addEventListener("pointerdown",ev=>{if(pinch)return;if(!G)return;const p=pt(ev);if(p.x>G.pw)return;
     if(prac&&prac.kind==="swings"&&!prac.checked){const i=Math.round(G.I(p.x));const b=bars[i];if(!b||i>i1v())return;const t=p.y<(G.Y(b.h)+G.Y(b.l))/2?"H":"L";
       const ex=prac.user.findIndex(m=>m.i===i&&m.t===t);if(ex>=0)prac.user.splice(ex,1);else prac.user.push({i,t});prac.count.textContent=prac.user.length+" marked";draw();return}
     if(tool==="cursor"){const hd=handleAt(p);const hitD=hd?sel:hitTest(p);
