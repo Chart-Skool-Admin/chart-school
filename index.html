@@ -81,6 +81,10 @@ h3{font-family:var(--f-display);font-weight:500;font-size:19px;margin:0 0 8px}
 .task{font-size:15px;margin:0 0 10px;max-width:68ch}
 canvas.chart{display:block;width:100%;height:320px;border-radius:8px;background:var(--panel);touch-action:manipulation}
 canvas.chart.clickable{touch-action:pan-y}
+/* pressing and sliding on a chart must not select the text around it or open the iPhone Copy / Look Up menu */
+canvas.chart,canvas.mcanvas{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.card:has(canvas.chart.clickable){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html.aiming,html.aiming *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 canvas.chart.qchart{height:220px;margin:4px 0 12px}
 html{touch-action:manipulation}
 html.is-phone canvas.chart.clickable{height:380px}
@@ -510,10 +514,12 @@ function pivotRound(el,done,opts={}){
   const target=ev=>{const p=canvasPoint(cv,ev);const g=cv._g;let i=g.idx(p.x);const b=bars[i];const t=p.y<(g.Y(b.h)+g.Y(b.l))/2?"H":"L";const r=snapR(g.slot);
     const ex=user.findIndex(m=>m.t===t&&Math.abs(m.i-i)<=r);return ex>=0?{i:user[ex].i,t,ex,del:true}:{i:snapI(bars,i,t,r,0,bars.length-1),t}};
   /* aim: while a finger is down (or the mouse hovers) the candle that would be picked is highlighted; it is placed when the finger lifts */
-  const aimAt=ev=>{if(checked||!cv._g)return;aim=target(ev);draw()},aimOff=()=>{if(aim){aim=null;draw()}};
+  const aimAt=ev=>{if(checked||!cv._g)return;aim=target(ev);draw()},aimOff=()=>{document.documentElement.classList.remove("aiming");if(aim){aim=null;draw()}};
+  cv.addEventListener("pointerdown",ev=>{if(ev.pointerType==="touch"){document.documentElement.classList.add("aiming");try{getSelection().removeAllRanges()}catch(e){}}});
+  ["contextmenu","selectstart","dragstart"].forEach(t=>cv.addEventListener(t,e=>e.preventDefault()));
   cv.addEventListener("pointerdown",aimAt);cv.addEventListener("pointermove",ev=>{if(ev.pointerType!=="touch"||ev.buttons)aimAt(ev)});
   cv.addEventListener("pointercancel",aimOff);cv.addEventListener("pointerleave",aimOff);
-  cv.addEventListener("pointerup",ev=>{if(checked||!cv._g||ev.pointerType!=="touch")return;ev.preventDefault();place(target(ev));aim=null;draw()});
+  cv.addEventListener("pointerup",ev=>{if(checked||!cv._g||ev.pointerType!=="touch")return;ev.preventDefault();place(target(ev));aim=null;document.documentElement.classList.remove("aiming");draw()});
   cv.addEventListener("click",ev=>{if(checked||!cv._g||cv._touchPlaced)return;place(target(ev))});
   function place(a){if(a.del){user.splice(a.ex,1);sfx("untap")}else{user.push({i:a.i,t:a.t});sfx("tap")}sc.textContent=user.length+" marked";
     cv._touchPlaced=true;setTimeout(()=>cv._touchPlaced=false,450);rerenderAll()}
