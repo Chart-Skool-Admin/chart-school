@@ -1101,8 +1101,14 @@ function renderStep(){live.clear();app.innerHTML="";const S_=SESSION;const st=S_
   const nx=document.getElementById("next");if(nx&&!nx.closest("[hidden]"))nx.focus({preventScroll:true});window.scrollTo(0,0)}
 /* ---------- achievement sounds: made on the fly with Web Audio, no sound files ---------- */
 let sfxCtx=null;
-function sfx(kind){if(state.sound===false)return;try{sfxCtx=sfxCtx||new (window.AudioContext||window.webkitAudioContext)();const c=sfxCtx;if(c.state==="suspended")c.resume();
-  const t0=c.currentTime+.01,out=c.createGain();out.gain.value=.22;out.connect(c.destination);
+/* iPhone: let sounds play like media (not muted by the ring switch) and unlock audio on the first tap */
+try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
+function sfxUnlock(){try{sfxCtx=sfxCtx||new (window.AudioContext||window.webkitAudioContext)();const c=sfxCtx;if(c.state!=="running")c.resume();
+  const b=c.createBuffer(1,1,22050),src=c.createBufferSource();src.buffer=b;src.connect(c.destination);src.start(0)}catch(e){}}
+["pointerdown","touchend","keydown"].forEach(t=>document.addEventListener(t,sfxUnlock,{capture:true,passive:true}));
+function sfx(kind){if(state.sound===false)return;try{sfxUnlock();const c=sfxCtx;if(c.state!=="running"){c.resume().then(()=>sfxPlay(kind)).catch(()=>{});return}sfxPlay(kind)}catch(e){}}
+function sfxPlay(kind){try{const c=sfxCtx;
+  const t0=c.currentTime+.03,out=c.createGain();out.gain.value=.22;out.connect(c.destination);
   const note=(f,at,len,type,vol)=>{const o=c.createOscillator(),g=c.createGain();o.type=type||"sine";o.frequency.value=f;g.gain.setValueAtTime(0,t0+at);g.gain.linearRampToValueAtTime(vol||1,t0+at+.015);g.gain.exponentialRampToValueAtTime(.001,t0+at+len);o.connect(g);g.connect(out);o.start(t0+at);o.stop(t0+at+len+.05)};
   if(kind==="right"){note(880,0,.18,"triangle",.8);note(1318.5,.08,.3,"triangle",.8)}
   else if(kind==="wrong"){note(220,0,.22,"sine",.7);note(196,.09,.28,"sine",.6)}
@@ -1521,7 +1527,7 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     if(tool==="h"){add({k:"h",p:price});return}
     if(!pend){pend={k:tool,t,p:price};hover=p;draw();return}
     if(tool==="t")add({k:"t",t1:pend.t,p1:pend.p,t2:t,p2:price});else add({k:"z",p1:pend.p,p2:price})});
-  function add(d){const ds=drawsOf();ds.push(d);if(ds.length>150)ds.shift();pend=null;mcSave();setTool("cursor");sel=d;selUI();draw();pop(true)}
+  function add(d){const ds=drawsOf();ds.push(d);if(ds.length>150)ds.shift();pend=null;mcSave();setTool("cursor");sel=d;selUI();draw();const _p=h("div",{class:"pop ok"},"✓");document.body.append(_p);setTimeout(()=>_p.remove(),700)}
   cv.addEventListener("pointermove",ev=>{const p=pt(ev);if(pan&&G){view.start=pan.s-(p.x-pan.x)/G.slot;clamp()}hover=p;
     if(drag&&G){const d=drag.d,o=drag.o,ms=mcIvMs(cfg.iv);drag.moved=true;
       if(drag.w){if(d.k==="t"){d["t"+drag.w]=snapT(p);d["p"+drag.w]=snapP(p)}else d["p"+drag.w]=snapP(p)}
