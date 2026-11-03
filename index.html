@@ -1808,13 +1808,13 @@ function genCdl(kind){const up=cdlUp(kind);const n=rint(20,24);
   const p=b[b.length-1].c;const k=cdlAt(kind,p,p*.017);const at=b.length;b.push(...k);return{bars:b,at,n:k.length}}
 function optsFor(right,pool,names){const o=[right];if(TWIN[right]&&names[TWIN[right]])o.push(TWIN[right]);shuffle(pool).forEach(k=>{if(o.length<4&&!o.includes(k))o.push(k)});return shuffle(o)}
 /* name the boxed candle pattern */
-function cdlRound(el,done,set,opts={}){const kind=pick(set);const g=genCdl(kind);const cv=h("canvas",{class:"chart","aria-label":"Chart with a candle pattern boxed"});const f=h("div",{hidden:""});
+function cdlRound(el,done,set,opts={}){const kind=pick(set);const rw=rwCdl(kind);const g=rw||genCdl(kind);const cv=h("canvas",{class:"chart","aria-label":"Chart with a candle pattern boxed"});const f=h("div",{hidden:""});
   mountChart(cv,()=>[g.bars,{box:{from:g.at,to:g.at+g.n-1}}]);
   const pool=opts.pool||set.concat(SET12,SET13);const choices=optsFor(kind,pool,CDL);const btns={};
   const row=h("div",{class:"opts"},...choices.map((k,j)=>btns[k]=optB(j,CDL[k].n,()=>answer(k))));
   el.append(h("p",{class:"task"},opts.prompt||"Name the boxed candle pattern. Check which way price was going before it."),cv,row,f);
   function answer(k){Object.values(btns).forEach(b=>b.disabled=true);const ok=k===kind;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[kind].classList.add("pick-good");
-    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+CDL[kind].e+(!ok&&TWIN[kind]===k?" Same shape, different trend before it: context decides the name.":""));done(ok,kind)}}
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+CDL[kind].e+(!ok&&TWIN[kind]===k?" Same shape, different trend before it: context decides the name.":"")+rwTag(rw));done(ok,kind)}}
 
 /* ---------- classical chart patterns ---------- */
 const PATS={
@@ -1839,13 +1839,13 @@ const SET15=["hs","hsi","dt","db"],SET16=["asc","desc","sym","bflag","sflag","re
 function genPat(kind){const mir=PAT_MIR[kind];const P=PATS[mir?mir[0]:kind];const flip=!!mir||(kind==="sym"&&R()<.5);const r=pathBars(P.s,P.legs(),.45,.003);
   let b=r.bars,lines=P.lines(r.ends);const M=200;if(flip){const sw={"flat top":"flat bottom","rising lows":"falling highs"};b=mirrorBars(b,M);lines=lines.map(([i1,p1,i2,p2,l])=>[i1,M-p1,i2,M-p2,sw[l]||l])}
   return{bars:b,tl:lines.map(([i1,p1,i2,p2,l])=>({a:{i:i1,p:p1},b:{i:i2,p:p2},c:"--accent",ext:true,w:1.5,dash:true,label:l}))}}
-function patRound(el,done,set,opts={}){const kind=pick(set);const g=genPat(kind);let shown=false;const cv=h("canvas",{class:"chart","aria-label":"Chart with a classical pattern"});const f=h("div",{hidden:""});
+function patRound(el,done,set,opts={}){const kind=pick(set);const rw=rwPat(kind);const g=rw||genPat(kind);let shown=false;const cv=h("canvas",{class:"chart","aria-label":"Chart with a classical pattern"});const f=h("div",{hidden:""});
   mountChart(cv,()=>[g.bars,shown?{tlines:g.tl}:{}]);const all=SET15.concat(SET16);const btns={};
   const ch=[kind];shuffle(set.length>=4?set:all).forEach(k=>{if(ch.length<4&&!ch.includes(k))ch.push(k)});shuffle(all).forEach(k=>{if(ch.length<4&&!ch.includes(k))ch.push(k)});
   const row=h("div",{class:"opts"},...shuffle(ch).map((k,j)=>btns[k]=optB(j,patName(k),()=>answer(k))));
   el.append(h("p",{class:"task"},opts.prompt||"Which pattern is this? Look at the whole shape, then where it broke out."),cv,row,f);
   function answer(k){Object.values(btns).forEach(b=>b.disabled=true);const ok=k===kind;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[kind].classList.add("pick-good");shown=true;rerenderAll();
-    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+patExp(kind)+" The key lines are now drawn on the chart.");done(ok,kind)}}
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+patExp(kind)+" The key lines are now drawn on the chart."+rwTag(rw));done(ok,kind)}}
 
 /* ---------- trendlines ---------- */
 function hullLine(bars,T,pv){const val=i=>T==="L"?bars[i].l:bars[i].h;const H=[];const cr=(o,a,b)=>(a-o)*(val(b)-val(o))-(val(a)-val(o))*(b-o);
@@ -1876,10 +1876,11 @@ function tlineRound(el,done,opts={}){const type=pick(["up","down"]);const rw=rwF
       :"Not quite: "+why.join(", ")+". The dashed purple line shows one good answer."+rwTag(rw));done(ok)}}
 
 /* ---------- retracements ---------- */
-function retrRound(el,done,opts={}){const want=pick(["shallow","normal","deep"]);const f0=want==="shallow"?rint(15,25)/100:want==="normal"?rint(42,58)/100:rint(80,92)/100;
+function retrRound(el,done,opts={}){const want=pick(["shallow","normal","deep"]);const rw=rwRetr(want);const f0=want==="shallow"?rint(15,25)/100:want==="normal"?rint(42,58)/100:rint(80,92)/100;
   const lo0=100,hi0=lo0*(1+rint(20,30)/100);const r=pathBars(lo0-3,[[4,lo0],[rint(24,30),hi0],[rint(8,12),hi0-(hi0-lo0)*f0]],.45);const b0=r.bars;
   let iH=0;for(let i=0;i<=r.ends[1]+1;i++)if(b0[i].h>b0[iH].h)iH=i;let iL=iH;for(let i=iH;i<b0.length;i++)if(b0[i].l<b0[iL].l)iL=i;let lo=Infinity;for(let i=0;i<iH;i++)lo=Math.min(lo,b0[i].l);
-  const hi=b0[iH].h,fr=(hi-b0[iL].l)/(hi-lo);const cat=fr<1/3?"shallow":fr<=2/3?"normal":"deep";const down=R()<.5,M=230,mp=p=>down?M-p:p;const bars=down?mirrorBars(b0,M):b0;
+  let hi=b0[iH].h,fr=(hi-b0[iL].l)/(hi-lo);let cat=fr<1/3?"shallow":fr<=2/3?"normal":"deep";let down=R()<.5;const M=230;let mp=p=>down?M-p:p;let bars=down?mirrorBars(b0,M):b0;
+  if(rw){bars=rw.bars;hi=rw.hi;lo=rw.lo;iL=rw.iL;fr=rw.fr;cat=rw.cat;down=rw.down;mp=p=>p}
   let shown=false;const lv=k=>mp(hi-(hi-lo)*k);const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});
   mountChart(cv,()=>[bars,shown?{hlines:[{p:lv(1/3),c:"--muted",dash:true,w:1,label:"⅓ back"},{p:lv(.5),c:"--accent",dash:true,w:1.5,label:"half"},{p:lv(2/3),c:"--muted",dash:true,w:1,label:"⅔ back"}],
     labels:[{i:iL,p:down?bars[iL].h:bars[iL].l,below:!down,text:Math.round(fr*100)+"% back",c:"--mark"}]}:{}]);
@@ -1887,40 +1888,40 @@ function retrRound(el,done,opts={}){const want=pick(["shallow","normal","deep"])
   const row=h("div",{class:"opts"},...["shallow","normal","deep"].map((k,j)=>btns[k]=optB(j,names[k],()=>answer(k))));
   el.append(h("p",{class:"task"},opts.prompt||"How much of the last swing has this pullback given back, and what does that say?"),cv,row,f);
   function answer(k){Object.values(btns).forEach(x=>x.disabled=true);const ok=k===cat;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[cat].classList.add("pick-good");shown=true;rerenderAll();
-    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+"It gave back about <b>"+Math.round(fr*100)+"%</b> of the "+(down?"fall":"rise")+". "+(cat==="shallow"?"Under a third: the trend is strong and buyers"+(down?" can't":"")+" barely let it dip.":cat==="normal"?"Between a third and two thirds: a normal, healthy pullback.":"Over two thirds: the trend is in serious doubt. Watch the last swing point."));done(ok)}}
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+"It gave back about <b>"+Math.round(fr*100)+"%</b> of the "+(down?"fall":"rise")+". "+(cat==="shallow"?"Under a third: the trend is strong and buyers"+(down?" can't":"")+" barely let it dip.":cat==="normal"?"Between a third and two thirds: a normal, healthy pullback.":"Over two thirds: the trend is in serious doubt. Watch the last swing point.")+rwTag(rw));done(ok)}}
 
 /* ---------- ranges: breakout or fake-out, and volume ---------- */
 function genBrk(real,volMode){let c=pathBars(102,[[8,109.6],[6,100.5],[6,109.8],[6,100.4],[6,109.5],[5,104],[4,109.2]],.45,.003).bars;addVol(c);const at=c.length;
   if(real){const r=pathBars(109.2,real==="short"?[[2,112.8]]:[[3,113.5],[3,112.4],[5,118]],.35,.003).bars;addVol(r);if(volMode)r.forEach((x,k)=>x.v*=volMode==="strong"?(k<3?3:2):.55);c=c.concat(r)}
   else{const p=109.2;c.push({o:p,c:108.4,h:112.6,l:108.1,v:150});const r=pathBars(108.4,[[7,102.6]],.4,.003).bars;addVol(r);c=c.concat(r)}
   return{bars:c,at,top:110,bot:100}}
-function brkRound(el,done,opts={}){const real=R()<.5;const g=genBrk(real);const down=R()<.5,M=210;const bars=down?mirrorBars(g.bars,M):g.bars;const T=down?M-g.top:g.top,Bt=down?M-g.bot:g.bot;
+function brkRound(el,done,opts={}){const real=R()<.5;const rw=rwRange(real?"real":"fake");const g=genBrk(real);const down=R()<.5,M=210;const bars=rw?rw.bars:down?mirrorBars(g.bars,M):g.bars;const T=rw?rw.top:down?M-g.top:g.top,Bt=rw?rw.bot:down?M-g.bot:g.bot;
   const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});mountChart(cv,()=>[bars,{hlines:[{p:T,c:"--muted",dash:true,w:1.5},{p:Bt,c:"--muted",dash:true,w:1.5}]}]);
   const btns={};const nm={real:"Real breakout",fake:"Fake-out"};const want=real?"real":"fake";
   const row=h("div",{class:"row"},...["real","fake"].map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
   el.append(h("p",{class:"task"},opts.prompt||"Price left this range. Real breakout or fake-out? Watch where the candles close."),cv,row,f);
   function answer(k){Object.values(btns).forEach(x=>x.disabled=true);const ok=k===want;btns[k].className=ok?"pick-good":"pick-bad";if(!ok)btns[want].className="pick-good";
-    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(real?"Price <b>closed outside the range and kept going</b>. That's a real breakout. The old edge often gets retested from the other side.":"Price <b>poked out, then closed back inside</b>. The breakout traders are trapped, and their exits push price back across the range."));done(ok)}}
-function volRound(el,done,opts={}){const strong=R()<.5;const g=genBrk("short",strong?"strong":"weak");const bars=g.bars;
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(real?"Price <b>closed outside the range and kept going</b>. That's a real breakout. The old edge often gets retested from the other side.":"Price <b>poked out, then closed back inside</b>. The breakout traders are trapped, and their exits push price back across the range.")+rwTag(rw));done(ok)}}
+function volRound(el,done,opts={}){const strong=R()<.5;const rw=rwRange("real",strong?"strong":"weak");const g=rw||genBrk("short",strong?"strong":"weak");const bars=g.bars;
   const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});mountChart(cv,()=>[bars,{vol:true,hlines:[{p:g.top,c:"--muted",dash:true,w:1.5,label:"range top"}]}]);
   const btns={};const nm={yes:"Trust it more",no:"Be suspicious"};const want=strong?"yes":"no";
   const row=h("div",{class:"row"},...["yes","no"].map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
   el.append(h("p",{class:"task"},opts.prompt||"Price just broke out of the range. Look at the volume bars under the chart. How much do you trust this breakout?"),cv,row,f);
   function answer(k){Object.values(btns).forEach(x=>x.disabled=true);const ok=k===want;btns[k].className=ok?"pick-good":"pick-bad";if(!ok)btns[want].className="pick-good";
-    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(strong?"Volume <b>jumped</b> on the breakout: lots of new buyers stepped in. That backs the move.":"Volume <b>shrank</b> on the breakout: few traders believe it. Thin breakouts fail more often, so wait for a retest or more volume."));done(ok)}}
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(strong?"Volume <b>jumped</b> on the breakout: lots of new buyers stepped in. That backs the move.":"Volume <b>shrank</b> on the breakout: few traders believe it. Thin breakouts fail more often, so wait for a retest or more volume.")+rwTag(rw));done(ok)}}
 
 /* ---------- candles in context ---------- */
 const BULLC=["hammer","bengulf","pierce","mstar"],BEARC=["star","sengulf","dark","estar"];
 function genCtx(cs){const base=[[7,111.5],[7,100.5],[7,111.3],[7,100.8]];const tail=cs==="sup"?[[7,100.7]]:cs==="res"?[[7,111.4]]:cs==="midb"?[[6,111],[5,106]]:[[6,106]];
   const b=pathBars(104,base.concat(tail),.45,.003).bars;const p=b[b.length-1].c;const kind=pick(cs==="sup"||cs==="midb"?BULLC:BEARC);const k=cdlAt(kind,p,p*.008);const at=b.length;b.push(...k);
   return{bars:b,at,n:k.length,kind,act:cs==="sup"||cs==="res"}}
-function ctxRound(el,done,opts={}){const cs=pick(["sup","res","midb","mids"]);const g=genCtx(cs);const zones=[{hi:101.6,lo:99.9,tint:"--up"},{hi:112.2,lo:110.6,tint:"--down"}];let shown=!opts.hard;
+function ctxRound(el,done,opts={}){const rw=rwCtx(R()<.5);const cs=pick(["sup","res","midb","mids"]);const g=rw||genCtx(cs);const zones=rw?rw.zones:[{hi:101.6,lo:99.9,tint:"--up"},{hi:112.2,lo:110.6,tint:"--down"}];let shown=!opts.hard;
   const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});mountChart(cv,()=>[g.bars,{box:{from:g.at,to:g.at+g.n-1},zones:shown?zones:[]}]);
   const btns={};const nm={yes:"Act on it",no:"Skip it"};const want=g.act?"yes":"no";const bull=BULLC.includes(g.kind);
   const row=h("div",{class:"row"},...["yes","no"].map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
   el.append(h("p",{class:"task"},opts.prompt||("The boxed candles are a "+CDL[g.kind].n.toLowerCase()+". Would you act on this signal here?"+(opts.hard?" Find the range's support and resistance yourself.":" Shaded bands are support and resistance."))),cv,row,f);
   function answer(k){Object.values(btns).forEach(x=>x.disabled=true);const ok=k===want;btns[k].className=ok?"pick-good":"pick-bad";if(!ok)btns[want].className="pick-good";shown=true;rerenderAll();
-    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(g.act?"A "+(bull?"bullish":"bearish")+" signal right at "+(bull?"support":"resistance")+": the candle and the level agree. That's confluence, and it gives a clear stop just "+(bull?"below the pattern's low":"above the pattern's high")+".":"The signal is in the <b>middle of the range</b>, far from any level. There's no reason for buyers or sellers to care here, and no logical place for a stop."));done(ok)}}
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(g.act?"A "+(bull?"bullish":"bearish")+" signal right at "+(bull?"support":"resistance")+": the candle and the level agree. That's confluence, and it gives a clear stop just "+(bull?"below the pattern's low":"above the pattern's high")+".":"The signal is in the <b>middle of the range</b>, far from any level. There's no reason for buyers or sellers to care here, and no logical place for a stop.")+rwTag(rw));done(ok)}}
 
 /* ---------- example charts for the Level 2 questions ---------- */
 Object.assign(EX,{
@@ -2000,7 +2001,7 @@ function exPic(key){if(key.indexOf("cdl:")===0){const c=cdlFigure(key);return c?
 function qPic(q){if(!q)return null;try{if(q.pic){if(q.pic.indexOf("ex:")===0)return exPic(q.pic.slice(3));const [n,...a]=q.pic.split(":");return PICS[n]?PICS[n](...a):null}
   return q.ex?exPic(q.ex):null}catch(e){return null}}
 function cdlFigure(key){if(!key||key.indexOf("cdl:")!==0)return null;const kind=key.slice(4);if(typeof CDL==="undefined"||!CDL[kind])return null;
-  const g=genCdl(kind);const a=Math.max(0,g.at-8);const bars=g.bars.slice(a,g.at+g.n);const cv=h("canvas",{class:"chart qchart cdlq","aria-label":"The candles described in the question"});
+  const g=rwCdl(kind,0)||genCdl(kind);const a=Math.max(0,g.at-8);const bars=g.bars.slice(a,g.at+g.n);const cv=h("canvas",{class:"chart qchart cdlq","aria-label":"The candles described in the question"});
   mountChart(cv,()=>[bars,{box:{from:g.at-a,to:g.at-a+g.n-1}}]);return cv}
 function exBlock(key){if(!key)return null;let cur=exMake(key);const cv=h("canvas",{class:"chart","aria-label":"Example chart with the pattern marked"});const look=h("p",{class:"look",html:"<b>What to look for:</b> "+cur.look});
   const box=h("div",{class:"ex"},h("div",{class:"exhead"},h("div",{class:"eyebrow"},"On a chart"),h("button",{class:"exmore",title:"Show another example",on:{click:()=>{cur=exMake(key);look.innerHTML="<b>What to look for:</b> "+cur.look;draw()}}},"↻ Another")),cv,look);
@@ -2845,7 +2846,14 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
 const RW={sets:[]};
 (async()=>{/* online: only prefetch once Revolut X is already allowed, so opening the page never pops a permission prompt */
   if(mcOnline()){let ok=false;try{const pm=await window.claude.use("permissions");ok=pm&&(await pm.state("mcp"))==="granted"}catch(e){}if(!ok)return}
-  [["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"]].forEach(([s,iv],k)=>setTimeout(()=>mcLoad(s,iv).then(r=>{if(r&&r.bars&&r.bars.length>200)RW.sets.push({sym:s,iv,bars:r.bars})}).catch(()=>{}),300+k*500))})();
+  /* real candles for practice: BTC, ETH and SOL, daily and 4-hour. A copy is kept on the device so practice stays real offline */
+  const KEY="cs-rw",want=[["BTC","D"],["ETH","D"],["SOL","D"],["BTC","240"],["ETH","240"],["SOL","240"]];let saved=null;
+  try{saved=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}
+  if(saved&&saved.sets)saved.sets.forEach(x=>RW.sets.push({sym:x.sym,iv:x.iv,bars:x.b.map(k=>({t:k[0],o:k[1],h:k[2],l:k[3],c:k[4],v:k[5]}))}));
+  if(saved&&Date.now()-saved.t<6*3600e3&&RW.sets.length>=want.length)return;
+  const fresh=[];await Promise.all(want.map(([s,iv],k)=>new Promise(res=>setTimeout(()=>mcLoad(s,iv).then(r=>{if(r&&r.bars&&r.bars.length>200)fresh.push({sym:s,iv,bars:r.bars})}).catch(()=>{}).then(res),300+k*400))));
+  if(!fresh.length)return;RW.sets.length=0;fresh.forEach(x=>RW.sets.push(x));RW.pscan=-1;
+  const r6=v=>+(+v).toPrecision(6);try{localStorage.setItem(KEY,JSON.stringify({t:Date.now(),sets:fresh.map(x=>({sym:x.sym,iv:x.iv,b:x.bars.map(k=>[k.t,r6(k.o),r6(k.h),r6(k.l),r6(k.c),r6(k.v||0)])}))}))}catch(e){}})();
 function rwClassify(b){const pv=pivots(b,3);const H=pv.filter(p=>p.t==="H"),L=pv.filter(p=>p.t==="L");if(H.length<2||L.length<2)return null;
   const n=b.length,hi=Math.max(...b.map(x=>x.h)),lo=Math.min(...b.map(x=>x.l)),span=hi-lo;if(!(span>0))return null;
   let sx=0,sy=0,sxx=0,sxy=0;b.forEach((x,i)=>{sx+=i;sy+=x.c;sxx+=i*i;sxy+=i*x.c});const slope=(n*sxy-sx*sy)/(n*sxx-sx*sx);const drift=slope*(n-1)/span;const net=(b[n-1].c-b[0].o)/span;
@@ -2872,6 +2880,133 @@ function rwFind(want,len,clsLen,opt={}){if(!RW.sets.length)return null;
 function rwTag(rw){if(!rw||!rw.meta)return"";const d=new Date(rw.meta.t);const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()];
   return ` <span class="realtag">Real ${rw.meta.sym} · ${rw.meta.iv==="D"?"daily":"4-hour"} · ${M} ${d.getUTCFullYear()}</span>`}
 
+/* real-chart pattern finder: scans real candles for classical patterns that actually happened, with the breakout */
+/* the main swings: a zigzag that only turns once price has moved back k times the average candle range */
+function rwAlt(b,k){const n=b.length;const atr=[];let sum=0;for(let i=0;i<n;i++){sum+=b[i].h-b[i].l;if(i>=14)sum-=b[i-14].h-b[i-14].l;atr.push(sum/Math.min(i+1,14))}
+  const q=[];let dir=0,ei=0,ev=b[0].h,li=0,lv=b[0].l;
+  for(let i=1;i<n;i++){const a=atr[i]*k;
+    if(dir>=0){if(b[i].h>=ev){ev=b[i].h;ei=i}if(dir===0&&b[i].l<=lv){lv=b[i].l;li=i}
+      if(ev-b[i].l>=a&&(dir===1||ei>li)){q.push({t:"H",i:ei,v:ev});dir=-1;lv=b[i].l;li=i;for(let j=ei+1;j<=i;j++)if(b[j].l<=lv){lv=b[j].l;li=j}continue}}
+    if(dir<=0){if(b[i].l<=lv){lv=b[i].l;li=i}
+      if(b[i].h-lv>=a&&(dir===-1||li>ei)){q.push({t:"L",i:li,v:lv});dir=1;ev=b[i].h;ei=i;for(let j=li+1;j<=i;j++)if(b[j].h>=ev){ev=b[j].h;ei=j}}}}
+  return q}
+function rwMir(b){return b.map(x=>({o:-x.o,h:-x.l,l:-x.h,c:-x.c,v:x.v}))}
+function rwLineAt(i1,p1,i2,p2,j){return p1+(p2-p1)*(j-i1)/(i2-i1)}
+function rwDet(b,thr,K){K=K||2.2;const out=[];const n=b.length;
+  for(const mir of [false,true]){const v=mir?rwMir(b):b;const q=rwAlt(v,K);const T=(a,b2)=>mir?b2:a;
+    const ok=(k,types)=>types.split("").every((t,j)=>q[k+j]&&q[k+j].t===t);
+    for(let k=0;k<q.length;k++){
+      /* double top / bottom */
+      if(ok(k,"LHLH")){const [L0,H1,L2,H3]=q.slice(k,k+4);const hgt=H1.v-L2.v,top=Math.max(H1.v,H3.v);
+        if(hgt/Math.abs(H1.v)>=thr&&Math.abs(H1.v-H3.v)<=.12*hgt&&H3.i-H1.i>=6&&H3.i-H1.i<=40&&H1.v-L0.v>=1.3*hgt){
+          let e=-1;for(let j=H3.i+1;j<=Math.min(n-1,H3.i+12);j++){if(v[j].h>top+.15*hgt)break;if(v[j].c<L2.v){e=j;break}}
+          let clean=true;for(let j=H1.i+1;j<H3.i;j++)if(v[j].h>top)clean=false;
+          if(e>0&&clean)out.push({kind:T("dt","db"),s:L0.i,e,mir,lines:[[H1.i,H1.v,H3.i,H3.v,""],[L2.i,L2.v,e,L2.v,"confirmation line"]]})}}
+      /* head and shoulders top / inverse */
+      if(ok(k,"LHLHLH")){const [L0,H1,L2,H3,L4,H5]=q.slice(k,k+6);const nk=(L2.v+L4.v)/2,hgt=H3.v-nk;
+        const gaps=[H1.i-L0.i,L2.i-H1.i,H3.i-L2.i,L4.i-H3.i,H5.i-L4.i];
+        if(hgt/Math.abs(H3.v)>=thr&&H3.v-Math.max(H1.v,H5.v)>=.15*hgt&&Math.min(H1.v,H5.v)-nk>=.25*hgt&&Math.abs(H1.v-H5.v)<=.5*hgt&&Math.abs(L2.v-L4.v)<=.4*hgt&&L0.v<nk-.15*hgt&&gaps.every(g=>g>=2&&g<=30)){
+          let e=-1;for(let j=H5.i+1;j<=Math.min(n-1,H5.i+16);j++){if(v[j].h>H3.v)break;if(v[j].c<rwLineAt(L2.i,L2.v,L4.i,L4.v,j)){e=j;break}}
+          if(e>0)out.push({kind:T("hs","hsi"),s:L0.i,e,mir,lines:[[L2.i,L2.v,L4.i,L4.v,"neckline"]]})}}
+      /* triangles and rectangles: two highs and two lows that start with a high */
+      if(ok(k,"HLHL")){const [Ha,La,Hb,Lb]=q.slice(k,k+4);const w0=Ha.v-La.v;
+        if(w0/Math.abs(Ha.v)>=thr*.7&&Lb.i-Ha.i>=10&&Lb.i-Ha.i<=60&&La.i-Ha.i>=3&&Hb.i-La.i>=3&&Lb.i-Hb.i>=3){const dH=(Hb.v-Ha.v)/w0,dL=(Lb.v-La.v)/w0;
+          let kind=null;if(Math.abs(dH)<=.07&&dL>=.25)kind=T("asc","desc");else if(!mir&&dH<=-.2&&dL>=.2)kind="sym";else if(!mir&&Math.abs(dH)<=.08&&Math.abs(dL)<=.08)kind="rect";
+          if(kind){const top=j=>rwLineAt(Ha.i,Ha.v,Hb.i,Hb.v,j),bot=j=>rwLineAt(La.i,La.v,Lb.i,Lb.v,j);let inside=true;
+            for(let j=Ha.i;j<=Lb.i;j++)if(v[j].h>top(j)+.15*w0||v[j].l<bot(j)-.15*w0)inside=false;
+            /* both lines must be used: plenty of candles reach near each one, not just one spike */
+            let nT=0,nB=0,nn=0;for(let j=Ha.i;j<=Lb.i;j++){nn++;if(v[j].h>=top(j)-.25*w0)nT++;if(v[j].l<=bot(j)+.25*w0)nB++}if(nT<.2*nn||nB<.2*nn)inside=false;
+            let e=-1,dir=0;if(inside)for(let j=Lb.i+1;j<=Math.min(n-1,Lb.i+15);j++){const tw=top(j)-bot(j);if(tw<=.05*w0)break;if(v[j].c>top(j)){e=j;dir=1;break}if(v[j].c<bot(j)){e=j;dir=-1;break}}
+            const want=kind==="asc"||kind==="desc"?1:0;/* in the view, asc/desc must break the flat side */
+            if(e>0&&(!want||dir===1)){const L=kind==="asc"||kind==="desc"?[[Ha.i,Ha.v,Hb.i,Hb.v,"flat top"],[La.i,La.v,Lb.i,Lb.v,"rising lows"]]:[[Ha.i,Ha.v,Hb.i,Hb.v,""],[La.i,La.v,Lb.i,Lb.v,""]];
+              out.push({kind,s:Ha.i,e,mir,lines:L,sw:kind==="desc"})}}}}
+    }
+    /* flags: a fast pole, then a short tight drift against it, then a break the pole's way */
+    for(const H of q.filter(p=>p.t==="H")){const hi=H.i;let lo=-1,lv=Infinity;for(let j=Math.max(0,hi-10);j<=hi-3;j++)if(v[j].l<lv){lv=v[j].l;lo=j}
+      if(lo<0)continue;const pole=H.v-lv;if(pole/Math.abs(H.v)<thr*1.3)continue;
+      for(let m=hi+4;m<=Math.min(n-1,hi+14);m++){let mx=-Infinity,mn=Infinity;for(let j=hi+1;j<m;j++){mx=Math.max(mx,v[j].h);mn=Math.min(mn,v[j].l)}
+        if(mn<H.v-.5*pole||mx>H.v||mx-mn>.5*pole)break;
+        const pm=Math.max(v[m-1].h,v[m-2].h,v[m-3].h);if(v[m].c>pm&&v[m].c>v[m].o){
+          const half=Math.floor((hi+1+m)/2);let h2=hi+1,l1=hi+1,l2=half;for(let j=hi+1;j<m;j++){if(j>=half&&v[j].h>v[h2].h)h2=j;if(j<half&&v[j].l<v[l1].l)l1=j;if(j>=half&&v[j].l<v[l2].l)l2=j}
+          if(h2<=hi+1)h2=m-1;if(v[l2].l>v[l1].l)break;/* drift must go against the pole */
+          out.push({kind:T("bflag","sflag"),s:lo,e:m,mir,lines:[[hi,H.v,h2,v[h2].h,""],[l1,v[l1].l,l2,v[l2].l,""]]});break}}}
+  }
+  /* back to real prices; drop overlaps of the same kind */
+  const seen={};return out.filter(x=>{const key=x.kind;seen[key]=seen[key]||[];if(seen[key].some(y=>!(x.e<y.s||x.s>y.e)))return false;seen[key].push(x);return true})
+    .map(x=>Object.assign(x,{lines:x.lines.map(([i1,p1,i2,p2,l],li)=>{if(!(li===0&&(x.kind==="dt"||x.kind==="db"))&&i2<x.e){p2=rwLineAt(i1,p1,i2,p2,x.e);i2=x.e}return[i1,p1,i2,p2,l]}).map(([i1,p1,i2,p2,l])=>[i1,x.mir?-p1:p1,i2,x.mir?-p2:p2,x.sw&&l?({"flat top":"flat bottom","rising lows":"falling highs"}[l]||l):l])}))}
+function rwPatScan(){if(RW.pscan===RW.sets.length)return RW.pats;RW.pscan=RW.sets.length;RW.pats={};
+  RW.sets.forEach(set=>{const thr=set.iv==="D"?.06:.03;rwDet(set.bars,thr).forEach(x=>{(RW.pats[x.kind]=RW.pats[x.kind]||[]).push(Object.assign(x,{set}))})});return RW.pats}
+/* a real pattern of this kind: bars from a little before it to just after the breakout, lines moved into the window */
+function rwPat(kind){const P=rwPatScan()[kind];if(!P||!P.length)return null;const x=pick(P);const b=x.set.bars;
+  const from=Math.max(0,x.s-rint(8,14)),to=Math.min(b.length-1,x.e+rint(2,4));
+  return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c,v:y.v})),tl:x.lines.map(([i1,p1,i2,p2,l])=>({a:{i:i1-from,p:p1},b:{i:i2-from,p:p2},c:"--accent",w:1.5,dash:true,label:l})),
+    meta:{sym:x.set.sym,iv:x.set.iv,t:b[from].t}}}
+/* real candles for the other drills: candle patterns, candles at a level, pullbacks, breakouts and breakout volume */
+function rwAtr(b){const n=b.length,a=[];let s=0;for(let i=0;i<n;i++){s+=b[i].h-b[i].l;if(i>=14)s-=b[i-14].h-b[i-14].l;a.push(s/Math.min(i+1,14))}return a}
+const RW_CMIR={hammer:"star",ihammer:"hangman",bengulf:"sengulf",pierce:"dark",mstar:"estar",bharami:"sharami",r3:"f3"};
+/* bullish shapes after a fall (the mirror finds the bearish twins after a rise); returns [start, length] or null */
+function rwCdlAt(v,i,a,kind){const k=v[i],B=x=>Math.abs(x.c-x.o),R_=x=>x.h-x.l,up=x=>x.c>x.o,U=x=>x.h-Math.max(x.o,x.c),D=x=>Math.min(x.o,x.c)-x.l;
+  const fell=n=>i-n-8>=0&&v[i-n-8].c-v[i-n].c>1.5*a[i];const rose=n=>i-n-8>=0&&v[i-n].c-v[i-n-8].c>1.5*a[i];
+  if(kind==="hammer"||kind==="ihammer"){if(!fell(1)||R_(k)<.8*a[i]||B(k)<.06*R_(k))return null;
+    if(kind==="hammer"&&D(k)>=2.2*B(k)&&U(k)<=.12*R_(k))return[i,1];if(kind==="ihammer"&&U(k)>=2.2*B(k)&&D(k)<=.12*R_(k))return[i,1];return null}
+  if(kind==="bengulf"){const p=v[i-1];if(!p||!fell(1)||up(p)||!up(k)||B(p)<.35*a[i])return null;if(k.o<=p.c+.05*B(p)&&k.c>=p.o&&B(k)>=1.15*B(p))return[i-1,2];return null}
+  if(kind==="pierce"){const p=v[i-1];if(!p||!fell(1)||up(p)||!up(k)||B(p)<.7*a[i])return null;const mid=(p.o+p.c)/2;if(k.o<=p.c+.05*B(p)&&k.c>mid&&k.c<p.o)return[i-1,2];return null}
+  if(kind==="mstar"){const p=v[i-2],m=v[i-1];if(!p||!fell(2)||up(p)||B(p)<.8*a[i]||B(m)>.3*B(p)||!up(k))return null;if(Math.max(m.o,m.c)<=p.c+.15*B(p)&&k.c>(p.o+p.c)/2&&B(k)>=.5*B(p))return[i-2,3];return null}
+  if(kind==="bharami"){const p=v[i-1];if(!p||!fell(1)||up(p)||!up(k)||B(p)<.8*a[i])return null;if(k.o>=p.c&&k.c<=p.o&&B(k)<=.5*B(p)&&B(k)>=.1*B(p))return[i-1,2];return null}
+  if(kind==="r3"){for(const m of [3,4]){const s=i-m-1;if(s<9)continue;const f=v[s];if(!up(f)||B(f)<1*a[i]||!rose(m+1))continue;let ok=true;
+      for(let j=s+1;j<i;j++)if(v[j].h>f.h+.1*B(f)||v[j].l<f.l||B(v[j])>.5*B(f))ok=false;if(ok&&up(k)&&B(k)>=.8*B(f)&&k.c>f.c)return[s,m+2]}return null}
+  if(kind==="doji"){if(!rose(1)||R_(k)<.8*a[i]||B(k)>.08*R_(k)||U(k)<.25*R_(k)||D(k)<.25*R_(k))return null;return[i,1]}
+  return null}
+function rwCdlScan(){if(RW.cscan===RW.sets.length)return RW.cdls;RW.cscan=RW.sets.length;RW.cdls={};
+  RW.sets.forEach(set=>{for(const mir of [false,true]){const v=mir?rwMir(set.bars):set.bars;const a=rwAtr(v);
+    ["hammer","ihammer","bengulf","pierce","mstar","bharami","r3","doji"].forEach(kind=>{if(mir&&kind==="doji")return;let last=-99;
+      for(let i=12;i<v.length-3;i++){const r=rwCdlAt(v,i,a,kind);if(r&&r[0]-last>6){last=r[0];const name=mir?RW_CMIR[kind]:kind;(RW.cdls[name]=RW.cdls[name]||[]).push({set,at:r[0],n:r[1],mir,i})}}})}});return RW.cdls}
+/* a window around a real candle pattern: lead-in before it and a few candles after */
+function rwCdl(kind,after){const C=rwCdlScan()[kind];if(!C||!C.length)return null;const x=pick(C);const b=x.set.bars;const from=Math.max(0,x.at-rint(20,26)),to=Math.min(b.length-1,x.at+x.n-1+(after==null?rint(2,4):after));
+  return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c,v:y.v})),at:x.at-from,n:x.n,kind,x,from,meta:{sym:x.set.sym,iv:x.set.iv,t:b[from].t}}}
+/* a real candle signal either right at a level that held before ("act") or far from any level ("skip") */
+function rwCtx(want){const kinds=BULLC.concat(BEARC);for(let t=0;t<150;t++){const kind=pick(kinds);const C=rwCdlScan()[kind];if(!C||!C.length)continue;const x=pick(C);const b=x.set.bars;
+    const v=x.mir?rwMir(b):b;const a=rwAtr(v)[x.i];const q=rwAlt(v,2.2).filter(p=>p.i<x.at-3&&p.i>x.at-90);if(q.length<3)continue;
+    let lowP=Infinity;for(let j=x.at;j<x.at+x.n;j++)lowP=Math.min(lowP,v[j].l);
+    const lows=q.filter(p=>p.t==="L"),highs=q.filter(p=>p.t==="H");const near=lows.filter(p=>Math.abs(p.v-lowP)<=.6*a);
+    const sup=lows.filter(p=>p.v<lowP-2.5*a).sort((p,r)=>r.v-p.v)[0],res=highs.filter(p=>p.v>lowP+2.5*a).sort((p,r)=>p.v-r.v)[0];
+    let act=null,zs=[];const Z=(p,tint)=>({lv:p,tint});
+    if(near.length&&res){act=true;const lv=near.reduce((s,p)=>s+p.v,0)/near.length;zs=[Z(lv,"--up"),Z(res.v,"--down")]}
+    else if(!near.length&&sup&&res&&!lows.some(p=>Math.abs(p.v-lowP)<=1.5*a)&&!highs.some(p=>Math.abs(p.v-lowP)<=1.5*a)){act=false;zs=[Z(sup.v,"--up"),Z(res.v,"--down")]}
+    if(act==null||act!==want)continue;
+    const from=Math.max(0,Math.min(...q.map(p=>p.i))-4,x.at-70),to=Math.min(b.length-1,x.at+x.n-1+2);const sg=x.mir?-1:1;
+    const zones=zs.map(z=>{const c=z.lv*sg,w=.35*a;return{hi:c+w,lo:c-w,tint:x.mir?(z.tint==="--up"?"--down":"--up"):z.tint}});
+    return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c})),at:x.at-from,n:x.n,kind,act,zones,meta:{sym:x.set.sym,iv:x.set.iv,t:b[from].t}}}
+  return null}
+/* the last pullback against a real swing: how much of the move it gave back */
+function rwRetr(want){const cat=fr=>fr<1/3?"shallow":fr<=2/3?"normal":"deep";
+  for(let t=0;t<60;t++){const set=pick(RW.sets);if(!set)return null;const mir=R()<.5;const v=mir?rwMir(set.bars):set.bars;const q=rwAlt(v,2.2);const thr=set.iv==="D"?.12:.05;
+    const c=[];for(let k=0;k+2<q.length;k++){const [L1,H,L2]=q.slice(k,k+3);if(L1.t!=="L")continue;const leg=H.v-L1.v;if(leg/Math.abs(H.v)<thr||H.i-L1.i<8||H.i-L1.i>60||L2.i-H.i<3||L2.i-H.i>30)continue;
+      const fr=(H.v-L2.v)/leg;if(fr<=.05||fr>=.97||cat(fr)!==want)continue;c.push({L1,H,L2,fr})}
+    if(!c.length)continue;const x=pick(c);const b=set.bars;const from=Math.max(0,x.L1.i-rint(4,8)),to=Math.min(b.length-1,x.L2.i+rint(2,3));
+    const sg=mir?-1:1;return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c})),hi:x.H.v*sg,lo:x.L1.v*sg,iL:x.L2.i-from,fr:x.fr,cat:want,down:mir,meta:{sym:set.sym,iv:set.iv,t:b[from].t}}}
+  return null}
+/* real ranges and what happened when price left them: a real breakout or a fake-out, with the volume on the break */
+function rwRangeScan(){if(RW.rscan===RW.sets.length)return RW.rngs;RW.rscan=RW.sets.length;RW.rngs=[];
+  RW.sets.forEach(set=>{for(const mir of [false,true]){const v=mir?rwMir(set.bars):set.bars;const q=rwAlt(v,2);
+    for(let k=0;k+3<q.length;k++){const P=[q[k],q[k+1],q[k+2],q[k+3]];const Hs=P.filter(p=>p.t==="H"),Ls=P.filter(p=>p.t==="L");if(Hs.length!==2||Ls.length!==2)continue;
+      const top=Math.max(...Hs.map(p=>p.v)),bot=Math.min(...Ls.map(p=>p.v)),w=top-bot;if(w/Math.abs(top)<(set.iv==="D"?.06:.025))continue;
+      if(Math.abs(Hs[0].v-Hs[1].v)>.15*w||Math.abs(Ls[0].v-Ls[1].v)>.15*w)continue;const s=P[0].i,e0=P[3].i;if(e0-s<12||e0-s>70)continue;
+      let ok=true;for(let j=s;j<=e0;j++)if(v[j].h>top+.02*w||v[j].l<bot-.02*w)ok=false;if(!ok)continue;
+      let j=-1;for(let i=e0+1;i<=Math.min(v.length-8,e0+15);i++){if(v[i].l<bot)break;if(v[i].h>top){j=i;break}}if(j<0)continue;
+      let kind=null;const cl=[v[j].c,v[j+1].c,v[j+2].c];
+      if(cl.every(c=>c>top)&&Math.max(...v.slice(j,j+7).map(x=>x.h))>=top+.3*w)kind="real";
+      else if(cl.some(c=>c<top)&&v.slice(j+1,j+7).every(x=>x.c<top+.05*w)&&Math.min(...v.slice(j+1,j+7).map(x=>x.c))<top-.2*w)kind="fake";
+      if(!kind)continue;const rv=v.slice(s,e0+1).map(x=>x.v||0);const av=rv.reduce((t,x)=>t+x,0)/rv.length;const vr=av>0?(v[j].v||0)/av:0;
+      RW.rngs.push({set,mir,s,e0,j,top:mir?-top:top,bot:mir?-bot:bot,kind,vr})}}});return RW.rngs}
+function rwRange(kind,volWant){const P=rwRangeScan().filter(x=>x.kind===kind&&(!volWant||(!x.mir&&(volWant==="strong"?x.vr>=1.6:x.vr>0&&x.vr<=1))));if(!P.length)return null;
+  const x=pick(P);const b=x.set.bars;const from=Math.max(0,x.s-rint(4,8)),to=Math.min(b.length-1,x.j+(volWant?0:rint(4,6)));
+  return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c,v:y.v})),top:x.top,bot:x.bot,down:x.mir,meta:{sym:x.set.sym,iv:x.set.iv,t:b[from].t}}}
+/* the lesson example charts use real candles too when they're loaded */
+{const _p=EX.pat,_c=EX.cdl,_x=EX.ctx;
+ EX.pat=k=>{const rw=rwPat(k);return rw?{bars:rw.bars,o:{tlines:rw.tl},look:patExp(k)+rwTag(rw)}:_p(k)};
+ EX.cdl=k=>{const g=rwCdl(k);if(!g)return _c(k);const seg=g.bars.slice(g.at,g.at+g.n);return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},labels:[{i:g.at,p:cdlUp(k)?Math.max(...seg.map(x=>x.h)):Math.min(...seg.map(x=>x.l)),below:!cdlUp(k),text:CDL[k].n,c:"--mark"}]},look:CDL[k].e+rwTag(g)}};
+ EX.ctx=()=>{const g=rwCtx(true);if(!g)return _x();return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},zones:g.zones},look:"A "+CDL[g.kind].n.toLowerCase()+" right at a level that held before. Two clues agree, and the stop goes just past the pattern."+rwTag(g)}}}
 
 const SB_DOM="@users.chartschool.app";const sbName=e=>String(e||"").replace(SB_DOM,"");
 function installSteps(){const c=document.documentElement.classList;if(c.contains("is-app"))return h("p",{class:"task"},"You're using the installed app. 👍");
