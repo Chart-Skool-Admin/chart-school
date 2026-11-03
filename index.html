@@ -704,7 +704,7 @@ function pivotRound(el,done,opts={}){
   function check(){checked=true;aim=null;aimUI();chk.disabled=true;clr.disabled=true;truth.forEach(t=>t.hit=false);let hits=0;
     user.forEach(m=>{const t=truth.find(t=>!t.hit&&t.t===m.t&&Math.abs(t.i-m.i)<=1);if(t){t.hit=true;m.ok=true;hits++}else m.ok=false});
     const prec=user.length?hits/user.length:0,rec=truth.length?hits/truth.length:1;const f1=prec+rec?2*prec*rec/(prec+rec):0;const ok=f1>=(opts.strict?.8:.7);rerenderAll();
-    fb(f,ok?"good":"bad",`You found <b>${hits} of ${truth.length}</b> swing points with <b>${user.length-hits}</b> extra marks. Score ${Math.round(f1*100)}%. `+(ok?"Good, that's consistent swing reading.":"Purple rings show the ones you missed. Look for the clear peaks and troughs only; ignore small wiggles inside a swing.")+rwTag(rw));
+    fb(f,ok?"good":"bad",`You found <b>${hits} of ${truth.length}</b> swing points with <b>${user.length-hits}</b> extra marks. Score ${Math.round(f1*100)}% (pass mark ${opts.strict?80:70}%). `+(ok?"Good, that's consistent swing reading.":"Purple rings show the ones you missed. Look for the clear peaks and troughs only; ignore small wiggles inside a swing.")+rwTag(rw));
     done(ok,Math.round(f1*100))}
 }
 
@@ -2739,7 +2739,7 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     const chk=h("button",{class:"primary",on:{click:()=>{if(prac.checked)return;prac.checked=true;prac.aim=null;prac.aimUI();chk.disabled=true;const N=pvN();const truth=swingsIn(i0v(),i1v(),N);let hits=0;truth.forEach(q=>q.hit=false);
       prac.user.forEach(m=>{const q=truth.find(q=>!q.hit&&q.t===m.t&&Math.abs(q.i-m.i)<=2);if(q){q.hit=true;m.c="--good";hits++}else m.c="--bad"});
       ov={marks:truth.filter(q=>!q.hit).map(q=>({...q,ring:true,c:"--mark"}))};const prec=prac.user.length?hits/prac.user.length:0,rec=truth.length?hits/truth.length:1;const f1=prec+rec?2*prec*rec/(prec+rec):0;const ok=f1>=.65;draw();
-      fb(pfb,ok?"good":"bad",`You found <b>${hits} of ${truth.length}</b> swing points with <b>${prac.user.length-hits}</b> extra. Score ${Math.round(f1*100)}%. `+(ok?"Good swing reading on a real chart.":"Purple rings are the ones you missed. On this zoom, a swing is a candle that sticks out past the "+N+" candles on each side."));record(ok)}}},"Check my marks");
+      fb(pfb,ok?"good":"bad",`You found <b>${hits} of ${truth.length}</b> swing points with <b>${prac.user.length-hits}</b> extra. Score ${Math.round(f1*100)}% (pass mark 65%). `+(ok?"Good swing reading on a real chart.":"Purple rings are the ones you missed. On this zoom, a swing is a candle that sticks out past the "+N+" candles on each side."));record(ok)}}},"Check my marks");
     pbox.append(h("p",{class:"task",style:"margin:0 0 8px"},phone?"Mark every clear swing on screen: tap a candle, nudge with ◀ ▶, then ▲ High or ▼ Low (✕ removes). Drag to move the chart.":"Click every clear swing high (click above the candle) and swing low (below it) on screen. Click a mark again to remove it."),phone?ab:null,h("div",{class:"row",style:"margin:0"},chk,h("button",{on:{click:()=>{if(prac.checked)return;prac.user=[];count.textContent="0 marked";draw()}}},"Clear marks"),count))}
   function exLevels(){if(!bars.length)return;reset();const ds=drawsOf().filter(d=>d.k==="h"||d.k==="z");
     if(!ds.length){pbox.append(h("p",{class:"task",style:"margin:0"},"First draw your support and resistance: a horizontal line (Alt+H) or a zone (Alt+Shift+R). Then press Rate my levels again."));setTool("h");return}
