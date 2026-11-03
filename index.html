@@ -166,6 +166,50 @@ a.mapitem:hover{border-color:var(--accent)}
   canvas.chart{height:260px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* home: compact level path */
+.plan.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px;padding:0;list-style:none}
+.plan.chips span{font-size:13px;padding:5px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line)}
+.quick{grid-template-columns:repeat(3,1fr)!important}
+.quick .tile{padding:10px 12px;gap:0}.quick .tile b{font-size:15px}.quick .tile span{font-size:12px}
+.quick .tile:last-child:nth-child(odd){grid-column:auto!important}
+.lpath{padding:14px 14px 16px;overflow:hidden}
+.lpills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -14px 12px;padding:0 14px 2px;scroll-snap-type:x proximity}
+.lpills::-webkit-scrollbar{display:none}
+.lpill{flex:0 0 auto;display:flex;flex-direction:column;gap:5px;align-items:stretch;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--muted);font-size:13px;font-weight:600;scroll-snap-align:center;min-width:86px}
+.lpill.on{background:var(--panel);color:var(--ink);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.lpill.locked{opacity:.6}.lpill.locked.on{opacity:1}
+.lpill.cur .lpn::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:middle}
+.lpbar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden}.lpbar i{display:block;height:100%;background:var(--good)}
+.lphead h3{margin:0;font-size:19px}.lpsub{font-size:12px;color:var(--muted);font-family:var(--f-mono);margin-top:2px}.lpdot{margin:0 6px}
+.lplock{font-size:13px;color:var(--muted);margin:8px 0 0}
+.lnodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;margin-top:12px}
+.lnode{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 6px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--ink);text-decoration:none;text-align:center;font:inherit;cursor:pointer;min-width:0}
+.lnode:hover:not([disabled]):not([aria-disabled]){border-color:var(--line);background:var(--bg)}
+.lnode[disabled],.lnode[aria-disabled]{cursor:default;opacity:.5}
+.lnode.next{border-color:var(--accent);background:var(--grad-soft),var(--panel)}
+.lnode .lt{font-size:12px;line-height:1.25;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
+.lnode .ls{font-size:11px;color:var(--muted);font-family:var(--f-mono);min-height:1.2em}
+.lnode.next .ls{color:var(--accent);font-weight:600}
+.nring{position:relative;display:block;width:48px;height:48px}.nring svg{width:48px;height:48px;display:block}
+.nring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:14px}
+.nring .rbg{fill:none;stroke:var(--line);stroke-width:4}.nring .rfg{fill:none;stroke:var(--good);stroke-width:4;stroke-linecap:round}
+.lnode.done .nring b{color:var(--good)}.nring.full .rbg{fill:var(--good-bg)}
+.lnode.next .nring .rbg{stroke:var(--accent);stroke-dasharray:4 4}
+.lpanel.slide-l{animation:slideL .22s ease-out}.lpanel.slide-r{animation:slideR .22s ease-out}
+@keyframes slideL{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes slideR{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+/* trading floor */
+.doors{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.door{display:flex;flex-direction:column;gap:4px;padding:18px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);text-decoration:none}
+.door .di{font-size:30px}.door b{font-family:var(--f-display);font-size:17px}.door>span:not(.di):not(.lpbar){font-size:13px;color:var(--muted)}
+.door .lpbar{margin-top:6px}a.door:hover{border-color:var(--accent)}.door.locked{opacity:.6}
+.crumb{font-size:13px;color:var(--muted);text-decoration:none;align-self:flex-start}
+/* program: folding levels */
+details.mapdet>summary{list-style:none;cursor:pointer}details.mapdet>summary::-webkit-details-marker{display:none}
+details.mapdet>summary .score::after{content:" ▾";display:inline-block;transition:transform .2s}details.mapdet:not([open])>summary .score::after{transform:rotate(-90deg)}
+details.mapdet[open]>summary{margin-bottom:6px}
+@media (max-width:700px){.lnodes{grid-template-columns:repeat(4,1fr);gap:4px}.lnode{padding:6px 2px}.lnode .lt{font-size:11px}.door{padding:14px 12px}.door .di{font-size:26px}.today .hero{font-size:26px!important}}
+
 .shell{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 .topbar{max-width:760px;margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
 .brand{font-family:var(--f-display);font-weight:700;font-size:22px;margin-right:auto;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -1900,33 +1944,68 @@ function lockText(n){const p=n-1;const miss=lvlLessons(p).filter(L=>!state.done[
   if(miss.length)parts.push("finish "+(miss.length===1?"Lesson ":"Lessons ")+(miss.length>2?miss.slice(0,-1).join(", ")+" and "+miss[miss.length-1]:miss.join(" and ")));
   if(!state.done[LEVELS[p-1].gate])parts.push("pass the Level "+p+" test");
   return "🔒 Unlocks when you "+parts.join(" and ")+"."}
-function lvlCard(n,next){const P=PROGRAM[n-1];const ls=lvlLessons(n);const nD=ls.filter(x=>state.done[x.id]).length;const gp=state.done[LEVELS[n-1].gate];const tt=lvlTimeText(n);
-  const head=h("div",{class:"done-row"},h("h3",{style:"margin:0"},"Level "+n+" · "+P.t),h("span",{class:"score"},nD+" of "+ls.length+" lessons"+(gp?" · test ✓":"")));
-  if(!lvlOpen(n))return h("section",{class:"card"},head,h("p",{class:"read",style:"margin:6px 0 4px"},P.sub),h("p",{class:"task"},lockText(n)),h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},P.time)));
-  const g=h("div",{class:"lgrid"});ls.forEach(L=>{const p=mastery(L.id);g.append(h("button",{class:"ltile"+(state.done[L.id]?" done":"")+(next&&next.id===L.id?" next":""),on:{click:()=>startSession("lesson",L.id)},title:"Lesson "+L.n},
-    ring(state.done[L.id]?Math.max(p,.08):0),h("span",{class:"n"},"Lesson "+L.n),h("span",{class:"t"},L.t),h("span",{class:"s"},state.done[L.id]?Math.round(p*100)+"% remembered":(next&&next.id===L.id?"Up next":"Not started"))))});
-  return h("section",{class:"card"},head,h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},P.time),tt?". "+tt:", about 2 to 3 lessons a week"),
-    h("p",{class:"read",style:"margin:4px 0 12px"},"The ring fills as you keep remembering a lesson over days and weeks. Until it's full, its questions keep popping up in your sessions."),g)}
-function homeView(m){const next=nextLesson();const due=dueCards().length;const lv=curLevel(),top=topLevel();const G=LEVELS[lv-1].gate;const lsDone=lvlLessonsDone(lv);
-  const plan=[];if(due)plan.push(Math.min(due,5)+" warm-up question"+(Math.min(due,5)>1?"s":""));if(next)plan.push("Lesson "+next.n+": "+next.t+(state.pos[next.id]?" (continue)":""));else plan.push("Mixed chart practice"+(state.done[G]?"":", then the Level "+lv+" test"));
-  const tb=throwbacks(next&&next.id,[],2).length;if(tb)plan.push(tb+" throwback question"+(tb>1?"s":"")+" from lessons not yet at 100%");
+/* Home: one compact "level path". Level pills on top, the chosen level's lessons as a grid of rings below.
+   Swipe sideways (phone) or tap a pill to switch level. Opens on the level you're working on. */
+let HOME_LV=null;
+function nodeRing(p,label,cls){const r=20,c=2*Math.PI*r;return h("span",{class:"nring "+(cls||""),html:`<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="${r}" class="rbg"/>${p>0?`<circle cx="24" cy="24" r="${r}" class="rfg" stroke-dasharray="${(p*c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 24 24)"/>`:""}</svg><b>${label}</b>`})}
+function lvlState(n){const built=n<=LEVELS.length;const open=built&&lvlOpen(n);const ls=built?lvlLessons(n):[];const nD=ls.filter(x=>state.done[x.id]).length;
+  const passed=built&&!!state.done[LEVELS[n-1].gate];return{built,open,ls,nD,passed,total:built?ls.length:PROGRAM[n-1].ls.length}}
+function levelPath(next){const lv=curLevel();if(HOME_LV==null||HOME_LV>PROGRAM.length)HOME_LV=lv;
+  const card=h("section",{class:"card lpath"});const pills=h("div",{class:"lpills",role:"tablist","aria-label":"Levels"});const panel=h("div",{class:"lpanel"});card.append(pills,panel);
+  function draw(dir){pills.innerHTML="";PROGRAM.forEach(P=>{const s=lvlState(P.n);const pct=s.total?Math.round(100*(s.nD+(s.passed?1:0))/(s.total+1)):0;
+      const b=h("button",{class:"lpill"+(P.n===HOME_LV?" on":"")+(s.open?"":" locked")+(P.n===lv&&!s.passed?" cur":""),role:"tab","aria-selected":P.n===HOME_LV?"true":"false",on:{click:()=>{if(P.n!==HOME_LV){const d=P.n>HOME_LV?1:-1;HOME_LV=P.n;sfx("tap");draw(d)}}}},
+        h("span",{class:"lpn"},(s.passed?"✓ ":s.open?"":"🔒 ")+"Level "+P.n),h("span",{class:"lpbar"},h("i",{style:"width:"+pct+"%"})));pills.append(b)});
+    const on=pills.querySelector(".on");if(on)on.scrollIntoView({block:"nearest",inline:"center"});
+    panel.innerHTML="";const n=HOME_LV,P=PROGRAM[n-1],s=lvlState(n);
+    const tt=s.built?lvlTimeText(n):"";
+    panel.append(h("div",{class:"lphead"},h("div",{},h("h3",{},P.t),h("div",{class:"lpsub"},s.built?(s.nD+" of "+s.total+" lessons"+(s.passed?" · test ✓":"")):(s.total+" lessons · coming later"),h("span",{class:"lpdot"},"·"),"⏱ "+(tt||P.time)))));
+    if(s.built&&!s.open)panel.append(h("p",{class:"lplock"},lockText(n)));
+    else if(!s.built)panel.append(h("p",{class:"lplock"},"🔒 Opens after Level "+(n-1)+"."));
+    const g=h("div",{class:"lnodes"});
+    if(s.built)s.ls.forEach(L=>{const d=state.done[L.id],p=mastery(L.id),isN=next&&next.id===L.id;
+      g.append(h("button",Object.assign({class:"lnode"+(d?" done":"")+(isN?" next":""),title:"Lesson "+L.n+": "+L.t,on:{click:()=>startSession("lesson",L.id)}},s.open?{}:{disabled:""}),
+        nodeRing(d?Math.max(p,.08):0,L.n,p>=1?"full":""),h("span",{class:"lt"},L.t),h("span",{class:"ls"},d?Math.round(p*100)+"%":isN?"Next":"")))});
+    else P.ls.forEach(([num,t])=>g.append(h("div",{class:"lnode",title:"Lesson "+num+": "+t,"aria-disabled":"true"},nodeRing(0,num),h("span",{class:"lt"},t),h("span",{class:"ls"},""))));
+    /* the level test is the last stop on the path */
+    const G=s.built?LEVELS[n-1].gate:null;const ready=s.open&&lvlLessonsDone(n);
+    g.append(h(ready?"a":"div",Object.assign({class:"lnode test"+(s.passed?" done":"")+(ready&&!s.passed?" next":""),title:"Level "+n+" test"},ready?{href:"#"+G}:{"aria-disabled":"true"}),
+      nodeRing(s.passed?1:0,ready||s.passed?"🏁":"🔒",s.passed?"full":""),h("span",{class:"lt"},"Level test"),h("span",{class:"ls"},s.passed?"Passed":ready?"Ready":"")));
+    panel.append(g);
+    if(dir&&!matchMedia("(prefers-reduced-motion: reduce)").matches){panel.classList.remove("slide-l","slide-r");void panel.offsetWidth;panel.classList.add(dir>0?"slide-l":"slide-r")}}
+  /* swipe between levels */
+  let sx=null,sy=0;panel.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY},{passive:true});
+  panel.addEventListener("touchend",e=>{if(sx==null)return;const t=e.changedTouches[0];const dx=t.clientX-sx,dy=t.clientY-sy;sx=null;
+    if(Math.abs(dx)>50&&Math.abs(dy)<40){const k=HOME_LV+(dx<0?1:-1);if(k>=1&&k<=PROGRAM.length){HOME_LV=k;sfx("tap");draw(dx<0?1:-1)}}},{passive:true});
+  draw(0);return card}
+function homeView(m){const next=nextLesson();const due=dueCards().length;const lv=curLevel();const G=LEVELS[lv-1].gate;const lsDone=lvlLessonsDone(lv);
+  const plan=[];if(due)plan.push("🔁 "+Math.min(due,5)+" warm-up");if(next)plan.push("📘 Lesson "+next.n+(state.pos[next.id]?" (continue)":""));else plan.push("📈 Mixed charts"+(state.done[G]?"":" + Level "+lv+" test"));
+  const tb=throwbacks(next&&next.id,[],2).length;if(tb)plan.push("↩ "+tb+" throwback"+(tb>1?"s":""));
   const mins=Math.round(Math.min(due,5)*.5+(next?next.min:5));
-  m.append(h("section",{class:"card today"},h("div",{class:"eyebrow"},"Today · about "+mins+" minutes"),h("h2",{class:"hero"},next?next.t:"Keep it sharp"),
-    h("ul",{class:"plan"},...plan.map(p=>h("li",{},p))),
-    h("div",{class:"row"},h("button",{class:"primary big",id:"start",on:{click:()=>startSession("today")}},"Start today's session"),h("span",{class:"hint"},"or press Enter"))));
+  m.append(h("section",{class:"card today"},h("div",{class:"eyebrow"},"Today · about "+mins+" min"+(next?" · step "+next.n+" of "+PROGRAM.reduce((t,P)=>t+P.ls.length,0):"")),h("h2",{class:"hero"},next?next.t:"Keep it sharp"),
+    h("div",{class:"plan chips"},...plan.map(p=>h("span",{},p))),
+    h("div",{class:"row"},h("button",{class:"primary big",id:"start",on:{click:()=>startSession("today")}},"Start ▶"),h("span",{class:"hint"},"or press Enter"))));
   m.append(h("div",{class:"quick"},
-    h("button",Object.assign({class:"tile",on:{click:()=>startSession("review")}},due?{}:{disabled:""}),h("b",{},"Quick review"),h("span",{},due?due+" due · 3 min":"Nothing due today")),
-    h("button",{class:"tile",on:{click:()=>startSession("mixed")}},h("b",{},"Mixed chart practice"),h("span",{},"6 charts · 4 min")),
-    h(lsDone?"a":"div",lsDone?{class:"tile",href:"#"+G}:{class:"tile","aria-disabled":"true",style:"opacity:.55"},h("b",{},(lsDone?"":"🔒 ")+"Level "+lv+" test"),h("span",{},state.done[G]?"Passed ✓ · retake any time":lsDone?"20 questions · ready":"Opens after all "+lvlLessons(lv).length+" lessons"))));
-  const order=[lv];if(top+1<=LEVELS.length&&!order.includes(top+1))order.push(top+1);for(let n=LEVELS.length;n>=1;n--)if(!order.includes(n)&&n<=top)order.push(n);
-  order.forEach(n=>m.append(lvlCard(n,next)));
+    h("button",Object.assign({class:"tile",on:{click:()=>startSession("review")}},due?{}:{disabled:""}),h("b",{},"🔁 Review"),h("span",{},due?due+" due":"None due")),
+    h("button",{class:"tile",on:{click:()=>startSession("mixed")}},h("b",{},"📈 Mix"),h("span",{},"6 charts")),
+    h(lsDone?"a":"div",lsDone?{class:"tile",href:"#"+G}:{class:"tile","aria-disabled":"true",style:"opacity:.55"},h("b",{},(lsDone?"🏁":"🔒")+" Test"),h("span",{},state.done[G]?"Passed ✓":lsDone?"Ready":"After "+lvlLessons(lv).length+" lessons"))));
+  m.append(levelPath(next));
   const sb=document.getElementById("start");if(sb)sb.focus({preventScroll:true})}
+/* ---------- Trading floor: the live chart and the TradingView school, kept apart from the lessons ---------- */
+function tvOpen(){return !!state.done.gate||Object.keys(tvDone()).length>0}
+function floorView(m){const done=tvDone();const nTv=TV_LESSONS.filter(L=>done[L.id]).length;const tvo=tvOpen();const pr=(state.tv&&state.tv.practice)||null;
+  m.append(h("section",{class:"card today"},h("div",{class:"eyebrow"},"Trading floor"),h("h2",{class:"hero"},"Real charts, real markets"),
+    h("p",{class:"lead"},"Practise on live prices here. The lessons stay on Today.")));
+  m.append(h("div",{class:"doors"},
+    h("a",{class:"door",href:"#chart"},h("span",{class:"di"},"📈"),h("b",{},"Live chart"),h("span",{},pr&&pr.n?pr.ok+" of "+pr.n+" right in practice":"Mark swings, draw levels")),
+    h(tvo?"a":"div",tvo?{class:"door",href:"#tv"}:{class:"door locked","aria-disabled":"true"},h("span",{class:"di"},tvo?"🎓":"🔒"),h("b",{},"TradingView school"),
+      h("span",{},tvo?nTv+" of "+TV_LESSONS.length+" lessons":"Opens when you pass Level 1"),tvo?h("span",{class:"lpbar"},h("i",{style:"width:"+Math.round(100*nTv/TV_LESSONS.length)+"%"})):null)))}
+function tvLocked(m){m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"TradingView school"),h("h2",{},"🔒 Not yet"),h("p",{class:"task"},"This opens when you pass the Level 1 test, once you can read trend and levels."),h("div",{class:"row"},h("a",{href:"#floor"},"‹ Trading floor"))))}
 function mapView(m){const nx=nextLesson();const lv=curLevel();
   m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"Your program"),h("h2",{},"42 lessons, 5 levels, about 6 to 8 months"),
     h("p",{class:"task"},"Work through one level at a time, 2 to 3 lessons a week. Each lesson starts with short study notes, then hands-on drills on practice charts. Every level ends with a test you must pass, and every lesson of a level must be finished, before the next level opens."),
     h("div",{class:"row"},h("a",{href:"#"+(nx?nx.id:LEVELS[lv-1].gate)},nx?"Continue: Lesson "+nx.n+" →":"Take the Level "+lv+" test →"))));
   PROGRAM.forEach(L=>{const built=L.n<=LEVELS.length;const open=built&&lvlOpen(L.n);const ls=lvlLessons(L.n);const nD=ls.filter(x=>state.done[x.id]).length;const G=built?LEVELS[L.n-1].gate:null;const tt=built?lvlTimeText(L.n):"";
-    const card=h("section",{class:"card"},h("div",{class:"done-row"},h("div",{},h("div",{class:"eyebrow"},"Level "+L.n+(open?"":built?" · locked":" · coming later")),h("h3",{style:"margin:4px 0 2px"},L.t)),h("span",{class:"score"},built?nD+" of "+ls.length+" done":L.ls.length+" lessons")),
+    const card=h("details",Object.assign({class:"card mapdet"},L.n===lv?{open:""}:{}),h("summary",{class:"done-row"},h("div",{},h("div",{class:"eyebrow"},"Level "+L.n+(open?"":built?" · locked":" · coming later")),h("h3",{style:"margin:4px 0 2px"},L.t)),h("span",{class:"score"},built?nD+" of "+ls.length+" done":L.ls.length+" lessons")),
       h("p",{class:"read",style:"margin:4px 0 10px"},L.sub),
       h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},L.time),tt?". "+tt:(L.n<5?" (2 to 3 lessons a week, plus the test)":" (2 to 3 lessons a week)")),
       built&&!open?h("p",{class:"task"},lockText(L.n)):null,
@@ -2539,10 +2618,10 @@ function syncView(m){if(SBC&&!window.__CS_NATIVE)return sbView(m);const card=h("
     const nL=LESSONS.filter(x=>state.done[x.id]).length;fb(f,"good",`Done. You have <b>${nL}</b> finished lesson${nL===1?"":"s"} and <b>${Object.keys(state.cards).length}</b> memory cards here now.`);ta.value=""}}},"Import");
   card2.append(h("h3",{},"Bring progress from the Mac app"),h("p",{class:"task"},"Only needed once. In the old Chart School app press Move my progress, then paste the code here."),ta,h("div",{class:"row"},imp),f)}
 const top=document.getElementById("topnav");
-function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";[["home","Today"],["map","Program"],["chart","Chart"],["tv","TradingView"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id?"on":""},l)));
+function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";const fl=["floor","chart","tv"].includes(cur);[["home","Today"],["map","Program"],["floor","Trading"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id||(id==="floor"&&fl)?"on":""},l)));
   const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
 function route(){if(SESSION||TVS)return;live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();document.body.classList.toggle("wide",id==="chart");
-  if(id==="gate"){gate(app)}else if(id==="gate2"){gate2(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="tv"){tvView(app)}else if(id==="chart"){chartView(app)}
+  if(id==="gate"){gate(app)}else if(id==="gate2"){gate2(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="floor"){floorView(app)}else if(id==="tv"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));tvOpen()?tvView(app):tvLocked(app)}else if(id==="chart"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));chartView(app)}
   else if(LESSONS.find(x=>x.id===id)){history.replaceState(null,"","#home");startSession("lesson",id);return}
   else homeView(app);window.scrollTo(0,0)}
 document.addEventListener("keydown",e=>{if(SESSION)return;if(e.key==="Enter"&&document.activeElement&&document.activeElement.id==="start"){e.preventDefault();startSession("today")}});
