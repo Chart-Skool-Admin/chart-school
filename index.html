@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Patrik's Chart School</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7,6 +9,10 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
+<script>/* device: phone or computer, and whether it runs as an installed app */
+(function(){const ua=navigator.userAgent,d=document.documentElement;const ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+  const phone=matchMedia("(max-width:700px)").matches||(/Mobi|Android|iPhone/.test(ua));d.classList.add(phone?"is-phone":"is-desktop");if(ios)d.classList.add("is-ios");if(/Macintosh/.test(ua)&&!ios)d.classList.add("is-mac");
+  if(matchMedia("(display-mode: standalone)").matches||navigator.standalone)d.classList.add("is-app")})();</script>
 <script>/* Supabase project for progress sync (the anon key is public by design; the database rules keep each person's row private) */
 window.CS_SB={url:"https://gkcifetzhyfmnmwexkce.supabase.co",key:"sb_publishable_ztg7So_ObnxudnfbEvQH5Q_g4lpJwny"};</script>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -235,6 +241,30 @@ canvas.mcanvas{display:block;width:100%;height:560px;border-radius:8px;touch-act
 .mcgrade{font-family:var(--f-mono);font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid}
 .mcgrade.strong{color:var(--good);background:var(--good-bg)}.mcgrade.OK{color:var(--ink);background:var(--warn-bg)}.mcgrade.weak{color:var(--bad);background:var(--bad-bg)}
 body.wide .shell,body.wide .topbar{max-width:1120px}
+/* ---------- device layouts ---------- */
+body{margin:0}
+@media (min-width:1000px){.shell,.movebar,.topbar{max-width:1080px}.topbar{flex-wrap:nowrap}.topbar .themes{margin-left:0}.card .fields{max-width:440px}body{font-size:16px}.step{min-height:420px}.step canvas.chart{height:380px}}
+.topbar .chip{white-space:nowrap}
+.apptheme{display:none}
+@media (max-width:700px){
+  body{padding-top:calc(env(safe-area-inset-top,0px) + 10px);padding-bottom:calc(84px + env(safe-area-inset-bottom,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+  .topbar{flex-wrap:nowrap;gap:8px;margin-bottom:12px}
+  .brand{font-size:20px}
+  .topbar .themes{display:none}
+  .apptheme{display:block}
+  .topbar .chip{font-size:11px;padding:4px 8px}
+  #topnav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:0;justify-content:space-around;background:var(--panel);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));flex-wrap:nowrap;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+  #topnav a{flex:1;text-align:center;font-size:12px;padding:10px 2px;border-radius:10px;white-space:nowrap}
+  #topnav a.on{box-shadow:none;color:var(--accent);background:var(--bg);font-weight:600}
+  .today{padding:20px 18px}.hero{font-size:28px!important}
+  .quick{grid-template-columns:1fr 1fr}.quick .tile:last-child:nth-child(odd){grid-column:1/-1}
+  .lgrid{grid-template-columns:1fr 1fr}
+  .card{padding:16px}
+  .step{min-height:calc(100svh - 190px);padding:20px 16px}
+  canvas.mcanvas{height:max(320px,calc(100svh - 330px))}
+  .mccard{padding:10px}
+  .tvbox{height:calc(100svh - 260px)}
+}
 /* sync */
 a.chip.sync{text-decoration:none;display:inline-flex;gap:6px;align-items:center}a.chip.sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
 a.chip.sync.on::before{background:var(--good)}a.chip.sync.err::before,a.chip.sync.native::before{background:var(--accent)}a.chip.sync.native{color:var(--accent);border-color:var(--accent)}
@@ -1379,7 +1409,7 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     stat.textContent="Loading "+cfg.sym+"…";if(!bars.length)draw();
     try{const r=await mcLoad(cfg.sym,cfg.iv);if(cfg.sym+"|"+cfg.iv!==key)return;const keep=force&&bars.length;bars=r.bars;src=r.src;if(!keep)fit();upd();draw();wsOpen()}
     catch(e){bars=[];draw();stat.textContent="";msg.hidden=false;msg.innerHTML="";msg.append(h("b",{},"Can't load live prices right now."),
-      h("span",{},window.__CS_NATIVE?"Check your internet connection, then try again.":"Live prices come from your CoinGecko connection. Press Allow prices, then Try again."),
+      h("span",{},mcOnline()?"Live prices come from your CoinGecko connection. Press Allow prices, then Try again.":"Check your internet connection, then try again."),
       h("div",{class:"row"},mcOnline()?h("button",{on:{click:async()=>{try{const pm=await window.claude.use("permissions");if(!pm)return;const st=await pm.request(["mcp"]);if(st&&st.mcp==="denied")await pm.manage().catch(()=>{});reload(true)}catch(e){}}}},"Allow prices"):null,
         h("button",{class:"primary",on:{click:()=>reload(true)}},"Try again")),
       mcWhy?h("span",{class:"score",style:"display:block"},/UnsupportedProtocol/.test(mcWhy)?"Price connectors aren't answering. Check that CoinGecko is connected in your Claude settings.":"Reason: "+mcWhy):null)}}
@@ -1603,11 +1633,17 @@ function rwTag(rw){if(!rw||!rw.meta)return"";const d=new Date(rw.meta.t);const M
 
 
 const SB_DOM="@users.chartschool.app";const sbName=e=>String(e||"").replace(SB_DOM,"");
-function sbView(m){const card=h("section",{class:"card"});m.append(card);
+function installSteps(){const c=document.documentElement.classList;if(c.contains("is-app"))return h("p",{class:"task"},"You're using the installed app. 👍");
+  const ph=c.contains("is-phone");return h("div",{},h("h3",{style:"margin-top:10px"},ph?"Put it on your home screen":"Put it in your Dock"),
+    h("ol",{class:"syncsteps"},ph?[h("li",{},"In Safari tap ",h("b",{},"Share")," (the square with the arrow)."),h("li",{},"Choose ",h("b",{},"Add to Home Screen"),", then ",h("b",{},"Add"),".")]
+      :[h("li",{},"In Safari choose ",h("b",{},"File → Add to Dock"),"."),h("li",{},"Open Chart School from the Dock from now on.")]))}
+function themeCard(){const row=h("div",{class:"themes",style:"margin:0;display:inline-flex"});
+  ["light","dark","auto"].forEach(t=>row.append(h("button",{class:(state.theme||"auto")===t?"on":"",on:{click:e=>{state.theme=t;applyTheme(t);save();[...row.children].forEach(x=>x.classList.toggle("on",x===e.currentTarget))}}},t[0].toUpperCase()+t.slice(1))));
+  return h("section",{class:"card apptheme"},h("h3",{},"Appearance"),row)}
+function sbView(m){const card=h("section",{class:"card"});m.append(card);setTimeout(()=>m.append(themeCard()),0);
   if(SB.sess){const lab={on:"Synced",start:"Connecting…",wait:"Offline right now",err:"Sync problem"}[SY.mode]||"Synced";
     card.append(h("div",{class:"eyebrow"},"Phone + Mac sync"),h("h2",{},lab),h("p",{class:"lead"},"Signed in as "+(sbName(SB.sess.email)||"you")+". Your progress saves to your account, so every device where you sign in picks up where you stopped."),
-      h("h3",{style:"margin-top:10px"},"Install it like an app"),
-      h("ol",{class:"syncsteps"},h("li",{},"iPhone: in Safari tap ",h("b",{},"Share")," then ",h("b",{},"Add to Home Screen"),"."),h("li",{},"Mac: in Safari choose ",h("b",{},"File → Add to Dock"),".")),
+      installSteps(),
       h("div",{class:"row"},h("button",{on:{click:()=>{sbSaveSess(null);SY.ref=null;SY.ready=false;setSync("signin");route()}}},"Sign out")))}
   else{const em=h("input",{type:"text",autocomplete:"username",autocapitalize:"none",autocorrect:"off",spellcheck:"false",placeholder:"Username"}),pw=h("input",{type:"password",autocomplete:"current-password",placeholder:"Password (at least 8 characters)"});const f=h("div",{hidden:""});
     const go=async up=>{const u=em.value.trim().toLowerCase(),p=pw.value;if(!/^[a-z0-9._-]{3,30}$/.test(u)){fb(f,"bad","Usernames are 3 to 30 letters or numbers (dots, dashes and underscores are fine too).");return}if(p.length<8){fb(f,"bad","Passwords need at least 8 characters.");return}const e=u+SB_DOM;
@@ -1650,7 +1686,7 @@ function syncView(m){if(SBC&&!window.__CS_NATIVE)return sbView(m);const card=h("
   card2.append(h("h3",{},"Bring progress from the Mac app"),h("p",{class:"task"},"Only needed once. In the old Chart School app press Move my progress, then paste the code here."),ta,h("div",{class:"row"},imp),f)}
 const top=document.getElementById("topnav");
 function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";[["home","Today"],["map","Program"],["chart","Chart"],["tv","TradingView"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id?"on":""},l)));
-  const s=streakNow();document.getElementById("streak").textContent=s?s+"-day streak":"Start a streak today"}
+  const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
 function route(){if(SESSION||TVS)return;live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();document.body.classList.toggle("wide",id==="chart");
   if(id==="gate"){gate(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="tv"){tvView(app)}else if(id==="chart"){chartView(app)}
   else if(LESSONS.find(x=>x.id===id)){history.replaceState(null,"","#home");startSession("lesson",id);return}
