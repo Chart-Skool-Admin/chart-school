@@ -1977,6 +1977,8 @@ function buildSession(kind,lid){const steps=[];let reviewEnd=0;
   let L=null;if(kind==="today"||kind==="lesson"){L=lid?LESSONS.find(x=>x.id===lid):nextLesson();
     if(L){lvlStart(L.lv);const start=(kind==="today"&&state.pos[L.id])||0;const ls0=steps.length+1;steps.push({t:"label",eyebrow:"Lesson "+L.n+" · Level "+L.lv,text:L.t,sub:"About "+L.min+" minutes. One step at a time."+(start?" Picking up where you left off.":"")});
       L.steps.slice(start).forEach((s,k)=>{if(s.t==="drill")for(let i=0;i<s.n;i++)steps.push({t:"round",kind:s.kind,lesson:L.id,idx:start+k});else steps.push({...s,lesson:L.id,idx:start+k})});
+      /* replaying a finished lesson: the questions swap places each time (the notes stay where they are), so it's recall, not memory of the order */
+      if(state.done[L.id]){const slots=[];for(let k=ls0;k<steps.length;k++)if(["guess","round","explain"].includes(steps[k].t))slots.push(k);const qs=shuffle(slots.map(k=>steps[k]));slots.forEach((k,j)=>steps[k]=qs[j])}
       /* throwbacks: questions from earlier lessons that aren't 100% remembered yet keep turning up inside new lessons */
       const tb=throwbacks(L.id,steps,2);tb.forEach(c=>{const at=rint(ls0+2,Math.max(ls0+2,steps.length-1));steps.splice(at,0,{t:"review",card:c,retry:true,throw:true})});
       steps.push({t:"lessonDone",lesson:L.id})}
