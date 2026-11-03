@@ -85,6 +85,8 @@ canvas.chart.clickable{touch-action:pan-y}
 canvas.chart,canvas.mcanvas{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .card:has(canvas.chart.clickable){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html.aiming,html.aiming *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+/* phone swing marking: nudge arrows and mark buttons under the chart */
+.aimbar{display:grid;grid-template-columns:52px 1fr 1fr 52px;gap:8px;margin:10px 0 4px}.aimbar[hidden]{display:none}.aimbar button{min-height:48px;padding:0 6px;font-size:15px}
 canvas.chart.qchart{height:220px;margin:4px 0 12px}
 html{touch-action:manipulation}
 html.is-phone canvas.chart.clickable{height:380px}
@@ -463,7 +465,8 @@ function drawChart(cv,bars,o={}){
     x.fillStyle=C.muted;x.fillText("future hidden",Math.min(X(vis)+4,L+pw-80),T+10)}
   (o.hlines||[]).forEach(l=>{const lc=rc(l.c)||C.accent;x.strokeStyle=lc;x.lineWidth=l.w||2;x.setLineDash(l.dash?[6,4]:[]);x.beginPath();x.moveTo(L,Y(l.p));x.lineTo(L+pw,Y(l.p));x.stroke();x.setLineDash([]);
     if(l.label){x.fillStyle=lc;x.fillText(l.label,L+4,Y(l.p)-9)}});
-  if(o.aim&&bars[o.aim.i]){const a=o.aim,b=bars[a.i],px=X(a.i);x.fillStyle=tint("--accent",.16);x.fillRect(px-Math.max(slot,6)/2,T,Math.max(slot,6),ph);
+  if(o.aim&&bars[o.aim.i]&&!o.aim.t){const b=bars[o.aim.i],px=X(o.aim.i),bw=Math.max(slot,6);x.fillStyle=tint("--accent",.18);x.fillRect(px-bw/2,T,bw,ph);x.strokeStyle=C.accent;x.lineWidth=1.5;x.strokeRect(px-bw/2-1,Y(b.h)-4,bw+2,Y(b.l)-Y(b.h)+8)}
+  else if(o.aim&&bars[o.aim.i]){const a=o.aim,b=bars[a.i],px=X(a.i);x.fillStyle=tint("--accent",.16);x.fillRect(px-Math.max(slot,6)/2,T,Math.max(slot,6),ph);
     const py=a.t==="H"?Y(b.h)-9:Y(b.l)+9;x.beginPath();x.arc(px,py,8,0,6.283);x.strokeStyle=a.del?C.bad:C.accent;x.lineWidth=2.5;x.stroke();
     x.font="600 12px "+tok("--f-body");const lab=a.del?"remove":(a.t==="H"?"swing high":"swing low");const tw=x.measureText(lab).width;x.fillStyle=a.del?C.bad:C.accent;
     x.fillText(lab,Math.max(L,Math.min(L+pw-tw,px-tw/2)),a.t==="H"?Math.max(T+8,py-20):Math.min(T+ph-6,py+20));x.font="11px "+tok("--f-mono")}
@@ -517,18 +520,28 @@ function pivotRound(el,done,opts={}){
   const aimAt=ev=>{if(checked||!cv._g)return;aim=target(ev);draw()},aimOff=()=>{document.documentElement.classList.remove("aiming");if(aim){aim=null;draw()}};
   cv.addEventListener("pointerdown",ev=>{if(ev.pointerType==="touch"){document.documentElement.classList.add("aiming");try{getSelection().removeAllRanges()}catch(e){}}});
   ["contextmenu","selectstart","dragstart"].forEach(t=>cv.addEventListener(t,e=>e.preventDefault()));
-  cv.addEventListener("pointerdown",aimAt);cv.addEventListener("pointermove",ev=>{if(ev.pointerType!=="touch"||ev.buttons)aimAt(ev)});
-  cv.addEventListener("pointercancel",aimOff);cv.addEventListener("pointerleave",aimOff);
-  cv.addEventListener("pointerup",ev=>{if(checked||!cv._g||ev.pointerType!=="touch")return;ev.preventDefault();place(target(ev));aim=null;document.documentElement.classList.remove("aiming");draw()});
-  cv.addEventListener("click",ev=>{if(checked||!cv._g||cv._touchPlaced)return;place(target(ev))});
+  /* phone: a finger is too wide to hit a 5-pixel candle, so a tap only picks a candle; arrows nudge it one candle at a time and buttons place the mark */
+  const phone=document.documentElement.classList.contains("is-phone");
+  const bar=h("div",{class:"aimbar",hidden:""}),bL=h("button",{"aria-label":"One candle left"},"◀"),bR=h("button",{"aria-label":"One candle right"},"▶"),bH=h("button",{class:"primary"}),bLo=h("button",{class:"primary"});bar.append(bL,bH,bLo,bR);
+  const hasM=t=>aim&&user.findIndex(m=>m.t===t&&m.i===aim.i);
+  function aimUI(){if(!phone)return;bar.hidden=!aim||checked;if(bar.hidden)return;bH.textContent=hasM("H")>=0?"✕ High":"▲ High";bLo.textContent=hasM("L")>=0?"✕ Low":"▼ Low";bL.disabled=aim.i<=0;bR.disabled=aim.i>=bars.length-1}
+  const nudge=d=>{if(!aim)return;aim={i:Math.max(0,Math.min(bars.length-1,aim.i+d))};aimUI();draw()};bL.addEventListener("click",()=>nudge(-1));bR.addEventListener("click",()=>nudge(1));
+  const toggle=t=>{if(!aim||checked)return;const k=hasM(t);if(k>=0){user.splice(k,1);sfx("untap")}else{user.push({i:aim.i,t});sfx("tap")}sc.textContent=user.length+" marked";aimUI();rerenderAll()};
+  bH.addEventListener("click",()=>toggle("H"));bLo.addEventListener("click",()=>toggle("L"));
+  if(phone){const pickAt=ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);aim={i:cv._g.idx(p.x)};aimUI();draw()};
+    cv.addEventListener("pointerdown",pickAt);cv.addEventListener("pointermove",ev=>{if(ev.buttons||ev.pointerType==="touch")pickAt(ev)});
+    const lift=()=>document.documentElement.classList.remove("aiming");cv.addEventListener("pointerup",lift);cv.addEventListener("pointercancel",lift)}
+  else{cv.addEventListener("pointerdown",aimAt);cv.addEventListener("pointermove",aimAt);
+  cv.addEventListener("pointerleave",aimOff);
+  cv.addEventListener("click",ev=>{if(checked||!cv._g)return;place(target(ev))})}
   function place(a){if(a.del){user.splice(a.ex,1);sfx("untap")}else{user.push({i:a.i,t:a.t});sfx("tap")}sc.textContent=user.length+" marked";
-    cv._touchPlaced=true;setTimeout(()=>cv._touchPlaced=false,450);rerenderAll()}
-  const chk=h("button",{class:"primary",on:{click:check}},"Check my marks");const clr=h("button",{on:{click:()=>{if(checked)return;user=[];sc.textContent="0 marked";rerenderAll()}}},"Clear");
+    rerenderAll()}
+  const chk=h("button",{class:"primary",on:{click:check}},"Check my marks");const clr=h("button",{on:{click:()=>{if(checked)return;user=[];sc.textContent="0 marked";aimUI();rerenderAll()}}},"Clear");
   el.append(h("p",{class:"task"},opts.prompt||"Click every swing high (above a candle) and swing low (below a candle). A swing high is a candle whose high is above the 3 candles on each side. Click a mark again to remove it."),
     cv,h("div",{class:"legend"},h("span",{style:"--c:var(--mark)"},"your marks / missed pivots (rings)"),h("span",{style:"--c:var(--good)"},"correct"),h("span",{style:"--c:var(--bad)"},"wrong")),
-    document.documentElement.classList.contains("is-phone")?h("p",{class:"ltime"},"Tip: press and slide sideways to aim. The highlighted candle is picked when you lift your finger."):null,
+    phone?bar:null,phone?h("p",{class:"ltime"},"Tap near a candle to select it, use ◀ ▶ to move one candle at a time, then press ▲ High or ▼ Low. ✕ removes a mark."):null,
     h("div",{class:"row"},chk,clr,sc),f);
-  function check(){checked=true;chk.disabled=true;clr.disabled=true;truth.forEach(t=>t.hit=false);let hits=0;
+  function check(){checked=true;aim=null;aimUI();chk.disabled=true;clr.disabled=true;truth.forEach(t=>t.hit=false);let hits=0;
     user.forEach(m=>{const t=truth.find(t=>!t.hit&&t.t===m.t&&Math.abs(t.i-m.i)<=1);if(t){t.hit=true;m.ok=true;hits++}else m.ok=false});
     const prec=user.length?hits/user.length:0,rec=truth.length?hits/truth.length:1;const f1=prec+rec?2*prec*rec/(prec+rec):0;const ok=f1>=(opts.strict?.8:.7);rerenderAll();
     fb(f,ok?"good":"bad",`You found <b>${hits} of ${truth.length}</b> swing points with <b>${user.length-hits}</b> extra marks. Score ${Math.round(f1*100)}%. `+(ok?"Good, that's consistent swing reading.":"Purple rings show the ones you missed. Look for the clear peaks and troughs only; ignore small wiggles inside a swing.")+rwTag(rw));
