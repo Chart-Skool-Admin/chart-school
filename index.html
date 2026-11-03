@@ -1533,7 +1533,7 @@ function gate(m){if(testLock(m,1))return;
   }
   function finish(){const ok=passed>=PASS;state.best.g20=Math.max(state.best.g20||0,passed);if(ok){state.done.gate=true;lvlCheck()}save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 1 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You know the theory and can read trend, swings and levels reliably. Level 1 is done.`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions and numbers change every time.`),
-      h("div",{class:"row"},h("button",{class:"primary",on:{click:start}},"Take the test again")))}
+      lvlNextRow(1,ok,start))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
 }
 
@@ -1610,7 +1610,7 @@ function gate2(m){if(testLock(m,2))return;
     else(R()<.5?volRound:brkRound)(body,after)}
   function finish(){const ok=passed>=PASS;state.best.g2=Math.max(state.best.g2||0,passed);if(ok){state.done.gate2=true;lvlEnd(2)}save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 2 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You can read trendlines, pullbacks, ranges, candles, patterns and volume. Level 2 is done. ${lvlTimeText(2)}`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions change every time.`),
-      h("div",{class:"row"},h("button",{class:"primary",on:{click:start}},"Take the test again"),h("a",{href:"#home"},"Back to Today")))}
+      lvlNextRow(2,ok,start))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
 }
 
@@ -2084,6 +2084,11 @@ document.addEventListener("keydown",e=>{if(!SESSION)return;if(e.target.tagName==
 
 /* ---------- home, map, notes ---------- */
 function ring(p){const r=16,c=2*Math.PI*r;return h("span",{class:"ring",html:`<svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true"><circle cx="20" cy="20" r="${r}" class="rbg"/><circle cx="20" cy="20" r="${r}" class="rfg" stroke-dasharray="${(p*c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 20 20)"/></svg>`})}
+/* end of a level test: a pass points straight on to the next level, a miss offers another go */
+function lvlNextRow(n,ok,again){const nx=n+1,built=nx<=LEVELS.length;
+  if(!ok)return h("div",{class:"row"},h("button",{class:"primary",on:{click:again}},"Take the test again"),h("a",{href:"#home"},"Back to Today"));
+  return h("div",{class:"row"},h("button",{class:"primary",on:{click:()=>{HOME_LV=built?nx:n;location.hash="#home"}}},built?"On to Level "+nx+" ▶":"Back to Today"),
+    h("button",{class:"ghost",on:{click:again}},"Retake for a higher score"))}
 function lvlCheck(){LEVELS.forEach(L=>{if(lvlLessonsDone(L.n)&&state.done[L.gate])lvlEnd(L.n)})}
 function lockText(n){const p=n-1;const miss=lvlLessons(p).filter(L=>!state.done[L.id]).map(L=>L.n);const parts=[];
   if(miss.length)parts.push("finish "+(miss.length===1?"Lesson ":"Lessons ")+(miss.length>2?miss.slice(0,-1).join(", ")+" and "+miss[miss.length-1]:miss.join(" and ")));
