@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <title>Patrik's Chart School</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -12,7 +12,9 @@
 <script>/* device: phone or computer, and whether it runs as an installed app */
 (function(){const ua=navigator.userAgent,d=document.documentElement;const ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
   const phone=matchMedia("(max-width:700px)").matches||(/Mobi|Android|iPhone/.test(ua));d.classList.add(phone?"is-phone":"is-desktop");if(ios)d.classList.add("is-ios");if(/Macintosh/.test(ua)&&!ios)d.classList.add("is-mac");
-  if(matchMedia("(display-mode: standalone)").matches||navigator.standalone)d.classList.add("is-app")})();</script>
+  if(matchMedia("(display-mode: standalone)").matches||navigator.standalone)d.classList.add("is-app")
+  /* the layout already fits the phone, so stop the whole page zooming by accident (charts have their own zoom) */
+  if(ios)["gesturestart","gesturechange"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}))})();</script>
 <script>/* Supabase project for progress sync (the anon key is public by design; the database rules keep each person's row private) */
 window.CS_SB={url:"https://gkcifetzhyfmnmwexkce.supabase.co",key:"sb_publishable_ztg7So_ObnxudnfbEvQH5Q_g4lpJwny"};</script>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -78,6 +80,9 @@ h3{font-family:var(--f-display);font-weight:500;font-size:19px;margin:0 0 8px}
 .read b{color:var(--ink);font-weight:600}
 .task{font-size:15px;margin:0 0 10px;max-width:68ch}
 canvas.chart{display:block;width:100%;height:320px;border-radius:8px;background:var(--panel);touch-action:manipulation}
+canvas.chart.clickable{touch-action:pan-y}
+html{touch-action:manipulation}
+html.is-phone canvas.chart.clickable{height:380px}
 .clickable{cursor:crosshair}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
 button{font:inherit;font-size:14px;font-weight:500;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;cursor:pointer}
@@ -445,6 +450,10 @@ function drawChart(cv,bars,o={}){
     x.fillStyle=C.muted;x.fillText("future hidden",Math.min(X(vis)+4,L+pw-80),T+10)}
   (o.hlines||[]).forEach(l=>{const lc=rc(l.c)||C.accent;x.strokeStyle=lc;x.lineWidth=l.w||2;x.setLineDash(l.dash?[6,4]:[]);x.beginPath();x.moveTo(L,Y(l.p));x.lineTo(L+pw,Y(l.p));x.stroke();x.setLineDash([]);
     if(l.label){x.fillStyle=lc;x.fillText(l.label,L+4,Y(l.p)-9)}});
+  if(o.aim&&bars[o.aim.i]){const a=o.aim,b=bars[a.i],px=X(a.i);x.fillStyle=tint("--accent",.16);x.fillRect(px-Math.max(slot,6)/2,T,Math.max(slot,6),ph);
+    const py=a.t==="H"?Y(b.h)-9:Y(b.l)+9;x.beginPath();x.arc(px,py,8,0,6.283);x.strokeStyle=a.del?C.bad:C.accent;x.lineWidth=2.5;x.stroke();
+    x.font="600 12px "+tok("--f-body");const lab=a.del?"remove":(a.t==="H"?"swing high":"swing low");const tw=x.measureText(lab).width;x.fillStyle=a.del?C.bad:C.accent;
+    x.fillText(lab,Math.max(L,Math.min(L+pw-tw,px-tw/2)),a.t==="H"?Math.max(T+8,py-20):Math.min(T+ph-6,py+20));x.font="11px "+tok("--f-mono")}
   (o.marks||[]).forEach(m=>{const b=bars[m.i];const px=X(m.i),py=m.t==="H"?Y(b.h)-9:Y(b.l)+9;x.beginPath();x.arc(px,py,m.ring?7:5,0,6.283);
     if(m.ring){x.strokeStyle=rc(m.c)||C.mark;x.lineWidth=2;x.stroke()}else{x.fillStyle=rc(m.c)||C.mark;x.fill()}});
   if(o.box){const b0=Math.max(0,o.box.from),b1=Math.min(bars.length-1,o.box.to);let bh=-Infinity,bl=Infinity;for(let i=b0;i<=b1;i++){bh=Math.max(bh,bars[i].h);bl=Math.min(bl,bars[i].l)}
@@ -487,13 +496,22 @@ function snapI(bars,i,t,r,lo,hi){let best=i;for(let k=Math.max(lo,i-r);k<=Math.m
 function pivotRound(el,done,opts={}){
   const type=opts.type||pick(["up","down","side"]);const rw=opts.bars?(opts.meta?{meta:opts.meta}:null):rwFind("any",60,60,{piv:[6,14]});const bars=opts.bars||(rw?rw.bars:genSwing(type,60));const N=3;const truth=pivots(bars,N);let user=[];let checked=false;
   const cv=h("canvas",{class:"chart clickable","aria-label":"Click candles to mark swing highs and lows"});const f=h("div",{hidden:""});const sc=h("span",{class:"score"},"0 marked");
-  const args=()=>{let marks=user.map(m=>({...m}));if(checked){marks=user.map(m=>({...m,c:m.ok?tok("--good"):tok("--bad")})).concat(truth.filter(t=>!t.hit).map(t=>({...t,ring:true,c:tok("--mark")})))}return[bars,{marks}]};
-  mountChart(cv,args);
-  cv.addEventListener("click",ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);const g=cv._g;let i=g.idx(p.x);const b=bars[i];const mid=(g.Y(b.h)+g.Y(b.l))/2;const t=p.y<mid?"H":"L";const r=snapR(g.slot);
-    const ex=user.findIndex(m=>m.t===t&&Math.abs(m.i-i)<=r);if(ex>=0){user.splice(ex,1);sfx("untap")}else{i=snapI(bars,i,t,r,0,bars.length-1);user.push({i,t});sfx("tap")}sc.textContent=user.length+" marked";rerenderAll()});
+  const args=()=>{let marks=user.map(m=>({...m}));if(checked){marks=user.map(m=>({...m,c:m.ok?tok("--good"):tok("--bad")})).concat(truth.filter(t=>!t.hit).map(t=>({...t,ring:true,c:tok("--mark")})))}return[bars,{marks,aim:checked?null:aim}]};
+  let aim=null;const draw=mountChart(cv,args);
+  const target=ev=>{const p=canvasPoint(cv,ev);const g=cv._g;let i=g.idx(p.x);const b=bars[i];const t=p.y<(g.Y(b.h)+g.Y(b.l))/2?"H":"L";const r=snapR(g.slot);
+    const ex=user.findIndex(m=>m.t===t&&Math.abs(m.i-i)<=r);return ex>=0?{i:user[ex].i,t,ex,del:true}:{i:snapI(bars,i,t,r,0,bars.length-1),t}};
+  /* aim: while a finger is down (or the mouse hovers) the candle that would be picked is highlighted; it is placed when the finger lifts */
+  const aimAt=ev=>{if(checked||!cv._g)return;aim=target(ev);draw()},aimOff=()=>{if(aim){aim=null;draw()}};
+  cv.addEventListener("pointerdown",aimAt);cv.addEventListener("pointermove",ev=>{if(ev.pointerType!=="touch"||ev.buttons)aimAt(ev)});
+  cv.addEventListener("pointercancel",aimOff);cv.addEventListener("pointerleave",aimOff);
+  cv.addEventListener("pointerup",ev=>{if(checked||!cv._g||ev.pointerType!=="touch")return;ev.preventDefault();place(target(ev));aim=null;draw()});
+  cv.addEventListener("click",ev=>{if(checked||!cv._g||cv._touchPlaced)return;place(target(ev))});
+  function place(a){if(a.del){user.splice(a.ex,1);sfx("untap")}else{user.push({i:a.i,t:a.t});sfx("tap")}sc.textContent=user.length+" marked";
+    cv._touchPlaced=true;setTimeout(()=>cv._touchPlaced=false,450);rerenderAll()}
   const chk=h("button",{class:"primary",on:{click:check}},"Check my marks");const clr=h("button",{on:{click:()=>{if(checked)return;user=[];sc.textContent="0 marked";rerenderAll()}}},"Clear");
   el.append(h("p",{class:"task"},opts.prompt||"Click every swing high (above a candle) and swing low (below a candle). A swing high is a candle whose high is above the 3 candles on each side. Click a mark again to remove it."),
     cv,h("div",{class:"legend"},h("span",{style:"--c:var(--mark)"},"your marks / missed pivots (rings)"),h("span",{style:"--c:var(--good)"},"correct"),h("span",{style:"--c:var(--bad)"},"wrong")),
+    document.documentElement.classList.contains("is-phone")?h("p",{class:"ltime"},"Tip: press and slide sideways to aim. The highlighted candle is picked when you lift your finger."):null,
     h("div",{class:"row"},chk,clr,sc),f);
   function check(){checked=true;chk.disabled=true;clr.disabled=true;truth.forEach(t=>t.hit=false);let hits=0;
     user.forEach(m=>{const t=truth.find(t=>!t.hit&&t.t===m.t&&Math.abs(t.i-m.i)<=1);if(t){t.hit=true;m.ok=true;hits++}else m.ok=false});
@@ -901,7 +919,7 @@ function gate(m){
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`Chart ${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
     const nextBtn=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextChart()}}},idx===NCH-1?"See my result":"Next chart");
-    const after=ok=>{if(ok)passed++;head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nextBtn()))};
+    const after=ok=>{pop(ok);if(ok)passed++;head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nextBtn()))};
     if(task==="trend"){const want=pick(["up","down","side"]);const rw=rwFind(want,60,60,{piv:[6,14]});const type=rw?rw.type:want;const bars=rw?rw.bars:genSwing(type,60);
       const cv=h("canvas",{class:"chart"});mountChart(cv,()=>[bars,{}]);const btns={};const f=h("div",{hidden:""});
       body.append(h("p",{class:"task"},"What is the trend? Look at the swing highs and lows, not the last few candles."),cv,h("div",{class:"row"},...["up","down","side"].map(t=>btns[t]=h("button",{on:{click:()=>{Object.values(btns).forEach(b=>b.disabled=true);const ok=t===type;btns[t].className=ok?"pick-good":"pick-bad";btns[type].className="pick-good";
@@ -914,7 +932,7 @@ function gate(m){
         pivotRound(body,after,{bars,type,meta:rw&&rw.meta,prompt:"Live prices aren't loading, so this one is from past data. Mark the swing highs and lows (3 candles each side)."})})}
     else srRound(body,after,{prompt:"Click twice to place support and resistance."})
   }
-  function finish(){const ok=passed>=PASS;state.best.g10=Math.max(state.best.g10||0,passed);if(ok)state.done.gate=true;save();renderNav();
+  function finish(){const ok=passed>=PASS;state.best.g10=Math.max(state.best.g10||0,passed);if(ok)state.done.gate=true;save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 1 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You can read trend, swings and levels reliably. Move on to Level 2.`:`${passed} of ${NCH}. You need ${PASS}. Practise the kind of chart you missed most (the live chart's swing switch helps with swings), then try again.`),
       h("div",{class:"row"},h("button",{class:"primary",on:{click:start}},"Take the test again")))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
