@@ -3542,11 +3542,17 @@ function rwFind(want,len,clsLen,opt={}){if(!RW.sets.length)return null;
 function rwTag(rw){if(!rw||!rw.meta)return"";const d=new Date(rw.meta.t);const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()];
   return ` <span class="realtag">Real ${rw.meta.sym} · ${rw.meta.iv==="D"?"daily":rw.meta.iv==="W"?"weekly":"4-hour"} · ${M} ${d.getUTCFullYear()}</span>`}
 /* ---------- Level 3: real price action for the indicator drills ----------
-   Extra live data (SOL daily, BTC and ETH weekly), then finders that pick a real window
+   Extra live data (BTC and ETH weekly), then finders that pick a real window
    which shows the thing being asked about. Every drill falls back to a made-up chart offline. */
 RW.wk=[];
 (async()=>{if(mcOnline()){let ok=false;try{const pm=await window.claude.use("permissions");ok=pm&&(await pm.state("mcp"))==="granted"}catch(e){}if(!ok)return}
-  [["SOL","D"],["BTC","W"],["ETH","W"]].forEach(([s,iv],k)=>setTimeout(()=>mcLoad(s,iv).then(r=>{if(!r||!r.bars)return;if(iv==="W"){if(r.bars.length>160)RW.wk.push({sym:s,iv,bars:r.bars})}else if(r.bars.length>200)RW.sets.push({sym:s,iv,bars:r.bars})}).catch(()=>{}),2600+k*600))})();
+  /* weekly BTC and ETH for the big-picture drill, kept on the device like the daily and 4-hour sets */
+  const KEY="cs-rw-wk";let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}
+  if(saved&&saved.sets)saved.sets.forEach(x=>RW.wk.push({sym:x.sym,iv:"W",bars:x.b.map(k=>({t:k[0],o:k[1],h:k[2],l:k[3],c:k[4]}))}));
+  if(saved&&Date.now()-saved.t<24*3600e3&&RW.wk.length>=2)return;
+  const fresh=[];await Promise.all(["BTC","ETH"].map((sym,k)=>new Promise(res=>setTimeout(()=>mcLoad(sym,"W").then(r=>{if(r&&r.bars&&r.bars.length>160)fresh.push({sym,iv:"W",bars:r.bars})}).catch(()=>{}).then(res),3200+k*500))));
+  if(!fresh.length)return;RW.wk.length=0;fresh.forEach(x=>RW.wk.push(x));
+  const r6=v=>+(+v).toPrecision(6);try{localStorage.setItem(KEY,JSON.stringify({t:Date.now(),sets:fresh.map(x=>({sym:x.sym,b:x.bars.map(k=>[k.t,r6(k.o),r6(k.h),r6(k.l),r6(k.c)])}))}))}catch(e){}})();
 function rwWin(sets,len){const ok=sets.filter(s=>s.bars.length>=len+2);if(!ok.length)return null;const set=pick(ok);const s=rint(0,set.bars.length-len);const raw=set.bars.slice(s,s+len);
   return{bars:raw.map(x=>({o:x.o,h:x.h,l:x.l,c:x.c})),meta:{sym:set.sym,iv:set.iv,t:raw[0].t}}}
 /* RSI divergence (or agreement) at the latest swing in a real window */
