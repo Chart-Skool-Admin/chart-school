@@ -167,7 +167,8 @@ a.mapitem:hover{border-color:var(--accent)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* home: compact level path */
-.plan.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px;padding:0;list-style:none}
+.plan.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.herorow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}.herorow .row{margin:0;align-items:center}
 .plan.chips span{font-size:13px;padding:5px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line)}
 .quick{grid-template-columns:repeat(3,1fr)!important}
 .quick .tile{padding:10px 12px;gap:0}.quick .tile b{font-size:15px}.quick .tile span{font-size:12px}
@@ -198,6 +199,38 @@ a.mapitem:hover{border-color:var(--accent)}
 .lpanel.slide-l{animation:slideL .22s ease-out}.lpanel.slide-r{animation:slideR .22s ease-out}
 @keyframes slideL{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
 @keyframes slideR{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+/* achievements */
+.lnode{position:relative}.lstar{position:absolute;top:2px;right:calc(50% - 34px);font-size:15px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25));animation:twinkle 2.4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.18) rotate(12deg)}}
+.trophies{padding:14px 14px 12px}.trophies .rank{margin:2px 0 0;font-size:18px}
+.shelf{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:10px -14px 0;padding:2px 14px 4px}.shelf::-webkit-scrollbar{display:none}
+.badge{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;width:68px;padding:8px 4px;border-radius:12px;border:1px dashed var(--line);opacity:.55}
+.badge .bi{font-size:24px;line-height:1}.badge .bn{font-family:inherit!important;font-size:10px;font-family:var(--f-mono);color:var(--muted);text-align:center;line-height:1.2}
+.badge.got{opacity:1;border:1px solid transparent;background:var(--grad-soft),var(--bg);box-shadow:inset 0 0 0 1px var(--accent)}
+.celebrate{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(20,14,10,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fadeIn .25s ease-out}
+.cbox{background:var(--panel);border-radius:20px;padding:20px 22px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:boxIn .4s cubic-bezier(.2,1.4,.4,1)}
+.cbox h2{margin:4px 0 6px;font-size:24px}.cbox p{margin:0 0 16px;color:var(--muted);font-size:14px}
+.cstage{position:relative;height:150px;display:flex;align-items:center;justify-content:center}
+.cicon{position:relative;z-index:2;font-size:84px;line-height:1;animation:trophyIn .8s cubic-bezier(.2,1.5,.4,1) both,floaty 2.6s ease-in-out .8s infinite}
+.crays{position:absolute;width:190px;height:190px;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,200,80,.35) 0 10deg,transparent 10deg 30deg);-webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%);animation:spin 9s linear infinite}
+.cburst{position:absolute;inset:0;pointer-events:none}
+.cburst span{position:absolute;left:50%;top:50%;font-size:16px;color:#f2b632;opacity:0;animation:burst 1.3s ease-out var(--d) both}
+@keyframes burst{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(0) scale(.4)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(calc(-1*var(--r))) scale(1.1)}}
+@keyframes trophyIn{0%{transform:scale(0) rotate(-30deg)}60%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes boxIn{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.celebrate.still *{animation:none!important}
+.rankbar{display:flex;align-items:center;gap:10px;width:100%;padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.rankbar .rk{font-weight:700;margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rankbar .rc{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap}.rankbar .rgo{color:var(--muted);font-size:18px}
+.rankbar:hover{border-color:var(--accent)}
+.sheetwrap{align-items:flex-end}@media (min-width:701px){.sheetwrap{align-items:center}}
+.sheet{background:var(--panel);border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-width:560px;width:100%;max-height:85vh;overflow:auto;animation:boxIn .3s ease-out}
+@media (min-width:701px){.sheet{border-radius:20px}}
+.sheet .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;overflow:visible;margin:0;padding:0}
+.sheet .badge{width:auto}.badge .bt{font-size:11px;font-weight:700;text-align:center;line-height:1.2}
+.stargrid{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.stargrid .sg{font-size:20px;color:var(--muted)}.stargrid .sg.got{animation:twinkle 2.4s ease-in-out infinite}
 /* trading floor */
 .doors{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .door{display:flex;flex-direction:column;gap:4px;padding:18px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);text-decoration:none}
@@ -352,6 +385,48 @@ body.focus .movebar,.movebar[hidden]{display:none}
 .syncsteps{margin:4px 0 0;padding-left:20px;max-width:62ch}.syncsteps li{margin-bottom:6px}
 .synccode{font-family:var(--f-mono);font-size:12px;min-height:90px;word-break:break-all}
 @media (max-width:600px){canvas.mcanvas{height:420px}.mctools .ml{display:none}}
+/* ---------- phone: its own fit-to-screen layout, no page scrolling on the main tabs ---------- */
+html.is-phone,html.is-phone body{overscroll-behavior:none}
+html.is-phone .shell{gap:8px}
+html.is-phone .topbar{margin-bottom:8px}
+html.is-phone .today{padding:12px 14px}
+html.is-phone .today .hero{font-size:22px!important;margin:2px 0 0}
+html.is-phone .today .eyebrow{font-size:10px}
+html.is-phone .herorow{margin-top:8px}
+html.is-phone .herorow .plan.chips{margin:0}
+html.is-phone .plan.chips span{font-size:11px;padding:3px 8px}
+html.is-phone .today button.big{padding:8px 18px;font-size:15px}
+html.is-phone .quick{gap:6px}
+html.is-phone .quick .tile{padding:7px 10px;border-radius:10px}html.is-phone .quick .tile b{font-size:13px}html.is-phone .quick .tile span{font-size:11px}
+html.is-phone .rankbar{padding:6px 12px;font-size:13px}
+html.is-phone .lpath{padding:10px 10px 8px}
+html.is-phone .lpills{margin:0 -10px 6px;padding:0 10px 2px;gap:5px}
+html.is-phone .lpill{padding:5px 9px;min-width:70px;font-size:12px;gap:4px}
+html.is-phone .lphead h3{font-size:16px;display:inline}html.is-phone .lpsub{display:inline;margin-left:8px;font-size:11px}
+html.is-phone .lplock{font-size:12px;margin:4px 0 0}
+html.is-phone .lnodes{grid-template-columns:repeat(5,1fr);gap:2px;margin-top:6px}
+html.is-phone .lnode{padding:4px 1px 2px;gap:1px;border-radius:10px}
+html.is-phone .lnode .lt{font-size:10px;min-height:2.5em}html.is-phone .lnode .ls{font-size:9.5px;min-height:1.1em}
+html.is-phone .nring,html.is-phone .nring svg{width:38px;height:38px}html.is-phone .nring b{font-size:13px}
+html.is-phone .lstar{right:calc(50% - 27px);font-size:12px}
+/* program on phone: one-line level rows, only the current level open */
+html.is-phone .mapintro .task{display:none}html.is-phone .mapintro{padding:12px 14px}html.is-phone .mapintro h2{font-size:18px;margin:2px 0 6px}
+html.is-phone details.mapdet{padding:10px 14px}
+html.is-phone details.mapdet>summary .eyebrow{display:none}html.is-phone details.mapdet>summary h3{font-size:15px;margin:0!important}
+html.is-phone details.mapdet>summary h3::before{content:attr(data-lv);font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-right:8px}
+html.is-phone details.mapdet .read,html.is-phone details.mapdet .ltime,html.is-phone details.mapdet .task{display:none}
+html.is-phone .maplist{grid-template-columns:1fr 1fr;gap:4px}html.is-phone .mapitem{padding:6px 8px;font-size:12px;grid-template-columns:20px 1fr 14px;gap:4px}
+html.is-phone .shell>.card{margin:0}
+html.is-phone .lptime{display:none}
+html.is-phone .sheet .badge .bn{display:none}html.is-phone .sheet .shelf{grid-template-columns:repeat(4,1fr);gap:6px}html.is-phone .sheet .badge{padding:6px 2px}html.is-phone .sheet .badge .bi{font-size:22px}html.is-phone .badge .bt{font-size:10px}
+/* lesson steps on phone: charts sized to the screen so a step fits without scrolling */
+html.is-phone .step{padding:16px 14px;min-height:0;gap:10px}html.is-phone .step h2{font-size:21px}
+html.is-phone canvas.chart{height:min(260px,30vh)}html.is-phone canvas.chart.clickable{height:min(380px,46vh)}
+html.is-phone .step textarea{min-height:0}html.is-phone .lead{font-size:16px}
+html.is-phone .mapintro h2{font-size:15px!important}html.is-phone .mapintro .row{margin-top:2px}
+html.is-phone details.mapdet{padding:8px 12px}
+html.is-phone .mapitem span:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html.is-phone .mapitem{padding:5px 8px;font-size:12px}
+@media (max-height:620px){html.is-phone .quick .tile span,html.is-phone .lnode .lt,html.is-phone .today .eyebrow{display:none}html.is-phone .lnode .ls{min-height:0}}
 </style>
 <header class="topbar"><span class="brand">Chart School</span><nav id="topnav" aria-label="Sections"></nav><span class="chip" id="streak"></span><a class="chip sync" id="sync" href="#sync" hidden></a>
   <div class="themes" role="group" aria-label="Appearance"><button id="th-light" data-t="light">Light</button><button id="th-dark" data-t="dark">Dark</button><button id="th-auto" data-t="auto">Auto</button></div></header>
@@ -381,6 +456,7 @@ function mergeIn(o){if(!o||typeof o!=="object")return false;const before=JSON.st
   const sa=base.streak,sb=ot.streak;if(sb&&sb.last&&(!sa.last||sb.last>sa.last||(sb.last===sa.last&&(sb.n||0)>(sa.n||0))))base.streak=sb;
   if(ot.lvT){base.lvT=base.lvT||{};for(const k in ot.lvT){const a=base.lvT[k]||{},b=ot.lvT[k]||{};const v={};const ss=[a.s,b.s].filter(Boolean),ee=[a.e,b.e].filter(Boolean);if(ss.length)v.s=Math.min(...ss);if(ee.length)v.e=Math.max(...ee);base.lvT[k]=v}}
   if(ot.mins){base.mins=base.mins||{};for(const k in ot.mins)base.mins[k]=Math.max(base.mins[k]||0,ot.mins[k]||0)}
+  if(ot.ach)base.ach=Object.assign({},ot.ach,base.ach||{});
   if(ot.tv&&ot.tv.done){base.tv=base.tv||{};base.tv.done=Object.assign({},ot.tv.done,base.tv.done||{})}
   base.t=Math.max(mine.t||0,o.t||0);for(const k of Object.keys(state))delete state[k];Object.assign(state,base);
   return JSON.stringify(state)!==before}
@@ -1893,11 +1969,13 @@ function renderStep(){live.clear();app.innerHTML="";const S_=SESSION;const st=S_
     ROUNDS[kind](area,ok=>{S_.asked++;if(ok)S_.right++;if(T==="review"){grade(st.card.id,ok);save()}nb.hidden=false;nb.append(nextBtn("Continue",go));pop(ok)})}
   else if(T==="tool"){card.append(h("div",{class:"eyebrow"},"Try it yourself"));TOOLS[st.kind](card);card.append(nextBtn("Continue",go))}
   else if(T==="explain"){const ta=h("textarea",{id:"explain-"+st.lesson,rows:"3",placeholder:"Type a few words, or just say it out loud."});const reveal=h("div",{hidden:""});
-    const show=h("button",{class:"primary big",id:"next",on:{click:()=>{show.remove();reveal.hidden=false}}},"Show my answer vs the model");
+    const show=h("button",{class:"primary big",id:"next",on:{click:()=>{show.remove();reveal.hidden=false;
+      /* phone: fold the answer box away so the model answer fits on screen */
+      if(document.documentElement.classList.contains("is-phone")){const v=ta.value.trim();ta.hidden=true;ta.style.display="none";if(v)ta.after(h("p",{class:"read",style:"margin:0"},h("b",{},"You: "),v))}}}},"Show my answer vs the model");
     card.append(h("div",{class:"eyebrow"},"Say it in your own words"),h("h2",{},st.q),ta,h("div",{class:"row foot"},show,h("span",{class:"hint"},"or press Enter")),reveal);
     reveal.append(h("div",{class:"model"},h("b",{},"A good answer: "),st.model),exBlock(st.ex),h("p",{class:"task",style:"margin-top:14px"},"How close were you?"),
       h("div",{class:"opts row"},...[["Nailed it","Great. You'll see this again in a few days to lock it in."],["Partly","Normal. Saying it again later is how it sticks."],["Missed it","That's useful to know. It'll come back soon."]].map(([l,m],k)=>h("button",{"data-key":String(k+1),on:{click:e=>{[...e.currentTarget.parentNode.children].forEach(b=>b.disabled=true);e.currentTarget.classList.add("pick-good");
-        const n=h("p",{class:"read"},m);reveal.append(n);reveal.append(nextBtn("Continue",go))}}},l))))}
+        const n=h("p",{class:"read"},m);reveal.append(n);const cb=nextBtn("Continue",go);reveal.append(cb);if(cb.scrollIntoView)cb.scrollIntoView({block:"nearest",behavior:"smooth"})}}},l))))}
   else if(T==="lessonDone"){sfx("lesson");const L=LESSONS.find(x=>x.id===st.lesson);const first=!state.done[L.id];state.done[L.id]=true;delete state.pos[L.id];unlockLesson(L.id);lvlCheck();save();
     card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Lesson "+L.n+" complete"),h("h2",{class:"hero"},L.t+": done"),
       h("p",{class:"lead"},first?"Its questions now join your review deck. They'll come back tomorrow, then in 3 days, a week, two weeks and a month.":"Nice refresher."),nextBtn("Continue",go));pop(true)}
@@ -1958,13 +2036,13 @@ function levelPath(next){const lv=curLevel();if(HOME_LV==null||HOME_LV>PROGRAM.l
     const on=pills.querySelector(".on");if(on)on.scrollIntoView({block:"nearest",inline:"center"});
     panel.innerHTML="";const n=HOME_LV,P=PROGRAM[n-1],s=lvlState(n);
     const tt=s.built?lvlTimeText(n):"";
-    panel.append(h("div",{class:"lphead"},h("div",{},h("h3",{},P.t),h("div",{class:"lpsub"},s.built?(s.nD+" of "+s.total+" lessons"+(s.passed?" · test ✓":"")):(s.total+" lessons · coming later"),h("span",{class:"lpdot"},"·"),"⏱ "+(tt||P.time)))));
+    panel.append(h("div",{class:"lphead"},h("div",{},h("h3",{},P.t),h("div",{class:"lpsub"},s.built?(s.nD+" of "+s.total+" lessons"+(s.passed?" · test ✓":"")):(s.total+" lessons · coming later"),h("span",{class:"lptime"},h("span",{class:"lpdot"},"·"),"⏱ "+(tt||P.time))))));
     if(s.built&&!s.open)panel.append(h("p",{class:"lplock"},lockText(n)));
     else if(!s.built)panel.append(h("p",{class:"lplock"},"🔒 Opens after Level "+(n-1)+"."));
     const g=h("div",{class:"lnodes"});
     if(s.built)s.ls.forEach(L=>{const d=state.done[L.id],p=mastery(L.id),isN=next&&next.id===L.id;
       g.append(h("button",Object.assign({class:"lnode"+(d?" done":"")+(isN?" next":""),title:"Lesson "+L.n+": "+L.t,on:{click:()=>startSession("lesson",L.id)}},s.open?{}:{disabled:""}),
-        nodeRing(d?Math.max(p,.08):0,L.n,p>=1?"full":""),h("span",{class:"lt"},L.t),h("span",{class:"ls"},d?Math.round(p*100)+"%":isN?"Next":"")))});
+        nodeRing(d?Math.max(p,.08):0,L.n,p>=1?"full":""),p>=1?h("span",{class:"lstar","aria-label":"100%"},"⭐"):null,h("span",{class:"lt"},L.t),h("span",{class:"ls"},d?Math.round(p*100)+"%":isN?"Next":"")))});
     else P.ls.forEach(([num,t])=>g.append(h("div",{class:"lnode",title:"Lesson "+num+": "+t,"aria-disabled":"true"},nodeRing(0,num),h("span",{class:"lt"},t),h("span",{class:"ls"},""))));
     /* the level test is the last stop on the path */
     const G=s.built?LEVELS[n-1].gate:null;const ready=s.open&&lvlLessonsDone(n);
@@ -1982,13 +2060,13 @@ function homeView(m){const next=nextLesson();const due=dueCards().length;const l
   const tb=throwbacks(next&&next.id,[],2).length;if(tb)plan.push("↩ "+tb+" throwback"+(tb>1?"s":""));
   const mins=Math.round(Math.min(due,5)*.5+(next?next.min:5));
   m.append(h("section",{class:"card today"},h("div",{class:"eyebrow"},"Today · about "+mins+" min"+(next?" · step "+next.n+" of "+PROGRAM.reduce((t,P)=>t+P.ls.length,0):"")),h("h2",{class:"hero"},next?next.t:"Keep it sharp"),
-    h("div",{class:"plan chips"},...plan.map(p=>h("span",{},p))),
-    h("div",{class:"row"},h("button",{class:"primary big",id:"start",on:{click:()=>startSession("today")}},"Start ▶"),h("span",{class:"hint"},"or press Enter"))));
+    h("div",{class:"herorow"},h("div",{class:"plan chips"},...plan.map(p=>h("span",{},p))),
+      h("div",{class:"row"},h("span",{class:"hint"},"Enter ↵"),h("button",{class:"primary big",id:"start",on:{click:()=>startSession("today")}},"Start ▶")))));
   m.append(h("div",{class:"quick"},
     h("button",Object.assign({class:"tile",on:{click:()=>startSession("review")}},due?{}:{disabled:""}),h("b",{},"🔁 Review"),h("span",{},due?due+" due":"None due")),
     h("button",{class:"tile",on:{click:()=>startSession("mixed")}},h("b",{},"📈 Mix"),h("span",{},"6 charts")),
     h(lsDone?"a":"div",lsDone?{class:"tile",href:"#"+G}:{class:"tile","aria-disabled":"true",style:"opacity:.55"},h("b",{},(lsDone?"🏁":"🔒")+" Test"),h("span",{},state.done[G]?"Passed ✓":lsDone?"Ready":"After "+lvlLessons(lv).length+" lessons"))));
-  m.append(levelPath(next));
+  m.append(trophyShelf(),levelPath(next));setTimeout(()=>{if(!SESSION&&!TVS&&(location.hash||"#home")==="#home")achCheck()},450);
   const sb=document.getElementById("start");if(sb)sb.focus({preventScroll:true})}
 /* ---------- Trading floor: the live chart and the TradingView school, kept apart from the lessons ---------- */
 function tvOpen(){return !!state.done.gate||Object.keys(tvDone()).length>0}
@@ -2000,18 +2078,63 @@ function floorView(m){const done=tvDone();const nTv=TV_LESSONS.filter(L=>done[L.
     h(tvo?"a":"div",tvo?{class:"door",href:"#tv"}:{class:"door locked","aria-disabled":"true"},h("span",{class:"di"},tvo?"🎓":"🔒"),h("b",{},"TradingView school"),
       h("span",{},tvo?nTv+" of "+TV_LESSONS.length+" lessons":"Opens when you pass Level 1"),tvo?h("span",{class:"lpbar"},h("i",{style:"width:"+Math.round(100*nTv/TV_LESSONS.length)+"%"})):null)))}
 function tvLocked(m){m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"TradingView school"),h("h2",{},"🔒 Not yet"),h("p",{class:"task"},"This opens when you pass the Level 1 test, once you can read trend and levels."),h("div",{class:"row"},h("a",{href:"#floor"},"‹ Trading floor"))))}
+/* ---------- Achievements: stars, trophies and a rank title. Earned ones live in state.ach {id: time} ---------- */
+const RANKS=["Chart Rookie","Trend Reader","Pattern Hunter","Market Analyst","Flow Reader","Master Trader"];
+const BEST_KEY={gate:"g20",gate2:"g2"};
+function rankNow(){let k=0;while(k<LEVELS.length&&state.done[LEVELS[k].gate]&&lvlLessonsDone(k+1))k++;return k}
+function achList(){const a=[];const sN=(state.streak&&state.streak.n)||0;
+  a.push({id:"first",i:"🌱",t:"First step",d:"Finish your first lesson",ok:LESSONS.some(L=>state.done[L.id])});
+  LEVELS.forEach(({n,gate})=>{const P=PROGRAM[n-1];
+    a.push({id:"lv"+n,i:"🏆",t:"Level "+n+" complete",d:"Every lesson done and the test passed",ok:lvlLessonsDone(n)&&!!state.done[gate]});
+    a.push({id:"lv"+n+"-100",i:"👑",t:"Level "+n+" at 100%",d:"Every Level "+n+" lesson fully remembered",ok:!!state.done[gate]&&lvlLessons(n).every(L=>mastery(L.id)>=1)});
+    const bk=BEST_KEY[gate];if(bk)a.push({id:"perfect"+n,i:"💯",t:"Perfect Level "+n+" test",d:"20 of 20",ok:state.best[bk]===20})});
+  a.push({id:"streak7",i:"🔥",t:"7-day streak",d:"Practise 7 days in a row",ok:sN>=7});
+  a.push({id:"streak30",i:"☄️",t:"30-day streak",d:"Practise 30 days in a row",ok:sN>=30});
+  a.push({id:"tvschool",i:"🎓",t:"TradingView school",d:"Every TradingView lesson done",ok:TV_LESSONS.every(L=>tvDone()[L.id])});
+  LESSONS.forEach(L=>a.push({id:"star-"+L.id,i:"⭐",t:"Lesson "+L.n+" at 100%",d:L.t,ok:mastery(L.id)>=1,star:true}));
+  for(let k=1;k<=LEVELS.length;k++)a.push({id:"rank"+k,i:"🎖️",t:"New title: "+RANKS[k],d:"You earned it by finishing Level "+k,ok:rankNow()>=k,rank:true});
+  return a}
+/* find newly earned ones, save them, and celebrate */
+function achCheck(){state.ach=state.ach||{};const fresh=achList().filter(x=>x.ok&&!state.ach[x.id]);if(!fresh.length)return;
+  const now=Date.now();fresh.forEach(x=>state.ach[x.id]=now);save();const old=document.querySelector(".rankbar");if(old)old.replaceWith(trophyShelf());
+  const stars=fresh.filter(x=>x.star),rest=fresh.filter(x=>!x.star);
+  if(stars.length===1)rest.push(stars[0]);else if(stars.length>1)rest.push({i:"⭐",t:stars.length+" lessons at 100%",d:stars.map(x=>x.t.replace(" at 100%","")).join(", ")});
+  rest.sort((a,b)=>(b.rank?1:0)-(a.rank?1:0));celebrate(rest)}
+function celebrate(q){if(!q.length)return;const x=q[0];const still=matchMedia("(prefers-reduced-motion: reduce)").matches;sfx(x.rank||x.i==="🏆"||x.i==="👑"?"session":"lesson");
+  const burst=h("div",{class:"cburst","aria-hidden":"true"});if(!still)for(let k=0;k<14;k++)burst.append(h("span",{style:`--a:${k*360/14+(R()*12-6)}deg;--d:${(.05*k%.35).toFixed(2)}s;--r:${90+Math.round(R()*50)}px`},k%3?"✦":"⭐"));
+  const close=()=>{ov.remove();celebrate(q.slice(1))};
+  const ov=h("div",{class:"celebrate"+(still?" still":""),role:"dialog","aria-label":x.t,on:{click:e=>{if(e.target===ov)close()}}},
+    h("div",{class:"cbox"},h("div",{class:"cstage"},h("div",{class:"crays"}),burst,h("div",{class:"cicon"},x.i)),
+      h("div",{class:"eyebrow"},x.rank?"Title unlocked":"Achievement"),h("h2",{},x.t),h("p",{},x.d),
+      h("button",{class:"primary big",on:{click:close}},q.length>1?"Next ("+(q.length-1)+" more)":"Nice!")));
+  document.body.append(ov);const b=ov.querySelector("button");if(b)b.focus()}
+function trophyShelf(){const all=achList();state.ach=state.ach||{};const got=x=>x.ok&&state.ach[x.id];
+  const main=all.filter(x=>!x.star&&!x.rank),stars=all.filter(x=>x.star);const nS=stars.filter(got).length,nT=main.filter(got).length;const rk=rankNow();
+  return h("button",{class:"rankbar",on:{click:()=>trophySheet()}},h("span",{class:"rk"},"🎖️ "+RANKS[rk]),h("span",{class:"rc"},"🏆 "+nT+"/"+main.length),h("span",{class:"rc"},"⭐ "+nS+"/"+stars.length),h("span",{class:"rgo"},"›"))}
+function trophySheet(){const all=achList();state.ach=state.ach||{};const got=x=>x.ok&&state.ach[x.id];const rk=rankNow();
+  const main=all.filter(x=>!x.star&&!x.rank),stars=all.filter(x=>x.star);
+  const close=()=>ov.remove();
+  const grid=h("div",{class:"shelf"},...main.map(x=>h("div",{class:"badge"+(got(x)?" got":"")},h("span",{class:"bi"},got(x)?x.i:"🔒"),h("span",{class:"bt"},x.t),h("span",{class:"bn"},x.d))));
+  const sg=h("div",{class:"stargrid"},...stars.map(x=>h("span",{class:"sg"+(got(x)?" got":""),title:x.t+": "+x.d},got(x)?"⭐":"☆")));
+  const ov=h("div",{class:"celebrate sheetwrap",on:{click:e=>{if(e.target===ov)close()}}},
+    h("div",{class:"sheet"},h("div",{class:"done-row"},h("div",{},h("div",{class:"eyebrow"},"Your title"),h("h3",{class:"rank"},"🎖️ "+RANKS[rk])),h("button",{class:"ghost",on:{click:close},"aria-label":"Close"},"✕")),
+      h("p",{class:"read",style:"margin:2px 0 10px"},rk<RANKS.length-1?"Next title: "+RANKS[rk+1]+", for finishing Level "+(rk+1)+".":"Top title reached."),
+      grid,h("div",{class:"eyebrow",style:"margin-top:12px"},"Lessons at 100% remembered"),sg));
+  document.body.append(ov)}
 function mapView(m){const nx=nextLesson();const lv=curLevel();
-  m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"Your program"),h("h2",{},"42 lessons, 5 levels, about 6 to 8 months"),
+  m.append(h("section",{class:"card mapintro"},h("div",{class:"eyebrow"},"Your program"),h("h2",{},"42 lessons, 5 levels, about 6 to 8 months"),
     h("p",{class:"task"},"Work through one level at a time, 2 to 3 lessons a week. Each lesson starts with short study notes, then hands-on drills on practice charts. Every level ends with a test you must pass, and every lesson of a level must be finished, before the next level opens."),
     h("div",{class:"row"},h("a",{href:"#"+(nx?nx.id:LEVELS[lv-1].gate)},nx?"Continue: Lesson "+nx.n+" →":"Take the Level "+lv+" test →"))));
   PROGRAM.forEach(L=>{const built=L.n<=LEVELS.length;const open=built&&lvlOpen(L.n);const ls=lvlLessons(L.n);const nD=ls.filter(x=>state.done[x.id]).length;const G=built?LEVELS[L.n-1].gate:null;const tt=built?lvlTimeText(L.n):"";
-    const card=h("details",Object.assign({class:"card mapdet"},L.n===lv?{open:""}:{}),h("summary",{class:"done-row"},h("div",{},h("div",{class:"eyebrow"},"Level "+L.n+(open?"":built?" · locked":" · coming later")),h("h3",{style:"margin:4px 0 2px"},L.t)),h("span",{class:"score"},built?nD+" of "+ls.length+" done":L.ls.length+" lessons")),
+    const card=h("details",Object.assign({class:"card mapdet"},L.n===lv?{open:""}:{}),h("summary",{class:"done-row"},h("div",{},h("div",{class:"eyebrow"},"Level "+L.n+(open?"":built?" · locked":" · coming later")),h("h3",{style:"margin:4px 0 2px","data-lv":"L"+L.n},L.t)),h("span",{class:"score"},built?nD+"/"+ls.length:L.ls.length+" lessons")),
       h("p",{class:"read",style:"margin:4px 0 10px"},L.sub),
       h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},L.time),tt?". "+tt:(L.n<5?" (2 to 3 lessons a week, plus the test)":" (2 to 3 lessons a week)")),
       built&&!open?h("p",{class:"task"},lockText(L.n)):null,
       h("div",{class:"maplist"},...L.ls.map(([num,t])=>{const les=lessons.find(x=>x.n===num);const lab=[h("span",{class:"n"},String(num).padStart(2,"0")),h("span",{},t),h("span",{class:"ok"},les&&state.done[les.id]?"✓":"")];
         return les&&open?h("a",{href:"#"+les.id,class:"mapitem"},...lab):h("div",{class:"mapitem locked"},...lab)})),
       h("p",{class:"read"},h("b",{},"Level test: "),L.gate,open?" ":"",open&&lvlLessonsDone(L.n)?h("a",{href:"#"+G},state.done[G]?"Passed ✓ · retake →":"Take it →"):(open?"🔒 Opens once every lesson above is done.":"")));m.append(card)})}
+/* Program levels work like an accordion: opening one closes the others */
+document.addEventListener("toggle",e=>{const d=e.target;if(d.matches&&d.matches("details.mapdet")&&d.open)document.querySelectorAll("details.mapdet[open]").forEach(x=>{if(x!==d)x.open=false})},true);
 /* ---------- Lesson notes as a slide deck with an index ---------- */
 function noteLessons(){return LESSONS.filter(L=>lvlOpen(L.lv))}
 function noteSlides(){const out=[];noteLessons().forEach(L=>{out.push({L,title:L.t,cover:true});const tmp=document.createElement("div");tmp.innerHTML=NOTES[L.id]||"";
