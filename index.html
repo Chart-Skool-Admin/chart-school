@@ -232,6 +232,28 @@ a{color:var(--accent)}
 .sheet .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;overflow:visible;margin:0;padding:0}
 .sheet .badge{width:auto}.badge .bt{font-size:11px;font-weight:700;text-align:center;line-height:1.2}
 .stargrid{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.stargrid .sg{font-size:20px;color:var(--muted)}.stargrid .sg.got{animation:twinkle 2.4s ease-in-out infinite}
+/* live chart on phone: full screen, TradingView-app style */
+body.mcfull{padding:0!important;overflow:hidden}body.mcfull .topbar,body.mcfull #topnav{display:none!important}body.mcfull .shell{max-width:none;gap:0}
+.mcphone{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--panel);padding-top:env(safe-area-inset-top,0px)}
+.mchead{display:flex;align-items:center;gap:8px;padding:8px 10px 4px}
+.mcback{font-size:28px;line-height:1;color:var(--ink);text-decoration:none;padding:0 6px 4px 2px}
+.mchead .mcsel{border:0;background:transparent;font-size:17px;font-weight:700;padding:2px 0}
+.mchead .mcpx{font-size:15px}.mcicon{border:0;background:transparent;font-size:20px;padding:4px 8px;color:var(--ink)}
+.mcivs{overflow-x:auto;scrollbar-width:none;padding:0 8px 6px;border-bottom:1px solid var(--line)}.mcivs::-webkit-scrollbar{display:none}
+.mcivs .tvchips{flex-wrap:nowrap;border:0;background:transparent;padding:0;gap:2px;width:max-content}.mcivs .tvchips button{padding:5px 10px;border-radius:8px}
+.mcivs .tvchips button.on{background:var(--bg);color:var(--ink);font-weight:700;box-shadow:inset 0 0 0 1px var(--line)}
+.mcphone .mcwrap{flex:1;min-height:0;display:flex}.mcphone canvas.mcanvas{flex:1;height:auto!important;min-height:0;border-radius:0}
+.mcpanel{position:relative;max-height:42vh;overflow:auto;border-top:1px solid var(--line);padding:10px 12px;background:var(--panel)}
+.mcpanel .task{font-size:14px;line-height:1.4}.mcpanel .fb{font-size:13px;padding:8px 10px;margin-top:6px}.mcpanel button.opt{padding:8px 10px;font-size:14px}
+.mcpclose{position:absolute;top:4px;right:4px;z-index:2}
+.mctb{display:flex;align-items:center;gap:6px;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--panel)}
+.mctb .mctools{flex:1;gap:2px;flex-wrap:nowrap}.mctb .mctools button{border:0;background:transparent;padding:8px 10px;border-radius:10px;color:var(--muted)}
+.mctb .mctools button.on{background:var(--bg);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.mctb .mctools .mi{font-size:18px}
+.mcpracbtn{padding:8px 12px;font-size:14px;white-space:nowrap}
+.mcgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.mcgrid button{padding:10px}
+.mcsheet .quick{grid-template-columns:1fr 1fr!important}
+.tvsheet .sheet{position:relative;max-height:92vh}.tvsheet .sheet>.card{border:0;padding:0;box-shadow:none;background:transparent}.tvclose{position:absolute;top:8px;right:8px;z-index:3}
+.tvsheet .tvbox{height:60vh}.door{font:inherit;text-align:left;cursor:pointer}
 /* trading floor */
 .doors{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .door{display:flex;flex-direction:column;gap:4px;padding:18px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);text-decoration:none}
@@ -393,7 +415,7 @@ html.is-phone .topbar{margin-bottom:8px}
 html.is-phone .today{padding:12px 14px}
 html.is-phone .today .hero{font-size:22px!important;margin:2px 0 0}
 html.is-phone .today .eyebrow{font-size:10px}
-html.is-phone .herorow{margin-top:8px}
+html.is-phone .herorow{margin-top:8px;flex-wrap:nowrap;align-items:flex-end}html.is-phone .herorow .plan.chips{min-width:0}html.is-phone .herorow .row{flex:0 0 auto}
 html.is-phone .herorow .plan.chips{margin:0}
 html.is-phone .plan.chips span{font-size:11px;padding:3px 8px}
 html.is-phone .today button.big{padding:8px 18px;font-size:15px}
@@ -419,6 +441,22 @@ html.is-phone details.mapdet .read,html.is-phone details.mapdet .ltime,html.is-p
 html.is-phone .maplist{grid-template-columns:1fr 1fr;gap:4px}html.is-phone .mapitem{padding:6px 8px;font-size:12px;grid-template-columns:20px 1fr 14px;gap:4px}
 html.is-phone .shell>.card{margin:0}
 html.is-phone .lptime{display:none}
+html.is-phone .tvnodes .lnodes{grid-template-columns:repeat(4,1fr)}html.is-phone .today .lead{font-size:14px;margin-top:2px}
+html.is-phone .door{padding:10px 12px;gap:2px}html.is-phone .door .di{font-size:22px}html.is-phone .door b{font-size:15px}
+html.is-phone body.focus{padding-bottom:0;padding-top:max(8px,env(safe-area-inset-top,0px))}html.is-phone body.focus .step{margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
+html.is-phone .card.tight{padding-top:10px}html.is-phone .card.tight h2,html.is-phone .card.tight h3{font-size:16px;line-height:1.25}html.is-phone .card.tight .task{font-size:14px;line-height:1.4}html.is-phone .card.tight button.opt{padding:7px 10px;font-size:14px}html.is-phone .card.tight .fb{font-size:13px}
+html.is-phone .step.tight{gap:7px;padding-top:12px}html.is-phone .step.tight h2{font-size:17px;line-height:1.25}html.is-phone .step.tight .eyebrow{font-size:10px}
+html.is-phone .step.tight .fb,html.is-phone .step.tight .look,html.is-phone .step.tight .model{font-size:13px;line-height:1.4}html.is-phone .step.tight button.opt{padding:7px 10px;font-size:14px}
+html.is-phone .step.tight .task,html.is-phone .step.tight .lead{font-size:14px;line-height:1.4}
+[hidden]{display:none!important}
+.exhead{display:flex;align-items:center;justify-content:space-between;gap:8px}.exmore{padding:4px 10px;font-size:13px;border-radius:999px}
+html.is-phone .step .look{font-size:14px;margin:0;line-height:1.45}html.is-phone .step .fb{font-size:14px;padding:10px 12px}
+html.is-phone .step button.opt{padding:10px 12px;font-size:15px}html.is-phone .step .opts{gap:8px}
+html.is-phone .step .foot{position:sticky;bottom:0;background:var(--panel);margin:0 -14px -16px;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));z-index:3}
+html.is-phone .step .foot .primary.big{width:100%}
+html.is-phone .step .ex{gap:6px}html.is-phone .step figure.dg{margin:0}html.is-phone .step figcaption{font-size:13px}
+html.is-phone .step .model{padding:10px 12px;font-size:14px}
+html.is-phone .sbar{padding:4px 0}
 html.is-phone .sheet .badge .bn{display:none}html.is-phone .sheet .shelf{grid-template-columns:repeat(4,1fr);gap:6px}html.is-phone .sheet .badge{padding:6px 2px}html.is-phone .sheet .badge .bi{font-size:22px}html.is-phone .badge .bt{font-size:10px}
 /* lesson steps on phone: charts sized to the screen so a step fits without scrolling */
 html.is-phone .step{padding:16px 14px;min-height:0;gap:10px}html.is-phone .step h2{font-size:21px}
@@ -1472,7 +1510,7 @@ function gate(m){if(testLock(m,1))return;
   const area=h("section",{class:"card"});m.append(intro,area);
   const names={up:"Uptrend",down:"Downtrend",side:"Sideways"},tname={trend:"Trend",swings:"Swings",levels:"Levels",theory:"Theory"};
   let idx=0,passed=0,plan=[],liveSets=[],theory=[];
-  function start(){idx=0;passed=0;theory=gateTheory(12);plan=shuffle(["trend","trend","trend","swings","swings","swings","levels","levels"].concat(Array(12).fill("theory")));liveSets=shuffle([["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"],["SOL","D"]]);nextChart()}
+  function start(){idx=0;passed=0;if(IS_PHONE())intro.hidden=true;theory=gateTheory(12);plan=shuffle(["trend","trend","trend","swings","swings","swings","levels","levels"].concat(Array(12).fill("theory")));liveSets=shuffle([["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"],["SOL","D"]]);nextChart()}
   function nextChart(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
@@ -1555,7 +1593,7 @@ function gate2(m){if(testLock(m,2))return;
   const area=h("section",{class:"card"});m.append(intro,area);
   const tname={tline:"Trendline",retr:"Pullback",cdl:"Candles",pat:"Pattern",ctx:"Location",vol:"Volume",theory:"Theory"};
   let idx=0,passed=0,plan=[],theory=[];
-  function start(){idx=0;passed=0;theory=gateTheory(NTH,GATE_Q2);plan=shuffle(["tline","retr","cdl","cdl","pat","pat","ctx","vol"].concat(Array(NTH).fill("theory")));nextQ()}
+  function start(){idx=0;passed=0;if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q2);plan=shuffle(["tline","retr","cdl","cdl","pat","pat","ctx","vol"].concat(Array(NTH).fill("theory")));nextQ()}
   function nextQ(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
@@ -1917,8 +1955,7 @@ function cdlFigure(key){if(!key||key.indexOf("cdl:")!==0)return null;const kind=
   const g=genCdl(kind);const a=Math.max(0,g.at-8);const bars=g.bars.slice(a,g.at+g.n);const cv=h("canvas",{class:"chart qchart cdlq","aria-label":"The candles described in the question"});
   mountChart(cv,()=>[bars,{box:{from:g.at-a,to:g.at-a+g.n-1}}]);return cv}
 function exBlock(key){if(!key)return null;let cur=exMake(key);const cv=h("canvas",{class:"chart","aria-label":"Example chart with the pattern marked"});const look=h("p",{class:"look",html:"<b>What to look for:</b> "+cur.look});
-  const box=h("div",{class:"ex"},h("div",{class:"eyebrow"},"Here's what it looks like on a chart"),cv,look,
-    h("div",{class:"row",style:"margin-top:0"},h("button",{on:{click:()=>{cur=exMake(key);look.innerHTML="<b>What to look for:</b> "+cur.look;draw()}}},"↻ Show another example")));
+  const box=h("div",{class:"ex"},h("div",{class:"exhead"},h("div",{class:"eyebrow"},"On a chart"),h("button",{class:"exmore",title:"Show another example",on:{click:()=>{cur=exMake(key);look.innerHTML="<b>What to look for:</b> "+cur.look;draw()}}},"↻ Another")),cv,look);
   const draw=mountChart(cv,()=>[cur.bars,cur.o]);return box}
 
 function svgBlock(k){return k&&SVGS[k]?h("figure",{class:"dg",html:SVGS[k]()}):null}
@@ -1926,7 +1963,9 @@ function nextBtn(label,fn){const b=h("button",{class:"primary big",id:"next",on:
 
 function mcq(el,q,onAnswer){const order=shuffle(q.o.map((t,i)=>i));const box=h("div",{class:"opts"});let done=false;
   order.forEach((i,k)=>box.append(h("button",{class:"opt","data-key":String(k+1),on:{click:e=>{if(done)return;if(Date.now()-STEP_AT<300)return;/* ignore a tap that carried over from the last screen */done=true;const ok=i===q.a;
-    [...box.children].forEach(b=>b.disabled=true);e.currentTarget.classList.add(ok?"pick-good":"pick-bad");box.children[order.indexOf(q.a)].classList.add("pick-good");onAnswer(ok)}}},h("span",{class:"k"},String(k+1)),h("span",{},q.o[i]))));
+    [...box.children].forEach(b=>b.disabled=true);e.currentTarget.classList.add(ok?"pick-good":"pick-bad");box.children[order.indexOf(q.a)].classList.add("pick-good");
+    if(IS_PHONE()){[...box.children].forEach(b=>{if(!b.classList.contains("pick-good")&&!b.classList.contains("pick-bad"))b.hidden=true});const cf=el.querySelector("canvas.cdlq");if(cf&&q.ex)cf.hidden=true}
+    onAnswer(ok)}}},h("span",{class:"k"},String(k+1)),h("span",{},q.o[i]))));
   el.append(box)}
 
 function buildSession(kind,lid){const steps=[];let reviewEnd=0;
@@ -1954,6 +1993,24 @@ function shuffleTail(a,from){const t=shuffle(a.slice(from));a.splice(from,t.leng
 function startSession(kind,lid){SESSION=buildSession(kind,lid);document.body.classList.add("focus");renderStep()}
 function exitSession(){SESSION=null;document.body.classList.remove("focus");live.clear();save();location.hash="home";route()}
 
+/* ---------- phone: make every screen fit without scrolling ----------
+   After a screen changes, shrink its charts and diagrams (never below a readable size)
+   until the page is no taller than the screen. */
+const IS_PHONE=()=>document.documentElement.classList.contains("is-phone");
+let FIT_Q=false;
+function fitPhone(){if(!IS_PHONE()||FIT_Q||!(document.body.classList.contains("focus")||/^#gate/.test(location.hash)))return;/* lesson and test screens only: the other tabs are laid out to fit already */FIT_Q=true;requestAnimationFrame(()=>{FIT_Q=false;
+  const over=()=>document.documentElement.scrollHeight-window.innerHeight;
+  /* 1. once answered, keep only the picked and the right answer */
+  app.querySelectorAll(".opts").forEach(box=>{if(box.querySelector(".pick-good,.pick-bad"))[...box.children].forEach(b=>{if(b.disabled&&!b.matches(".pick-good,.pick-bad")&&!b.hidden)b.hidden=true})});
+  const step=app.querySelector(".step")||app.querySelector(".card:not([hidden])");if(step)step.classList.remove("tight");
+  const els=[...app.querySelectorAll("canvas.chart:not(.mcanvas),figure.dg svg")].filter(e=>e.offsetParent!==null);
+  els.forEach(e=>{e.style.height="";e.style.maxHeight=""});
+  /* 2. shrink charts and diagrams, 3. then tighten the text if it still doesn't fit */
+  const shrink=min=>{if(!els.length||over()<=0)return;const hs=els.map(e=>e.getBoundingClientRect().height);const room=hs.reduce((t,v)=>t+Math.max(0,v-min),0);if(room<=0)return;
+    const k=Math.min(1,over()/room);els.forEach((e,i)=>{const nh=Math.round(hs[i]-Math.max(0,hs[i]-min)*k);if(e.tagName==="svg"){e.style.maxHeight=nh+"px";e.style.width="auto";e.style.margin="0 auto";e.style.display="block"}else e.style.height=nh+"px"})};
+  shrink(120);if(over()>0&&step){step.classList.add("tight");shrink(95);shrink(75)}})}
+new MutationObserver(fitPhone).observe(document.getElementById("app"),{childList:true,subtree:true,attributes:true,attributeFilter:["hidden"]});
+window.addEventListener("resize",fitPhone);
 let STEP_AT=0;
 function renderStep(){STEP_AT=Date.now();try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(e){}live.clear();app.innerHTML="";const S_=SESSION;const st=S_.steps[S_.i];const total=S_.steps.length;
   const bar=h("div",{class:"sbar"},h("button",{class:"ghost",on:{click:exitSession},"aria-label":"Exit session"},"✕ Exit"),
@@ -2049,7 +2106,7 @@ function levelPath(next){const lv=curLevel();if(HOME_LV==null||HOME_LV>PROGRAM.l
     const g=h("div",{class:"lnodes"});
     if(s.built)s.ls.forEach(L=>{const d=state.done[L.id],p=mastery(L.id),isN=next&&next.id===L.id;
       g.append(h("button",Object.assign({class:"lnode"+(d?" done":"")+(isN?" next":""),title:"Lesson "+L.n+": "+L.t,on:{click:()=>startSession("lesson",L.id)}},s.open?{}:{disabled:""}),
-        nodeRing(d?Math.max(p,.08):0,L.n,p>=1?"full":""),p>=1?h("span",{class:"lstar","aria-label":"100%"},"⭐"):null,h("span",{class:"lt"},L.t),h("span",{class:"ls"},d?Math.round(p*100)+"%":isN?"Next":"")))});
+        nodeRing(d?Math.max(p,.08):0,L.n,p>=1?"full":""),p>=1?h("span",{class:"lstar","aria-label":"100%"},"⭐"):null,h("span",{class:"lt"},L.t),h("span",{class:"ls"},d&&p>=.05?Math.round(p*100)+"%":d?"✓":isN?"Next":"")))});
     else P.ls.forEach(([num,t])=>g.append(h("div",{class:"lnode",title:"Lesson "+num+": "+t,"aria-disabled":"true"},nodeRing(0,num),h("span",{class:"lt"},t),h("span",{class:"ls"},""))));
     /* the level test is the last stop on the path */
     const G=s.built?LEVELS[n-1].gate:null;const ready=s.open&&lvlLessonsDone(n);
@@ -2362,15 +2419,24 @@ function tvView(m){const done=tvDone();const nDone=TV_LESSONS.filter(L=>done[L.i
     h("div",{class:"row"},h("button",{class:"primary big",id:"tvgo",on:{click:()=>tvStart(next&&next.id)}},next?(nDone?"Continue the course":"Start lesson 1"):"Replay lesson 1"))));
   const g=h("div",{class:"lgrid"});TV_LESSONS.forEach(L=>{const p=mastery(L.id);g.append(h("button",{class:"ltile"+(next&&next.id===L.id?" next":""),on:{click:()=>tvStart(L.id)},title:"Open lesson "+L.n},
     ring(done[L.id]?Math.max(p,.08):0),h("span",{class:"n"},"Lesson "+L.n),h("span",{class:"t"},L.t),h("span",{class:"s"},done[L.id]?Math.round(p*100)+"% remembered":(next&&next.id===L.id?"Up next":L.min+" min"))))});
-  m.append(h("section",{class:"card"},h("h3",{},"All lessons"),g));
+  const ph=IS_PHONE();
+  if(ph){/* phone: lessons as a compact ring grid, the live chart and shortcuts open on demand */
+    const gg=h("div",{class:"lnodes"});TV_LESSONS.forEach(L=>{const p=mastery(L.id),d=done[L.id],isN=next&&next.id===L.id;gg.append(h("button",{class:"lnode"+(d?" done":"")+(isN?" next":""),title:L.t,on:{click:()=>tvStart(L.id)}},nodeRing(d?Math.max(p,.08):0,L.n,p>=1?"full":""),h("span",{class:"lt"},L.t),h("span",{class:"ls"},isN?"Next":d?"✓":"")))});
+    m.append(h("section",{class:"card lpath tvnodes"},gg))}
+  else m.append(h("section",{class:"card"},h("h3",{},"All lessons"),g));
   const box=h("div",{class:"tvbox"});const symRow=h("div",{class:"tvchips",role:"group","aria-label":"Market"}),ivRow=h("div",{class:"tvchips",role:"group","aria-label":"Timeframe"});
   const open=h("a",{class:"tvbtn",href:tvSiteUrl(),target:"_blank",rel:"noopener"},"Open on TradingView ↗");
   const redo=()=>{[...symRow.children].forEach(b=>b.classList.toggle("on",b.dataset.v===tvPick.sym));[...ivRow.children].forEach(b=>b.classList.toggle("on",b.dataset.v===tvPick.iv));open.href=tvSiteUrl();tvMount(box,tvPick.sym,tvPick.iv)};
   TV_SYMS.forEach(([l,v])=>symRow.append(h("button",{"data-v":v,on:{click:()=>{tvPick.sym=v;redo()}}},l)));TV_IVS.forEach(([l,v])=>ivRow.append(h("button",{"data-v":v,on:{click:()=>{tvPick.iv=v;redo()}}},l)));
-  m.append(h("section",{class:"card"},h("div",{class:"done-row"},h("h3",{style:"margin:0"},"Live chart"),open),h("div",{class:"row",style:"margin:8px 0 12px"},symRow,ivRow),box,
-    h("p",{class:"read"},"Drawings here aren't saved. Use TradingView itself (free account) to keep drawings and use alerts and replay.")));redo();
-  m.append(h("section",{class:"card"},h("h3",{},"Shortcut cheat sheet"),h("p",{class:"read",style:"margin:0 0 10px"},"On a Mac, Alt is the Option key ⌥."),
-    h("div",{class:"tw notes"},h("table",{},h("tr",{},h("th",{},"Do this"),h("th",{},"Press")),...TV_KEYS.map(([a,b])=>h("tr",{},h("td",{},a),h("td",{},h("span",{class:"kbd"},b))))))));
+  const liveCard=h("section",{class:"card"},h("div",{class:"done-row"},h("h3",{style:"margin:0"},"Live chart"),open),h("div",{class:"row",style:"margin:8px 0 12px"},symRow,ivRow),box,
+    h("p",{class:"read"},"Drawings here aren't saved. Use TradingView itself (free account) to keep drawings and use alerts and replay."));
+  const keysCard=h("section",{class:"card"},h("h3",{},"Shortcut cheat sheet"),h("p",{class:"read",style:"margin:0 0 10px"},"On a Mac, Alt is the Option key ⌥."),
+    h("div",{class:"tw notes"},h("table",{},h("tr",{},h("th",{},"Do this"),h("th",{},"Press")),...TV_KEYS.map(([a,b])=>h("tr",{},h("td",{},a),h("td",{},h("span",{class:"kbd"},b)))))));
+  if(!ph){m.append(liveCard,keysCard);redo()}
+  else{const ovl=(card,onOpen)=>{const w=h("div",{class:"celebrate sheetwrap tvsheet",hidden:"",on:{click:e=>{if(e.target===w)w.hidden=true}}},h("div",{class:"sheet"},h("button",{class:"ghost tvclose","aria-label":"Close",on:{click:()=>w.hidden=true}},"✕"),card));m.append(w);return()=>{w.hidden=false;onOpen&&onOpen()}};
+    const openLive=ovl(liveCard,redo),openKeys=ovl(keysCard);
+    m.append(h("div",{class:"doors"},h("button",{class:"door",on:{click:openLive}},h("span",{class:"di"},"📺"),h("b",{},"Live chart"),h("span",{},"TradingView, BTC, ETH, S&P")),
+      h("button",{class:"door",on:{click:openKeys}},h("span",{class:"di"},"⌨️"),h("b",{},"Shortcuts"),h("span",{},TV_KEYS.length+" keys to know"))))}
   const sb=document.getElementById("tvgo");if(sb)sb.focus({preventScroll:true})}
 document.addEventListener("keydown",e=>{if(SESSION||TVS)return;if(e.key==="Enter"&&document.activeElement&&document.activeElement.id==="tvgo"){e.preventDefault();document.activeElement.click()}});
 
@@ -2656,7 +2722,26 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     h("div",{class:"quick"},h("button",{class:"tile",on:{click:exTrend}},h("b",{},"Name the trend"),h("span",{},"Up, down or sideways?")),h("button",{class:"tile",on:{click:exSwings}},h("b",{},"Mark the swings"),h("span",{},"Click the highs and lows")),
       h("button",{class:"tile",on:{click:exLevels}},h("b",{},"Rate my levels"),h("span",{},"Are your lines real support?")),h("button",{class:"tile",on:{click:exBlind}},h("b",{},"Blind test"),h("span",{},"Future hidden. Call it."))),
     pbox,pfb));showScore();
-  sync();reload()}
+  if(IS_PHONE())mcPhoneLayout();
+  sync();reload();
+  /* phone: a full-screen chart like the TradingView app. Header with coin and price,
+     timeframes, the chart filling the screen, a practice panel that slides up when
+     a drill is running, and a bottom toolbar. */
+  function mcPhoneLayout(){const pracCard=m.lastElementChild,mcwrap=cv.parentNode;const quick=pracCard.querySelector(".quick");
+    document.body.classList.add("mcfull");
+    const sheet=(title,...kids)=>{const ov_=h("div",{class:"celebrate sheetwrap mcsheet",hidden:"",on:{click:e=>{if(e.target===ov_)ov_.hidden=true}}},
+      h("div",{class:"sheet"},h("div",{class:"done-row"},h("h3",{style:"margin:0"},title),h("button",{class:"ghost","aria-label":"Close",on:{click:()=>ov_.hidden=true}},"✕")),...kids));return ov_};
+    const resetB=h("button",{class:"mctog",on:{click:()=>{fit();draw()}}},"Reset view");
+    const moreS=sheet("Chart settings",h("div",{class:"mcgrid"},logB,magB,refB,resetB,clearB),h("p",{class:"score",style:"margin:10px 0 0"},stat));
+    const pracS=sheet("Practice on this chart",h("p",{class:"read",style:"margin:4px 0 10px"},"I'll check your answer on the live prices."),quick,h("p",{class:"score",style:"margin:10px 0 0"},pscore));
+    quick.addEventListener("click",e=>{if(e.target.closest("button"))pracS.hidden=true});
+    const panel=h("div",{class:"mcpanel",hidden:""},h("button",{class:"ghost mcpclose","aria-label":"Close practice",on:{click:()=>{reset();panel.hidden=true}}},"✕"),pbox,pfb);
+    const upPanel=()=>{panel.hidden=!(pbox.childElementCount||!pfb.hidden)};new MutationObserver(upPanel).observe(pbox,{childList:true});new MutationObserver(upPanel).observe(pfb,{attributes:true,attributeFilter:["hidden"]});
+    const head=h("div",{class:"mchead"},h("a",{href:"#floor",class:"mcback","aria-label":"Back to Trading floor"},"‹"),coin,pxEl,h("span",{style:"flex:1"}),
+      h("button",{class:"mcicon","aria-label":"Chart settings",on:{click:()=>{moreS.hidden=false}}},"⚙︎"));
+    [...toolRow.querySelectorAll(".ml")].forEach(x=>x.remove());logB.textContent="Log scale";refB.textContent="↻ Refresh prices";
+    const tb=h("div",{class:"mctb"},toolRow,h("button",{class:"primary mcpracbtn",on:{click:()=>{pracS.hidden=false}}},"🎯 Practice"));
+    m.innerHTML="";m.append(h("div",{class:"mcphone"},head,h("div",{class:"mcivs"},ivRow),mcwrap,panel,tb),moreS,pracS)}}
 
 /* =====================================================================
    Real market practice: lesson drills use windows of real BTC/ETH history
@@ -2750,7 +2835,7 @@ function syncView(m){if(SBC&&!window.__CS_NATIVE)return sbView(m);const card=h("
 const top=document.getElementById("topnav");
 function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";const fl=["floor","chart","tv"].includes(cur);[["home","Today"],["map","Program"],["floor","Trading"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id||(id==="floor"&&fl)?"on":""},l)));
   const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
-function route(){if(SESSION||TVS)return;live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();document.body.classList.toggle("wide",id==="chart");
+function route(){if(SESSION||TVS)return;document.body.classList.remove("mcfull");live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();document.body.classList.toggle("wide",id==="chart");
   if(id==="gate"){gate(app)}else if(id==="gate2"){gate2(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="floor"){floorView(app)}else if(id==="tv"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));tvOpen()?tvView(app):tvLocked(app)}else if(id==="chart"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));chartView(app)}
   else if(LESSONS.find(x=>x.id===id)){history.replaceState(null,"","#home");startSession("lesson",id);return}
   else homeView(app);window.scrollTo(0,0)}
