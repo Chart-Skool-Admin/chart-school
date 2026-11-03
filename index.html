@@ -1090,16 +1090,26 @@ function renderStep(){live.clear();app.innerHTML="";const S_=SESSION;const st=S_
     reveal.append(h("div",{class:"model"},h("b",{},"A good answer: "),st.model),exBlock(st.ex),h("p",{class:"task",style:"margin-top:14px"},"How close were you?"),
       h("div",{class:"opts row"},...[["Nailed it","Great. You'll see this again in a few days to lock it in."],["Partly","Normal. Saying it again later is how it sticks."],["Missed it","That's useful to know. It'll come back soon."]].map(([l,m],k)=>h("button",{"data-key":String(k+1),on:{click:e=>{[...e.currentTarget.parentNode.children].forEach(b=>b.disabled=true);e.currentTarget.classList.add("pick-good");
         const n=h("p",{class:"read"},m);reveal.append(n);reveal.append(nextBtn("Continue",go))}}},l))))}
-  else if(T==="lessonDone"){const L=LESSONS.find(x=>x.id===st.lesson);const first=!state.done[L.id];state.done[L.id]=true;delete state.pos[L.id];unlockLesson(L.id);save();
+  else if(T==="lessonDone"){sfx("lesson");const L=LESSONS.find(x=>x.id===st.lesson);const first=!state.done[L.id];state.done[L.id]=true;delete state.pos[L.id];unlockLesson(L.id);save();
     card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Lesson "+L.n+" complete"),h("h2",{class:"hero"},L.t+": done"),
       h("p",{class:"lead"},first?"Its questions now join your review deck. They'll come back tomorrow, then in 3 days, a week, two weeks and a month.":"Nice refresher."),nextBtn("Continue",go));pop(true)}
-  else if(T==="summary"){bumpStreak();save();const mins=Math.max(1,Math.round((Date.now()-S_.start)/60000));const due=CARDS.filter(c=>state.cards[c.id]&&state.cards[c.id].due===addDays(today(),1)).length;
+  else if(T==="summary"){setTimeout(()=>sfx("session"),150);bumpStreak();save();const mins=Math.max(1,Math.round((Date.now()-S_.start)/60000));const due=CARDS.filter(c=>state.cards[c.id]&&state.cards[c.id].due===addDays(today(),1)).length;
     card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Session complete"),h("h2",{class:"hero"},"That's today done."),
       h("div",{class:"stats"},...[["Time",mins+" min"],["Answered right",S_.right+" of "+S_.asked],["Streak",streakNow()+" day"+(streakNow()===1?"":"s")],["Back tomorrow",due+" card"+(due===1?"":"s")]].map(([k,v])=>h("div",{class:"stat"},h("div",{class:"k"},k),h("div",{class:"v"},v)))),
       h("p",{class:"lead"},"Stopping here is a win. A break now helps your brain store what you just did. Come back tomorrow for a fresh 10 minutes."),
       nextBtn("Back to home",exitSession))}
   const nx=document.getElementById("next");if(nx&&!nx.closest("[hidden]"))nx.focus({preventScroll:true});window.scrollTo(0,0)}
-function pop(ok){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const p=h("div",{class:"pop "+(ok?"ok":"no")},ok?"✓":"•");document.body.append(p);setTimeout(()=>p.remove(),700)}
+/* ---------- achievement sounds: made on the fly with Web Audio, no sound files ---------- */
+let sfxCtx=null;
+function sfx(kind){if(state.sound===false)return;try{sfxCtx=sfxCtx||new (window.AudioContext||window.webkitAudioContext)();const c=sfxCtx;if(c.state==="suspended")c.resume();
+  const t0=c.currentTime+.01,out=c.createGain();out.gain.value=.22;out.connect(c.destination);
+  const note=(f,at,len,type,vol)=>{const o=c.createOscillator(),g=c.createGain();o.type=type||"sine";o.frequency.value=f;g.gain.setValueAtTime(0,t0+at);g.gain.linearRampToValueAtTime(vol||1,t0+at+.015);g.gain.exponentialRampToValueAtTime(.001,t0+at+len);o.connect(g);g.connect(out);o.start(t0+at);o.stop(t0+at+len+.05)};
+  if(kind==="right"){note(880,0,.18,"triangle",.8);note(1318.5,.08,.3,"triangle",.8)}
+  else if(kind==="wrong"){note(220,0,.22,"sine",.7);note(196,.09,.28,"sine",.6)}
+  else if(kind==="lesson"){[523.25,659.25,783.99,1046.5].forEach((f,i)=>note(f,i*.1,.45,"triangle",.7));note(1567.98,.42,.6,"sine",.35)}
+  else if(kind==="session"){[392,523.25,659.25,783.99,1046.5].forEach((f,i)=>note(f,i*.09,.5,"triangle",.6));[1046.5,1318.5,1567.98].forEach(f=>note(f,.5,.9,"sine",.3))}
+  else if(kind==="streak"){note(659.25,0,.12,"square",.25);note(987.77,.1,.35,"square",.25)}}catch(e){}}
+function pop(ok){sfx(ok?"right":"wrong");if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const p=h("div",{class:"pop "+(ok?"ok":"no")},ok?"✓":"•");document.body.append(p);setTimeout(()=>p.remove(),700)}
 
 document.addEventListener("keydown",e=>{if(!SESSION)return;if(e.target.tagName==="TEXTAREA"&&e.key!=="Enter")return;if(e.target.tagName==="INPUT")return;
   if(e.key==="Enter"&&!(e.target.tagName==="TEXTAREA"&&e.shiftKey)){const b=document.getElementById("next");if(b&&!b.closest("[hidden]")&&!b.disabled){e.preventDefault();b.click()}return}
@@ -1296,7 +1306,7 @@ function tvStep(){live.clear();app.innerHTML="";const T_=TVS,L=T_.L,st=T_.steps[
   else if(T==="explain"){const ta=h("textarea",{rows:"3",placeholder:"Type a few words, or just say it out loud."});const reveal=h("div",{hidden:""});
     const show=h("button",{class:"primary big",id:"next",on:{click:()=>{show.remove();reveal.hidden=false;reveal.append(nextBtn("Continue",go));const n=document.getElementById("next");if(n)n.focus({preventScroll:true})}}},"Show a good answer");
     card.append(h("div",{class:"eyebrow"},"Say it in your own words"),h("h2",{},st.q),ta,h("div",{class:"row foot"},show),reveal);reveal.append(h("div",{class:"model"},h("b",{},"A good answer: "),st.model))}
-  else if(T==="tvdone"){const first=!tvDone()[L.id];state.tv=state.tv||{};state.tv.done=Object.assign({},tvDone(),{[L.id]:true});unlockLesson(L.id);bumpStreak();save();
+  else if(T==="tvdone"){sfx("lesson");const first=!tvDone()[L.id];state.tv=state.tv||{};state.tv.done=Object.assign({},tvDone(),{[L.id]:true});unlockLesson(L.id);bumpStreak();save();
     const nx=TV_LESSONS.find(x=>!tvDone()[x.id]);card.classList.add("hook");
     card.append(h("div",{class:"eyebrow"},"Lesson complete"),h("h2",{class:"hero"},L.t+": done"),
       h("div",{class:"stats"},...[["Answered right",T_.right+" of "+T_.asked],["Course",Object.keys(tvDone()).length+" of "+TV_LESSONS.length+" lessons"]].map(([k,v])=>h("div",{class:"stat"},h("div",{class:"k"},k),h("div",{class:"v"},v)))),
@@ -1652,7 +1662,8 @@ function installSteps(){const c=document.documentElement.classList;if(c.contains
 function themeCard(){const row=h("div",{class:"themes",style:"margin:0;display:inline-flex"});
   ["light","dark","auto"].forEach(t=>row.append(h("button",{class:(state.theme||"auto")===t?"on":"",on:{click:e=>{state.theme=t;applyTheme(t);save();[...row.children].forEach(x=>x.classList.toggle("on",x===e.currentTarget))}}},t[0].toUpperCase()+t.slice(1))));
   return h("section",{class:"card apptheme"},h("h3",{},"Appearance"),row)}
-function sbView(m){const card=h("section",{class:"card"});m.append(card);setTimeout(()=>m.append(themeCard()),0);
+function soundCard(){const b=h("button",{on:{click:()=>{state.sound=state.sound===false;save();b.textContent=state.sound===false?"Sounds: off":"Sounds: on";if(state.sound!==false)sfx("lesson")}}},state.sound===false?"Sounds: off":"Sounds: on");return h("section",{class:"card"},h("h3",{},"Achievement sounds"),h("p",{class:"task"},"Little chimes for right answers and finished lessons. On iPhone, the silent switch mutes them."),b)}
+function sbView(m){const card=h("section",{class:"card"});m.append(card);setTimeout(()=>{m.append(themeCard());m.append(soundCard())},0);
   if(SB.sess){const lab={on:"Synced",start:"Connecting…",wait:"Offline right now",err:"Sync problem"}[SY.mode]||"Synced";
     card.append(h("div",{class:"eyebrow"},"Phone + Mac sync"),h("h2",{},lab),h("p",{class:"lead"},"Signed in as "+(sbName(SB.sess.email)||"you")+". Your progress saves to your account, so every device where you sign in picks up where you stopped."),
       installSteps(),
