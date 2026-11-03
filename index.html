@@ -63,7 +63,7 @@ h1 small{display:block;font-family:var(--f-mono);font-size:12px;font-weight:400;
 .progress p{margin:6px 0 0;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 nav.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);display:flex;flex-direction:column;gap:4px}
 nav.rail a{display:grid;grid-template-columns:28px 1fr 18px;gap:8px;align-items:center;padding:9px 10px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.3}
-nav.rail a:hover{background:var(--panel)}
+@media (hover:hover){nav.rail a:hover{background:var(--panel)}}
 nav.rail a.on{background:var(--panel);box-shadow:inset 3px 0 0 var(--accent);font-weight:600}
 nav.rail a .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
 nav.rail a .ok{color:var(--good);font-size:14px;text-align:right}
@@ -88,15 +88,16 @@ html.aiming,html.aiming *{-webkit-user-select:none!important;user-select:none!im
 /* phone swing marking: nudge arrows and mark buttons under the chart */
 .aimbar{display:grid;grid-template-columns:52px 1fr 1fr 52px;gap:8px;margin:10px 0 4px}.aimbar[hidden]{display:none}.aimbar button{min-height:48px;padding:0 6px;font-size:15px}
 canvas.chart.qchart{height:220px;margin:4px 0 12px}
+canvas.chart.cdlq{height:170px}html.is-phone canvas.chart.cdlq{height:min(150px,20vh)}
 html{touch-action:manipulation}
 html.is-phone canvas.chart.clickable{height:380px}
 .clickable{cursor:crosshair}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
 button{font:inherit;font-size:14px;font-weight:500;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;cursor:pointer}
-button:hover{border-color:var(--accent)}
+@media (hover:hover){button:hover{border-color:var(--accent)}}
 button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button.primary{background:var(--grad);color:var(--accent-ink);border-color:transparent;box-shadow:0 2px 10px -4px rgba(189,90,57,.6)}
-button.primary:hover{filter:brightness(1.06);border-color:transparent}
+@media (hover:hover){button.primary:hover{filter:brightness(1.06);border-color:transparent}}
 button:disabled{opacity:.45;cursor:default}
 .opts button:disabled{opacity:1}
 .opts button:disabled:not(.pick-good):not(.pick-bad){opacity:.5}
@@ -131,7 +132,7 @@ label.f input{font:inherit;font-family:var(--f-mono);font-size:15px;color:var(--
 a{color:var(--accent)}
 .maplist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px}
 .mapitem{display:grid;grid-template-columns:28px 1fr 18px;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.3;min-width:0}
-a.mapitem:hover{border-color:var(--accent)}
+@media (hover:hover){a.mapitem:hover{border-color:var(--accent)}}
 .mapitem .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)} .mapitem .ok{color:var(--good)}
 .mapitem.locked{color:var(--muted);border-style:dashed}
 .notes{display:flex;flex-direction:column;gap:22px}
@@ -185,7 +186,7 @@ a.mapitem:hover{border-color:var(--accent)}
 .lplock{font-size:13px;color:var(--muted);margin:8px 0 0}
 .lnodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;margin-top:12px}
 .lnode{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 6px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--ink);text-decoration:none;text-align:center;font:inherit;cursor:pointer;min-width:0}
-.lnode:hover:not([disabled]):not([aria-disabled]){border-color:var(--line);background:var(--bg)}
+@media (hover:hover){.lnode:hover:not([disabled]):not([aria-disabled]){border-color:var(--line);background:var(--bg)}}
 .lnode[disabled],.lnode[aria-disabled]{cursor:default;opacity:.5}
 .lnode.next{border-color:var(--accent);background:var(--grad-soft),var(--panel)}
 .lnode .lt{font-size:12px;line-height:1.25;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
@@ -224,7 +225,7 @@ a.mapitem:hover{border-color:var(--accent)}
 .celebrate.still *{animation:none!important}
 .rankbar{display:flex;align-items:center;gap:10px;width:100%;padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer}
 .rankbar .rk{font-weight:700;margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rankbar .rc{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap}.rankbar .rgo{color:var(--muted);font-size:18px}
-.rankbar:hover{border-color:var(--accent)}
+@media (hover:hover){.rankbar:hover{border-color:var(--accent)}}
 .sheetwrap{align-items:flex-end}@media (min-width:701px){.sheetwrap{align-items:center}}
 .sheet{background:var(--panel);border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-width:560px;width:100%;max-height:85vh;overflow:auto;animation:boxIn .3s ease-out}
 @media (min-width:701px){.sheet{border-radius:20px}}
@@ -235,7 +236,7 @@ a.mapitem:hover{border-color:var(--accent)}
 .doors{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .door{display:flex;flex-direction:column;gap:4px;padding:18px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);text-decoration:none}
 .door .di{font-size:30px}.door b{font-family:var(--f-display);font-size:17px}.door>span:not(.di):not(.lpbar){font-size:13px;color:var(--muted)}
-.door .lpbar{margin-top:6px}a.door:hover{border-color:var(--accent)}.door.locked{opacity:.6}
+.door .lpbar{margin-top:6px}@media (hover:hover){a.door:hover{border-color:var(--accent)}}.door.locked{opacity:.6}
 .crumb{font-size:13px;color:var(--muted);text-decoration:none;align-self:flex-start}
 /* program: folding levels */
 details.mapdet>summary{list-style:none;cursor:pointer}details.mapdet>summary::-webkit-details-marker{display:none}
@@ -282,7 +283,7 @@ textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);borde
 .tile{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);text-decoration:none;font-size:14px}
 .tile b{font-family:var(--f-display);font-size:16px}
 .tile span{color:var(--muted);font-size:13px}
-a.tile:hover,button.tile:hover{border-color:var(--accent)}
+@media (hover:hover){a.tile:hover,button.tile:hover{border-color:var(--accent)}}
 .lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
 .ltile{display:grid;grid-template-columns:40px 1fr;grid-template-rows:auto auto auto;column-gap:10px;align-items:center;text-align:left;padding:10px;border-radius:10px}
 .ltile .ring{grid-row:1/4}
@@ -1911,6 +1912,10 @@ Object.assign(EX,{
 Object.assign(ROUNDS,{tline:(el,d)=>tlineRound(el,d),retr:(el,d)=>retrRound(el,d),brk:(el,d)=>brkRound(el,d),vol:(el,d)=>volRound(el,d),ctx:(el,d)=>ctxRound(el,d),
   cdl12:(el,d)=>cdlRound(el,d,SET12,{pool:SET12}),cdl13:(el,d)=>cdlRound(el,d,SET13,{pool:SET13}),pat15:(el,d)=>patRound(el,d,SET15),pat16:(el,d)=>patRound(el,d,SET16)});
 
+/* the pattern's candles for a question that describes them: a few bars of lead-in plus the pattern, boxed, no name */
+function cdlFigure(key){if(!key||key.indexOf("cdl:")!==0)return null;const kind=key.slice(4);if(typeof CDL==="undefined"||!CDL[kind])return null;
+  const g=genCdl(kind);const a=Math.max(0,g.at-8);const bars=g.bars.slice(a,g.at+g.n);const cv=h("canvas",{class:"chart qchart cdlq","aria-label":"The candles described in the question"});
+  mountChart(cv,()=>[bars,{box:{from:g.at-a,to:g.at-a+g.n-1}}]);return cv}
 function exBlock(key){if(!key)return null;let cur=exMake(key);const cv=h("canvas",{class:"chart","aria-label":"Example chart with the pattern marked"});const look=h("p",{class:"look",html:"<b>What to look for:</b> "+cur.look});
   const box=h("div",{class:"ex"},h("div",{class:"eyebrow"},"Here's what it looks like on a chart"),cv,look,
     h("div",{class:"row",style:"margin-top:0"},h("button",{on:{click:()=>{cur=exMake(key);look.innerHTML="<b>What to look for:</b> "+cur.look;draw()}}},"↻ Show another example")));
@@ -1920,7 +1925,7 @@ function svgBlock(k){return k&&SVGS[k]?h("figure",{class:"dg",html:SVGS[k]()}):n
 function nextBtn(label,fn){const b=h("button",{class:"primary big",id:"next",on:{click:fn}},label||"Continue");return h("div",{class:"row foot"},b,h("span",{class:"hint"},"or press Enter"))}
 
 function mcq(el,q,onAnswer){const order=shuffle(q.o.map((t,i)=>i));const box=h("div",{class:"opts"});let done=false;
-  order.forEach((i,k)=>box.append(h("button",{class:"opt","data-key":String(k+1),on:{click:e=>{if(done)return;done=true;const ok=i===q.a;
+  order.forEach((i,k)=>box.append(h("button",{class:"opt","data-key":String(k+1),on:{click:e=>{if(done)return;if(Date.now()-STEP_AT<300)return;/* ignore a tap that carried over from the last screen */done=true;const ok=i===q.a;
     [...box.children].forEach(b=>b.disabled=true);e.currentTarget.classList.add(ok?"pick-good":"pick-bad");box.children[order.indexOf(q.a)].classList.add("pick-good");onAnswer(ok)}}},h("span",{class:"k"},String(k+1)),h("span",{},q.o[i]))));
   el.append(box)}
 
@@ -1949,7 +1954,8 @@ function shuffleTail(a,from){const t=shuffle(a.slice(from));a.splice(from,t.leng
 function startSession(kind,lid){SESSION=buildSession(kind,lid);document.body.classList.add("focus");renderStep()}
 function exitSession(){SESSION=null;document.body.classList.remove("focus");live.clear();save();location.hash="home";route()}
 
-function renderStep(){live.clear();app.innerHTML="";const S_=SESSION;const st=S_.steps[S_.i];const total=S_.steps.length;
+let STEP_AT=0;
+function renderStep(){STEP_AT=Date.now();try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(e){}live.clear();app.innerHTML="";const S_=SESSION;const st=S_.steps[S_.i];const total=S_.steps.length;
   const bar=h("div",{class:"sbar"},h("button",{class:"ghost",on:{click:exitSession},"aria-label":"Exit session"},"✕ Exit"),
     h("div",{class:"track"},h("i",{style:"width:"+Math.round(S_.i/(total-1)*100)+"%"})),h("span",{class:"score"},Math.min(S_.i+1,total)+" / "+total));
   const card=h("section",{class:"card step"});app.append(bar,card);
@@ -1960,6 +1966,7 @@ function renderStep(){live.clear();app.innerHTML="";const S_=SESSION;const st=S_
   else if(T==="learn"){card.append(h("div",{class:"eyebrow"},"Key idea"),h("h2",{},st.title),svgBlock(st.svg),h("p",{class:"lead"},st.text),nextBtn("Got it",go))}
   else if(T==="guess"||T==="review"&&st.card.type==="mcq"){const q=T==="guess"?st:st.card;const f=h("div",{hidden:""});const nb=h("div",{hidden:""});
     card.append(h("div",{class:"eyebrow"},T==="guess"?"Guess first, then learn":st.throw?"Throwback · Lesson "+((LESSONS.find(x=>x.id===q.lesson)||{}).n||"")+" isn't 100% yet":"From memory"+(st.retry?" · second try":"")),h("h2",{},q.q));
+    if(!q.svg){const cf=cdlFigure(q.ex);if(cf)card.append(cf)}
     mcq(card,q,ok=>{S_.asked++;if(ok)S_.right++;if(T==="review"){grade(q.id,ok);if(!ok&&!st.retry){S_.steps.splice(S_.reviewEnd,0,{t:"review",card:q,retry:true});S_.reviewEnd++}save()}
       fb(f,ok?"good":"bad",(ok?(T==="guess"?"Nice guess. ":"Correct. "):(T==="guess"?"Good try. Here's the answer: ":"Not this time. "))+q.e+(T==="review"&&!ok&&!st.retry?" It comes back at the end of the warm-up.":""));
       const fig=svgBlock(q.svg);if(fig)f.after(fig);const exb=exBlock(q.ex);if(exb)(fig||f).after(exb);nb.hidden=false;pop(ok)});
