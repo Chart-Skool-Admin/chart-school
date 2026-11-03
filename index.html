@@ -231,6 +231,7 @@ a{color:var(--accent)}
 @media (min-width:701px){.sheet{border-radius:20px}}
 .sheet .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;overflow:visible;margin:0;padding:0}
 .sheet .badge{width:auto}.badge .bt{font-size:11px;font-weight:700;text-align:center;line-height:1.2}
+.memtop{display:flex;align-items:center;gap:14px;margin:12px 0 8px}.memtop .nring{width:64px;height:64px;flex:none}.memtop .nring svg{width:64px;height:64px}.memtop .nring b{font-size:14px}.memtop>div>b{display:block;font-size:17px}.memtop .lpsub{display:block;margin-top:2px}.mempips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.mempips .mp{display:flex;gap:2px;padding:4px 5px;border-radius:7px;background:var(--bg)}.mempips i{width:7px;height:14px;border-radius:3px;background:var(--line,#444)}.mempips i.on{background:var(--up)}.memwhy{font-size:14px;margin:8px 0 12px}.memact{display:flex;gap:8px}.memact button{flex:1}
 .stargrid{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.stargrid .sg{font-size:20px;color:var(--muted)}.stargrid .sg.got{animation:twinkle 2.4s ease-in-out infinite}
 /* live chart on phone: full screen, TradingView-app style */
 body.mcfull{padding:0!important;overflow:hidden}body.mcfull .topbar,body.mcfull #topnav{display:none!important}body.mcfull .shell{max-width:none;gap:0}
@@ -1977,6 +1978,8 @@ function buildSession(kind,lid){const steps=[];let reviewEnd=0;
   let L=null;if(kind==="today"||kind==="lesson"){L=lid?LESSONS.find(x=>x.id===lid):nextLesson();
     if(L){lvlStart(L.lv);const start=(kind==="today"&&state.pos[L.id])||0;const ls0=steps.length+1;steps.push({t:"label",eyebrow:"Lesson "+L.n+" · Level "+L.lv,text:L.t,sub:"About "+L.min+" minutes. One step at a time."+(start?" Picking up where you left off.":"")});
       L.steps.slice(start).forEach((s,k)=>{if(s.t==="drill")for(let i=0;i<s.n;i++)steps.push({t:"round",kind:s.kind,lesson:L.id,idx:start+k});else steps.push({...s,lesson:L.id,idx:start+k})});
+      /* replaying a finished lesson: the questions swap places each time (the notes stay where they are), so it's recall, not memory of the order */
+      if(state.done[L.id]){const slots=[];for(let k=ls0;k<steps.length;k++)if(["guess","round","explain"].includes(steps[k].t))slots.push(k);const qs=shuffle(slots.map(k=>steps[k]));slots.forEach((k,j)=>steps[k]=qs[j])}
       /* throwbacks: questions from earlier lessons that aren't 100% remembered yet keep turning up inside new lessons */
       const tb=throwbacks(L.id,steps,2);tb.forEach(c=>{const at=rint(ls0+2,Math.max(ls0+2,steps.length-1));steps.splice(at,0,{t:"review",card:c,retry:true,throw:true})});
       steps.push({t:"lessonDone",lesson:L.id})}
@@ -2105,7 +2108,7 @@ function levelPath(next){const lv=curLevel();if(HOME_LV==null||HOME_LV>PROGRAM.l
     else if(!s.built)panel.append(h("p",{class:"lplock"},"🔒 Opens after Level "+(n-1)+"."));
     const g=h("div",{class:"lnodes"});
     if(s.built)s.ls.forEach(L=>{const d=state.done[L.id],p=mastery(L.id),isN=next&&next.id===L.id;
-      g.append(h("button",Object.assign({class:"lnode"+(d?" done":"")+(isN?" next":""),title:"Lesson "+L.n+": "+L.t,on:{click:()=>startSession("lesson",L.id)}},s.open?{}:{disabled:""}),
+      g.append(h("button",Object.assign({class:"lnode"+(d?" done":"")+(isN?" next":""),title:"Lesson "+L.n+": "+L.t,on:{click:()=>d?memSheet(L):startSession("lesson",L.id)}},s.open?{}:{disabled:""}),
         nodeRing(d?Math.max(p,.08):0,L.n,p>=1?"full":""),p>=1?h("span",{class:"lstar","aria-label":"100%"},"⭐"):null,h("span",{class:"lt"},L.t),h("span",{class:"ls"},d&&p>=.05?Math.round(p*100)+"%":d?"✓":isN?"Next":"")))});
     else P.ls.forEach(([num,t])=>g.append(h("div",{class:"lnode",title:"Lesson "+num+": "+t,"aria-disabled":"true"},nodeRing(0,num),h("span",{class:"lt"},t),h("span",{class:"ls"},""))));
     /* the level test is the last stop on the path */
@@ -2175,6 +2178,22 @@ function celebrate(q){if(!q.length)return;const x=q[0];const still=matchMedia("(
 function trophyShelf(){const all=achList();state.ach=state.ach||{};const got=x=>x.ok&&state.ach[x.id];
   const main=all.filter(x=>!x.star&&!x.rank),stars=all.filter(x=>x.star);const nS=stars.filter(got).length,nT=main.filter(got).length;const rk=rankNow();
   return h("button",{class:"rankbar",on:{click:()=>trophySheet()}},h("span",{class:"rk"},"🎖️ "+RANKS[rk]),h("span",{class:"rc"},"🏆 "+nT+"/"+main.length),h("span",{class:"rc"},"⭐ "+nS+"/"+stars.length),h("span",{class:"rgo"},"›"))}
+/* tapping a finished lesson: how much of it is locked into memory, and when the next review comes */
+function memSheet(L){const cs=CARDS.filter(c=>c.lesson===L.id),p=mastery(L.id),t=today();
+  const st=cs.map(c=>state.cards[c.id]||{box:0,due:t});const locked=st.filter(c=>c.box>=3).length,due=st.filter(c=>c.due<=t).length;
+  const nxt=st.filter(c=>c.due>t).map(c=>c.due).sort()[0];
+  const dayTxt=ds=>{if(ds===addDays(t,1))return"tomorrow";const [y,m,d]=ds.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short"})};
+  const close=()=>ov.remove();
+  const pips=h("div",{class:"mempips"},...st.map(c=>h("span",{class:"mp"},...[0,1,2].map(k=>h("i",{class:k<Math.min(c.box,3)?"on":""})))));
+  const ov=h("div",{class:"celebrate sheetwrap",on:{click:e=>{if(e.target===ov)close()}}},
+    h("div",{class:"sheet memsheet"},h("div",{class:"done-row"},h("div",{},h("div",{class:"eyebrow"},"Lesson "+L.n+" · finished ✓"),h("h3",{style:"margin:2px 0 0"},L.t)),h("button",{class:"ghost",on:{click:close},"aria-label":"Close"},"✕")),
+      h("div",{class:"memtop"},nodeRing(Math.max(p,.02),Math.round(p*100)+"%",p>=1?"full":""),h("div",{},h("b",{},locked+" of "+cs.length+" facts locked in"),
+        h("div",{class:"lpsub"},p>=1?"Fully remembered ⭐":due?due+" due for review now":nxt?"Next review "+dayTxt(nxt):""))),
+      pips,
+      h("p",{class:"read memwhy"},"Each fact needs 3 right answers in Review, spaced about 1, 3 and 7 days apart. A miss sends it back to the start. Replaying the lesson is practice, but it doesn't fill the ring."),
+      h("div",{class:"memact"},due?h("button",{class:"primary",on:{click:()=>{close();startSession("review")}}},"🔁 Review now"):null,
+        h("button",{class:due?"ghost":"primary",on:{click:()=>{close();startSession("lesson",L.id)}}},"↻ Replay lesson"))));
+  sfx("tap");document.body.append(ov)}
 function trophySheet(){const all=achList();state.ach=state.ach||{};const got=x=>x.ok&&state.ach[x.id];const rk=rankNow();
   const main=all.filter(x=>!x.star&&!x.rank),stars=all.filter(x=>x.star);
   const close=()=>ov.remove();
