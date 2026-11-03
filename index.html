@@ -328,6 +328,8 @@ function mergeIn(o){if(!o||typeof o!=="object")return false;const before=JSON.st
   for(const k in ot.best){const a=base.best[k],b=ot.best[k];base.best[k]=(typeof a==="number"&&typeof b==="number")?Math.max(a,b):(a!=null?a:b)}
   for(const k in ot.cards){const a=base.cards[k],b=ot.cards[k];if(!a||(b&&(b.r||0)>(a.r||0)))base.cards[k]=b}
   const sa=base.streak,sb=ot.streak;if(sb&&sb.last&&(!sa.last||sb.last>sa.last||(sb.last===sa.last&&(sb.n||0)>(sa.n||0))))base.streak=sb;
+  if(ot.lvT){base.lvT=base.lvT||{};for(const k in ot.lvT){const a=base.lvT[k]||{},b=ot.lvT[k]||{};const v={};const ss=[a.s,b.s].filter(Boolean),ee=[a.e,b.e].filter(Boolean);if(ss.length)v.s=Math.min(...ss);if(ee.length)v.e=Math.max(...ee);base.lvT[k]=v}}
+  if(ot.mins){base.mins=base.mins||{};for(const k in ot.mins)base.mins[k]=Math.max(base.mins[k]||0,ot.mins[k]||0)}
   if(ot.tv&&ot.tv.done){base.tv=base.tv||{};base.tv.done=Object.assign({},ot.tv.done,base.tv.done||{})}
   base.t=Math.max(mine.t||0,o.t||0);for(const k of Object.keys(state))delete state[k];Object.assign(state,base);
   return JSON.stringify(state)!==before}
@@ -432,7 +434,7 @@ function drawChart(cv,bars,o={}){
   const vis=o.visible??bars.length;const sb=o.scaleAll?bars:bars.slice(0,vis);
   let lo=Math.min(...sb.map(b=>b.l)),hi=Math.max(...sb.map(b=>b.h));(o.hlines||[]).forEach(l=>{lo=Math.min(lo,l.p);hi=Math.max(hi,l.p)});
   const log=!!o.log;const f=log?Math.log:v=>v,fi=log?Math.exp:v=>v;const pad=(f(hi)-f(lo))*.07;const top=f(hi)+pad,bot=f(lo)-pad;
-  const L=8,Rp=54,T=10,B=12;const pw=w-L-Rp,ph=h-T-B;const slot=pw/bars.length;
+  const L=8,Rp=54,T=10,B=12;const VH=o.vol?Math.round((h-T-B)*.2):0;const pw=w-L-Rp,ph=h-T-B-VH;const slot=pw/bars.length;
   const X=i=>L+(i+.5)*slot,Y=p=>T+(top-f(p))/(top-bot)*ph;
   cv._g={X,Y,slot,L,inv:py=>fi(top-(py-T)/ph*(top-bot)),idx:px=>Math.max(0,Math.min(vis-1,Math.floor((px-L)/slot)))};
   // grid
@@ -446,6 +448,12 @@ function drawChart(cv,bars,o={}){
     for(let i=0;i<vis;i++){const b=bars[i];const col=b.c>=b.o?C.up:C.down;const px=X(i);
       x.strokeStyle=col;x.lineWidth=1;x.beginPath();x.moveTo(Math.round(px)+.5,Y(b.h));x.lineTo(Math.round(px)+.5,Y(b.l));x.stroke();
       const y1=Y(Math.max(b.o,b.c)),y2=Y(Math.min(b.o,b.c));x.fillStyle=col;x.fillRect(px-bw/2,y1,bw,Math.max(1,y2-y1))}}
+  if(VH){let vm=0;for(let i=0;i<vis;i++)vm=Math.max(vm,bars[i].v||0);const bw=Math.max(1,Math.min(10,slot*.62));x.globalAlpha=.45;
+    for(let i=0;i<vis;i++){const b=bars[i];const vh=vm?(b.v||0)/vm*(VH-6):0;x.fillStyle=b.c>=b.o?C.up:C.down;x.fillRect(X(i)-bw/2,h-B-vh,bw,vh)}x.globalAlpha=1;
+    x.fillStyle=C.muted;x.fillText("volume",L+4,h-B-VH+8)}
+  (o.tlines||[]).forEach(l=>{if(l.b.i===l.a.i)return;const sl=(l.b.p-l.a.p)/(l.b.i-l.a.i);const i2=l.ext?bars.length-1:l.b.i;const lc=rc(l.c)||C.accent;
+    x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();x.strokeStyle=lc;x.lineWidth=l.w||2.2;x.setLineDash(l.dash?[6,4]:[]);x.beginPath();x.moveTo(X(l.a.i),Y(l.a.p));x.lineTo(X(i2),Y(l.a.p+sl*(i2-l.a.i)));x.stroke();x.setLineDash([]);x.restore();
+    if(l.label){x.fillStyle=lc;x.fillText(l.label,Math.min(X(l.a.i)+4,L+pw-120),Y(l.a.p)+(sl>0?12:-10))}});
   if(vis<bars.length){x.strokeStyle=C.muted;x.setLineDash([4,4]);x.beginPath();x.moveTo(X(vis)-slot/2,T);x.lineTo(X(vis)-slot/2,T+ph);x.stroke();x.setLineDash([]);
     x.fillStyle=C.muted;x.fillText("future hidden",Math.min(X(vis)+4,L+pw-80),T+10)}
   (o.hlines||[]).forEach(l=>{const lc=rc(l.c)||C.accent;x.strokeStyle=lc;x.lineWidth=l.w||2;x.setLineDash(l.dash?[6,4]:[]);x.beginPath();x.moveTo(L,Y(l.p));x.lineTo(L+pw,Y(l.p));x.stroke();x.setLineDash([]);
@@ -719,6 +727,235 @@ l8:`
 <div class="remember"><b>Remember</b>Decide your risk before you think about profit. Keep trading money separate from your long-term monthly investing, and never risk more than 1% on one idea while you're learning.</div>`
 };
 
+/* ---------- Level 2 diagrams ---------- */
+function ck(x,o,c,hi,lo,w){w=w||12;const g=c<o;return `<line x1="${x}" y1="${hi}" x2="${x}" y2="${lo}" class="${g?"s-up":"s-dn"}"/><rect x="${x-w/2}" y="${Math.min(o,c)}" width="${w}" height="${Math.max(2,Math.abs(c-o))}" class="${g?"up":"dn"}"/>`}
+/* small panel: 3 context candles, then the pattern. Pattern values are pixel offsets from the level E (negative = higher) */
+function cpanel(x0,E,dir,pat,label){let s="";const ctx=dir==="down"?[[-44,-28,-47,-25],[-30,-14,-33,-11],[-16,0,-19,3]]:[[44,28,47,25],[30,14,33,11],[16,0,19,-3]];
+  ctx.forEach(([o,c,a,b],k)=>s+=ck(x0+12+k*18,E+o,E+c,E+Math.min(a,b),E+Math.max(a,b)));
+  pat.forEach(([o,c,hi,lo],k)=>s+=ck(x0+72+k*18,E+o,E+c,E+hi,E+lo));return s+`<text x="${x0+4}" y="${E+64}" class="ink b">${label}</text>`}
+function svgC12(){const P=[["down",[[2,-6,-8,30]],"Hammer"],["up",[[-2,-10,-12,26]],"Hanging man"],["up",[[-6,-1,-36,1]],"Shooting star"],["down",[[2,-4,-30,4]],"Inverted hammer"],
+  ["down",[[-4,4,-6,6],[8,-12,-14,10]],"Bull engulfing"],["up",[[4,-4,-6,6],[-8,12,-10,14]],"Bear engulfing"],["down",[[-10,20,-12,22],[26,2,0,28]],"Piercing"],["up",[[10,-20,-22,12],[-26,-2,-28,0]],"Dark cloud"]];
+  return `<svg viewBox="0 0 600 260" role="img" aria-label="Single and two-candle reversal patterns">${P.map((p,k)=>cpanel((k%4)*150,(k<4?62:192),p[0],p[1],p[2])).join("")}</svg>`}
+function svgC13(){const P=[["down",[[-14,16,-16,18],[24,21,19,27],[16,-6,-8,18]],"Morning star"],["up",[[14,-16,-18,16],[-24,-21,-27,-19],[-16,6,-18,8]],"Evening star"],["down",[[-16,16,-18,18],[8,-2,-4,10]],"Bullish harami"],
+  ["up",[[16,-16,-18,18],[-8,2,-10,4]],"Bearish harami"],["up",[[-4,-5,-16,8]],"Doji after a rise"],["up",[[16,-16,-18,18],[-12,-6,-14,-4],[-6,0,-8,2],[0,6,-2,8],[10,-26,-28,12]],"Rising three"]];
+  return `<svg viewBox="0 0 600 260" role="img" aria-label="Star, harami, doji and continuation patterns">${P.map((p,k)=>cpanel((k%3)*200,(k<3?62:192),p[0],p[1],p[2])).join("")}</svg>`}
+function svgTline(){return `<svg viewBox="0 0 580 210" role="img" aria-label="Uptrend line through rising lows">
+<path class="s-mut" style="stroke-dasharray:none;stroke-width:2" d="M20 180 L80 110 L120 150 L190 80 L240 125 L310 50 L360 100 L420 40 L470 70 L540 150"/>
+<line x1="10" y1="196" x2="470" y2="86" class="s-acc"/>
+<circle cx="120" cy="150" r="7" class="s-mk"/><circle cx="240" cy="125" r="7" class="s-mk"/><circle cx="360" cy="100" r="7" class="s-mk"/>
+<text x="100" y="178" class="ink">1</text><text x="222" y="152" class="ink">2</text><text x="345" y="128" class="ink">3rd touch confirms</text>
+<circle cx="500" cy="104" r="6" class="dn"/><text x="450" y="200" style="fill:var(--down)" class="b">close below: warning</text></svg>`}
+function svgChannel(){return `<svg viewBox="0 0 580 210" role="img" aria-label="Up channel with a failed rally">
+<line x1="10" y1="190" x2="570" y2="70" class="s-acc"/><line x1="10" y1="120" x2="570" y2="0" class="s-mut"/>
+<path class="s-ink" d="M30 180 L110 104 L150 158 L230 78 L270 132 L350 52 L390 107 L450 62 L500 120"/>
+<circle cx="450" cy="62" r="6" class="mk"/><text x="380" y="40" class="ink">fails short of the top line</text>
+<text x="20" y="206">trendline (lows)</text><text x="20" y="100">channel line (parallel, across the peaks)</text></svg>`}
+function svgRetr(){return `<svg viewBox="0 0 580 210" role="img" aria-label="Pullback zone between a third and two thirds">
+<rect x="300" y="86" width="270" height="47" class="zn"/>
+<line x1="40" y1="40" x2="570" y2="40" class="s-mut"/><line x1="40" y1="180" x2="570" y2="180" class="s-mut"/>
+<line x1="300" y1="86" x2="570" y2="86" class="s-mut"/><line x1="300" y1="110" x2="570" y2="110" class="s-acc" style="stroke-width:1.5;stroke-dasharray:6 4"/><line x1="300" y1="133" x2="570" y2="133" class="s-mut"/>
+<path class="s-ink" d="M40 180 L120 130 L150 145 L230 70 L250 82 L300 40 L350 92 L380 78 L420 112 L520 30"/>
+<text x="470" y="82" class="ink">⅓ back</text><text x="470" y="106" class="ink b">½ back</text><text x="470" y="150" class="ink">⅔ back</text>
+<text x="60" y="34">end of the swing</text><text x="60" y="198">start of the swing</text><text x="306" y="162">normal pullback zone</text></svg>`}
+function svgFake(){return `<svg viewBox="0 0 580 200" role="img" aria-label="Real breakout versus fake-out">
+<line x1="10" y1="60" x2="280" y2="60" class="s-mut"/><line x1="10" y1="140" x2="280" y2="140" class="s-mut"/>
+<path class="s-acc" d="M15 130 L50 66 L85 134 L120 64 L155 136 L190 68 L215 50 L240 36 L270 18"/><text x="20" y="190" class="ink b">Real: closes out, keeps going</text>
+<line x1="300" y1="60" x2="570" y2="60" class="s-mut"/><line x1="300" y1="140" x2="570" y2="140" class="s-mut"/>
+<path class="s-acc" d="M305 130 L340 66 L375 134 L410 64 L440 128 L470 40 L490 80 L530 132 L560 138"/><circle cx="470" cy="40" r="6" class="mk"/>
+<text x="310" y="190" class="ink b">Fake-out: pokes out, closes back in</text></svg>`}
+function svgConf(){return `<svg viewBox="0 0 580 200" role="img" aria-label="Candle signal at a support zone">
+<rect x="10" y="140" width="560" height="22" class="zn"/><text x="16" y="182">support zone: held twice before</text>
+<path class="s-mut" style="stroke-dasharray:none;stroke-width:2" d="M20 60 L70 150 L120 70 L170 148 L230 50 L300 120"/>
+${ck(320,118,126,114,130)}${ck(340,128,136,124,140)}${ck(360,138,146,134,150)}${ck(384,150,142,140,172)}
+<circle cx="384" cy="176" r="10" class="s-mk"/><text x="404" y="120" class="ink b">hammer + support</text><text x="404" y="138" class="ink">= confluence</text>
+<line x1="370" y1="178" x2="420" y2="178" style="stroke:var(--bad);stroke-width:2;stroke-dasharray:4 3"/><text x="426" y="196" style="fill:var(--bad)">stop under the low</text></svg>`}
+function svgHS(){return `<svg viewBox="0 0 580 230" role="img" aria-label="Head and shoulders top with neckline and target">
+<path class="s-acc" d="M20 190 L110 80 L160 130 L260 30 L330 132 L410 85 L460 128 L490 150 L520 136 L560 205"/>
+<line x1="140" y1="130" x2="570" y2="130" class="s-ink" style="stroke-dasharray:6 4"/>
+<text x="90" y="70" class="ink b">left shoulder</text><text x="240" y="20" class="ink b">head</text><text x="380" y="75" class="ink b">right shoulder</text><text x="150" y="124">neckline</text>
+<line x1="270" y1="30" x2="270" y2="130" class="s-mut"/><line x1="530" y1="130" x2="530" y2="230" class="s-mut"/><text x="276" y="88">height</text><text x="460" y="225">target = same height down</text>
+<circle cx="520" cy="136" r="5" class="mk"/><text x="470" y="170">return move</text></svg>`}
+function svgCont(){return `<svg viewBox="0 0 600 190" role="img" aria-label="Ascending triangle, symmetrical triangle and bull flag">
+<line x1="20" y1="40" x2="170" y2="40" class="s-mut"/><line x1="20" y1="140" x2="170" y2="50" class="s-mut"/><path class="s-acc" d="M20 140 L45 40 L70 110 L95 40 L120 85 L145 40 L160 62 L185 10"/><text x="20" y="180" class="ink b">Ascending triangle</text>
+<line x1="220" y1="20" x2="370" y2="80" class="s-mut"/><line x1="220" y1="150" x2="370" y2="95" class="s-mut"/><path class="s-acc" d="M200 170 L220 20 L250 140 L280 45 L310 120 L335 70 L355 98 L390 30"/><text x="215" y="180" class="ink b">Symmetrical</text>
+<line x1="470" y1="40" x2="560" y2="70" class="s-mut"/><line x1="470" y1="66" x2="560" y2="96" class="s-mut"/><path class="s-acc" d="M420 160 L470 40 L485 66 L505 48 L525 80 L540 62 L555 92 L590 20"/>
+<text x="428" y="120">pole</text><text x="430" y="180" class="ink b">Bull flag</text></svg>`}
+function svgVol(){const P="M20 150 L90 80 L130 110 L200 50 L240 82 L310 30 L350 60 L420 40";const V=[[30,40],[50,46],[70,52],[100,18],[120,16],[150,48],[170,56],[190,60],[215,20],[232,18],[260,40],[285,36],[305,30],[330,14],[345,12],[380,18],[400,14]];
+  return `<svg viewBox="0 0 580 230" role="img" aria-label="Volume rising on rallies and fading at the end"><path class="s-acc" d="${P}"/>
+${V.map(([x,hh],k)=>`<rect x="${x-7}" y="${220-hh}" width="14" height="${hh}" class="${k===3||k===4||k===8||k===9?"dn":"up"}" opacity=".6"/>`).join("")}
+<text x="150" y="150" class="ink">big volume on rallies</text><text x="80" y="176">small on dips</text><text x="360" y="120" class="ink b">new high, fading volume:</text><text x="360" y="138" class="ink">a warning</text></svg>`}
+
+/* ---------- Level 2 study notes ---------- */
+Object.assign(NOTES,{
+l9:`
+<section><h4>What a trendline is</h4>
+<p>A straight line that joins the swing points of a trend. In an <b>uptrend</b> it runs under the rising swing lows. In a <b>downtrend</b> it runs along the falling swing highs.</p>
+<figure class="dg">${svgTline()}<figcaption>Two points draw the line. The third touch is what confirms it.</figcaption></figure></section>
+<section><h4>How to draw it well</h4>
+<ul><li>Use clear swing points, not random candles.</li>
+<li>Go through as many swing points as you can. A few wicks poking through is fine; slicing through candle bodies is not.</li>
+<li>Draw on a log scale for anything that has moved a lot, like BTC.</li></ul></section>
+<section><h4>How important is a line?</h4>
+<ul><li><b>Touches:</b> the more times price has bounced off it, the more it matters.</li>
+<li><b>Length:</b> a line that has held for months beats one from last week.</li>
+<li><b>Angle:</b> steep lines (much steeper than 45°) break soon. The trend often carries on at a gentler angle after.</li></ul></section>
+<section><h4>When the line breaks</h4>
+<p>A clear <b>close</b> through the line is an early warning, not proof. The trend is only over when the swing structure breaks too: a lower high and a lower low in an uptrend.</p>
+<p>A broken uptrend line often turns into resistance later, the same way broken support does.</p></section>
+<section><h4>Channels</h4>
+<p>Draw a line parallel to the trendline across the peaks. Price often swings between the two lines.</p>
+<figure class="dg">${svgChannel()}<figcaption>A rally that falls short of the channel line is a sign the trend is tiring.</figcaption></figure></section>
+<div class="remember"><b>Remember</b>Lines are drawn by people, so different people draw them differently. Trust a line more when it has many touches and the swing structure agrees.</div>`,
+
+l10:`
+<section><h4>Why pullbacks matter</h4>
+<p>Trends move in waves: a push, a pullback, another push. The pullback is where most trend traders get in. The hard part is telling a normal pullback from the start of a reversal.</p></section>
+<section><h4>The ⅓ to ⅔ rule</h4>
+<p>Measure the last swing from its start to its end. A normal pullback gives back <b>between a third and two thirds</b> of it, most often about half.</p>
+<figure class="dg">${svgRetr()}<figcaption>The shaded band is where most healthy pullbacks stop.</figcaption></figure>
+<div class="tw"><table><tr><th>Pullback</th><th>Reads as</th></tr>
+<tr><td>Under ⅓</td><td>Strong trend; buyers barely let it dip</td></tr>
+<tr><td>⅓ to ⅔</td><td>Normal, healthy pullback</td></tr>
+<tr><td>Over ⅔</td><td>Trend in doubt; watch the last swing low</td></tr></table></div></section>
+<section><h4>Fibonacci levels</h4>
+<p>Many traders use 38.2% and 61.8%. They sit inside the same ⅓ to ⅔ zone. Treat them as a zone, not magic numbers. 50% isn't a Fibonacci ratio; it's just the most common pullback size.</p>
+<p>Quick math: rise from 2,000 to 3,000. 61.8% back = 3,000 − 0.618 × 1,000 = 2,382.</p></section>
+<section><h4>The shape of a healthy pullback</h4>
+<ul><li>Often <b>two legs</b>: down, a small bounce, down again.</li>
+<li>Quiet, overlapping candles, often on lower volume.</li>
+<li>Holds above the last swing low (in an uptrend).</li></ul>
+<p>Warning signs: big, fast candles against the trend, a pullback that goes past ⅔, or a break of the last swing low.</p></section>
+<div class="remember"><b>Remember</b>Depth and speed both matter. A deep, fast pullback is far more dangerous than a deep, slow one.</div>`,
+
+l11:`
+<section><h4>Ranges are normal</h4>
+<p>Markets spend at least a third of their time going sideways between support and resistance. A range means buyers and sellers are roughly in balance.</p></section>
+<section><h4>Trading inside a range</h4>
+<ul><li>Buy near support, sell near resistance. Fading the edges works more often than chasing breakouts.</li>
+<li>Avoid the middle: there's no reason for anyone to act there, and no clean place for a stop.</li>
+<li>Trend tools (like trendlines and moving averages) lose money in ranges.</li></ul></section>
+<section><h4>Breakout or fake-out?</h4>
+<figure class="dg">${svgFake()}<figcaption>Watch where the candles close, not where the wicks reach.</figcaption></figure>
+<ul><li><b>Real breakout:</b> closes outside the range and keeps going, often on bigger volume. It often comes back to retest the old edge from the other side.</li>
+<li><b>Fake-out:</b> pokes out, then closes back inside. Breakout buyers are trapped, and their selling pushes price toward the other side.</li></ul></section>
+<section><h4>Which breakouts work better</h4>
+<ul><li>Pressure building at one edge first: rising lows into resistance, or falling highs into support.</li>
+<li>A tight, coiled range rather than a wide, messy one.</li>
+<li>Volume picking up on the break.</li></ul>
+<p>Classic target: add the range's height to the breakout point. Range 100 to 110, break above 110: target about 120.</p></section>
+<div class="remember"><b>Remember</b>Most breakouts from ranges fail. A breakout needs proof: a close outside, follow-through, and ideally volume.</div>`,
+
+l12:`
+<section><h4>Why candle patterns work at all</h4>
+<p>Each candle shows who won that period. Some shapes show one side suddenly losing control. They only mean something <b>after a clear move</b>: a reversal pattern needs something to reverse.</p></section>
+<section><h4>The eight to know</h4>
+<figure class="dg">${svgC12()}<figcaption>Top row: one-candle patterns. Bottom row: two-candle patterns. The three candles before each show the trend.</figcaption></figure></section>
+<section><h4>One-candle patterns</h4>
+<ul><li><b>Hammer</b> (after a fall): small body at the top, lower shadow at least twice the body. Buyers rejected the lows.</li>
+<li><b>Hanging man</b> (after a rise): the same shape. Needs a lower close next to confirm.</li>
+<li><b>Shooting star</b> (after a rise): small body at the bottom, long upper shadow. Sellers rejected the highs.</li>
+<li><b>Inverted hammer</b> (after a fall): the shooting-star shape. Needs a higher close next to confirm.</li></ul>
+<p>Same shape, different name: the trend before it decides.</p></section>
+<section><h4>Two-candle patterns</h4>
+<ul><li><b>Bullish engulfing</b>: after a fall, a green body that fully covers the last red body.</li>
+<li><b>Bearish engulfing</b>: after a rise, a red body that fully covers the last green body.</li>
+<li><b>Dark cloud cover</b>: after a rise, a red candle opens above the last high and closes below the middle of the green body.</li>
+<li><b>Piercing pattern</b>: after a fall, a green candle opens below the last low and closes above the middle of the red body.</li></ul>
+<p>Engulfing is stronger than dark cloud or piercing, because the second body covers all of the first.</p></section>
+<div class="remember"><b>Remember</b>A candle pattern is a hint about who's in control right now. It doesn't tell you how far price will go.</div>`,
+
+l13:`
+<section><h4>Stars</h4>
+<p>A star is a small body set apart from a big candle before it. It shows the trend stalling.</p>
+<ul><li><b>Morning star</b> (bottom): big red, small star below, big green closing deep into the red body.</li>
+<li><b>Evening star</b> (top): big green, small star above, big red closing deep into the green body.</li></ul>
+<p>Stronger when there are gaps around the star and the third candle closes deep into the first one.</p></section>
+<section><h4>Harami and doji</h4>
+<ul><li><b>Harami</b>: a small body inside the previous big body. The move has lost steam. Weaker than engulfing: it says "slowing", not "reversed".</li>
+<li><b>Doji</b>: open and close almost equal. After a long trend it's a warning that the winning side has stalled. In a range it means little.</li></ul>
+<figure class="dg">${svgC13()}<figcaption>Stars, harami and doji show a trend pausing. Rising three methods shows it continuing.</figcaption></figure></section>
+<section><h4>Continuation candles</h4>
+<ul><li><b>Rising three methods</b>: a big green candle, three small candles drifting down inside its range, then a new big green high. The uptrend continues.</li>
+<li><b>Falling three methods</b>: the mirror image in a downtrend.</li></ul></section>
+<section><h4>Windows (gaps)</h4>
+<p>Japanese traders call a gap between candles a <b>window</b>. A rising window tends to act as support when price comes back to it. A falling window tends to act as resistance.</p></section>
+<div class="remember"><b>Remember</b>Ask two questions every time: was there a clear trend before it, and what did the next candle do?</div>`,
+
+l14:`
+<section><h4>Confluence</h4>
+<p>A candle signal on its own is weak. When it appears <b>at a place that already matters</b>, two separate clues agree. That's confluence, and it's where an edge can live.</p>
+<figure class="dg">${svgConf()}<figcaption>Level first, candle second. The candle tells you the level is holding right now.</figcaption></figure></section>
+<section><h4>Good places for a signal</h4>
+<ul><li>Support or resistance zones that have held before.</li>
+<li>A trendline or channel line.</li>
+<li>The end of a normal pullback (⅓ to ⅔ back).</li>
+<li>Old resistance that turned into support (and the reverse).</li></ul></section>
+<section><h4>Places to ignore</h4>
+<ul><li>The middle of a range.</li>
+<li>Right under resistance for a buy, or right above support for a sell: there's no room to profit.</li></ul></section>
+<section><h4>Turning a signal into a plan</h4>
+<ul><li><b>Stop:</b> just past the pattern's extreme. Under a hammer's low; above a shooting star's high.</li>
+<li><b>Room:</b> check the distance to the next level. If the reward is smaller than the risk, skip it.</li>
+<li><b>Confirmation:</b> the next candle moving your way adds proof.</li></ul></section>
+<div class="remember"><b>Remember</b>Candles give timing, not targets. Use levels and patterns to decide where price might go.</div>`,
+
+l15:`
+<section><h4>Reversal patterns</h4>
+<p>These shapes show a trend running out of fuel. None of them is complete until price breaks a key line. Until then, the trend is still in force.</p></section>
+<section><h4>Head and shoulders</h4>
+<figure class="dg">${svgHS()}<figcaption>The neckline joins the two dips. The pattern completes on a close below it.</figcaption></figure>
+<ul><li>Left shoulder, a higher head, then a lower right shoulder: the first lower high.</li>
+<li>Volume is often lighter on the head and right shoulder.</li>
+<li><b>Target:</b> head-to-neckline height, projected down from the break. Head 130, neckline 110: target 90.</li>
+<li>Price often makes a <b>return move</b> to the neckline, which now acts as resistance.</li>
+<li>The <b>inverse</b> version marks a bottom and breaks up through its neckline.</li></ul></section>
+<section><h4>Double tops and bottoms</h4>
+<ul><li><b>Double top</b>: two peaks at about the same price. Confirmed only when price closes below the low between them.</li>
+<li><b>Double bottom</b>: the mirror image. Confirmed on a close above the high between the two lows.</li>
+<li>Target: the pattern's height, projected from the break. Lows at 80, middle high 95: target about 110.</li></ul></section>
+<section><h4>When patterns fail</h4>
+<p>If price breaks the wrong way, for example above both peaks of a "double top", the pattern has failed. Failed patterns are often strong signals in the other direction. Respect the break, not the textbook.</p></section>
+<div class="remember"><b>Remember</b>Don't sell the right shoulder or the second peak. Wait for the neckline or middle-low break: that's the proof.</div>`,
+
+l16:`
+<section><h4>Continuation patterns</h4>
+<p>Most patterns are pauses, not reversals. The trend catches its breath, then usually carries on in the same direction.</p>
+<figure class="dg">${svgCont()}<figcaption>Triangles coil; flags drift against a sharp move.</figcaption></figure></section>
+<section><h4>Triangles</h4>
+<ul><li><b>Ascending</b>: flat top, rising lows. Usually breaks up.</li>
+<li><b>Descending</b>: flat bottom, falling highs. Usually breaks down.</li>
+<li><b>Symmetrical</b>: lower highs and higher lows. Neutral; usually breaks in the direction of the trend before it.</li>
+<li>Breakouts work best roughly half to three quarters of the way into the triangle. At the tip, the pattern often fizzles.</li></ul></section>
+<section><h4>Flags and pennants</h4>
+<ul><li>A sharp move (the <b>pole</b>), then a short, tight drift against it.</li>
+<li>Short: a few candles to a few weeks. If it drags on, it's something else.</li>
+<li><b>Target:</b> the pole's height added to the breakout. "Flags fly at half-mast": the move after is often as big as the move before.</li></ul></section>
+<section><h4>Rectangles</h4>
+<p>A sideways box with a flat top and bottom inside a trend. It's a range that usually resolves in the trend's direction. Target: the box's height from the breakout.</p></section>
+<div class="remember"><b>Remember</b>Wait for the break. Until price closes outside the pattern, any direction is possible.</div>`,
+
+l17:`
+<section><h4>What volume tells you</h4>
+<p>Volume is how much traded in each candle. It shows how many people were behind a move. Big moves on big volume are believable; big moves on small volume are suspect.</p>
+<figure class="dg">${svgVol()}<figcaption>Healthy uptrend: volume grows on rallies and shrinks on dips.</figcaption></figure></section>
+<section><h4>Volume rules</h4>
+<ul><li>Volume should grow <b>in the direction of the trend</b>.</li>
+<li>A breakout on heavy volume is more believable. On thin volume, wait for a retest.</li>
+<li>A new high on fading volume is a warning that buyers are tiring.</li>
+<li>A huge volume spike with a long wick after a long move often marks a <b>climax</b>: the panic low or the euphoric top.</li></ul></section>
+<section><h4>Open interest (futures)</h4>
+<p>Open interest is the number of futures contracts still open. Each has a buyer and a seller.</p>
+<div class="tw"><table><tr><th>Price</th><th>Open interest</th><th>Reads as</th></tr>
+<tr><td>Up</td><td>Up</td><td>New longs: healthy</td></tr>
+<tr><td>Up</td><td>Down</td><td>Shorts covering: may run out of fuel</td></tr>
+<tr><td>Down</td><td>Up</td><td>New shorts: healthy downtrend</td></tr>
+<tr><td>Down</td><td>Down</td><td>Longs closing or being liquidated</td></tr></table></div></section>
+<section><h4>Crypto specifics</h4>
+<ul><li>Volume is split across many exchanges and some is inflated. Compare rising and falling volume on one big exchange, not exact totals.</li>
+<li>Perpetual futures have a <b>funding rate</b>. Very high funding plus rising open interest means crowded leveraged longs, which can unwind in a fast flush.</li></ul></section>
+<div class="remember"><b>Remember</b>Volume confirms; it rarely leads on its own. Use it to judge how much to trust a move you already see on the price chart.</div>`
+});
+
 /* ---------- diagrams (inline SVG, theme-aware via CSS classes) ---------- */
 function svgEdge(){const rows=[["Coin flip",50],["Real edge",55],["Beginner's dream",80]];
   return `<svg viewBox="0 0 560 150" role="img" aria-label="Win/loss split: coin flip 50/50, real edge 55/45, dream 80/20">${rows.map(([l,p],k)=>{const y=14+k*46,W=380,w=W*p/100;
@@ -888,7 +1125,128 @@ const LESSONS=[
  cards:[{q:"While learning, the most you should risk on one trade is…",o:["1% of the account","5%","Whatever feels right"],a:0,e:"0.5 to 1% keeps a normal losing streak survivable."},
   {q:"Ten coins bought equally in January 2018 lost about 61% by July. The lesson?",o:["Crypto coins crash together; stops and sizing protect you","Buy more coins next time","Only buy Bitcoin"],a:0,e:"Spreading money across coins isn't real protection in a crypto crash."}]}
 ];
+/* ---------- Level 2 lessons: core chart reading ---------- */
+LESSONS.forEach(L=>L.lv=L.lv||1);
+LESSONS.push(
+{id:"l9",n:9,lv:2,t:"Trendlines and channels",min:10,steps:[
+ S("hook",{text:"One straight line can show you the trend, where to get in, and the moment the trend starts to crack."}),
+ S("guess",{q:"To draw an uptrend line, you connect…",o:["Two or more rising swing lows","The two highest highs","Any two candles that look important"],a:0,e:"Uptrend line: under the rising lows. Downtrend line: along the falling highs. Two points draw it; a third touch confirms it.",ex:"tline:up"}),
+ S("learn",{title:"Drawing it right",svg:"tline",text:"Connect swing lows in an uptrend, swing highs in a downtrend. Go through the most points, and let a few wicks poke through rather than slicing through candle bodies."}),
+ S("drill",{kind:"tline",n:2}),
+ S("guess",{q:"Which trendline matters more?",o:["One touched 4 times over months","One touched twice last week","The steepest one on the chart"],a:0,e:"More touches, a longer life and a gentler angle all make a line more important. Very steep lines break quickly."}),
+ S("guess",{q:"Price closes clearly below a long uptrend line. What does it mean?",o:["A warning that the trend may change; now check the swings","Sell short right away","Nothing, lines don't matter"],a:0,e:"A trendline break is an early warning. Proof still comes from the swing structure: a lower high and a lower low.",ex:"tbreak"}),
+ S("learn",{title:"Channels",svg:"channel",text:"Draw a line parallel to the trendline across the peaks. Price often swings between the two. When a rally can't reach the top line, buyers are weakening."}),
+ S("guess",{q:"In an up channel, a rally stops well short of the top line. That suggests…",o:["Buyers are weakening; watch the lower line","The trend is speeding up","Nothing at all"],a:0,e:"Failing to reach the channel top often comes before the lower line breaks.",ex:"channel"}),
+ S("drill",{kind:"tline",n:1}),
+ S("explain",{q:"Why does a broken uptrend line often act as resistance later?",model:"Same as broken support: people who bought near the line are now losing and sell when price comes back up to it, so the line flips roles.",ex:"tbreak"})],
+ cards:[{q:"A trendline is drawn on…",o:["Swing lows in an uptrend, swing highs in a downtrend","Closing prices anywhere","The single most extreme wick"],a:0,e:"Use the swing points. The line should touch the turns, not one odd spike."},
+  {q:"Very steep trendlines usually…",o:["Break soon and get redrawn at a gentler angle","Are the most reliable","Never break"],a:0,e:"A steep pace can't last. When it breaks, the trend often carries on at a slower angle (the fan principle)."}],chart:["tline"]},
+
+{id:"l10",n:10,lv:2,t:"Retracements and pullbacks",min:9,steps:[
+ S("hook",{text:"Trends never move in a straight line. The pullback is where traders get in, if they can tell it from a reversal."}),
+ S("guess",{q:"A normal pullback in a trend usually gives back…",o:["⅓ to ⅔ of the last swing, often half","Exactly 10%","All of it"],a:0,e:"The 33 to 66% zone. Fibonacci traders use 38% and 62%, which sit inside the same zone.",ex:"retrace"}),
+ S("learn",{title:"The pullback zone",svg:"retr",text:"Measure the last swing from start to end. Shallow pullbacks (under ⅓) show a strong trend. Deep ones (over ⅔) put the trend in doubt."}),
+ S("drill",{kind:"retr",n:3}),
+ S("guess",{q:"Why do Fibonacci levels like 38.2% and 61.8% seem to work?",o:["Many traders watch them, and they sit in the normal pullback zone anyway","Nature makes markets obey them","They're exact to the cent"],a:0,e:"Treat them as a zone, not magic. Most of their \"hits\" land in the ⅓ to ⅔ area that pullbacks visit anyway."}),
+ S("guess",{q:"Healthy pullbacks often come in how many legs?",o:["Two: down, a small bounce, down again","One straight drop","Five"],a:0,e:"The two-legged pullback is the classic shape. The second leg shakes out the last nervous buyers before the trend resumes.",ex:"twoleg"}),
+ S("guess",{q:"Pullback A drifts down on small candles. Pullback B is a sudden drop of big red candles. Which worries an uptrend more?",o:["B","A"],a:0,e:"Fast, strong counter-moves show real selling. Quiet, overlapping pullbacks are usually just profit-taking."}),
+ S("explain",{q:"How do you tell a healthy pullback from the start of a reversal?",model:"A healthy pullback is shallow to normal (under ⅔), quiet, and holds above the last swing low. A reversal goes deeper, moves fast and breaks the swing low."})],
+ cards:[{q:"Price gives back 90% of the last rise. Most likely…",o:["The uptrend is in doubt","It's a normal buying chance","The trend is very strong"],a:0,e:"Over ⅔ back is a deep pullback. Watch whether the last swing low breaks."},
+  {q:"The 50% pullback level comes from…",o:["Old Dow Theory observation, not Fibonacci","The Fibonacci sequence","Elliott Wave only"],a:0,e:"50% isn't a Fibonacci ratio. It's simply the most common pullback size traders have seen for over a century."}],chart:["retr"]},
+
+{id:"l11",n:11,lv:2,t:"Trading ranges",min:9,steps:[
+ S("hook",{text:"Markets spend a big part of their time going nowhere. Ranges have their own rules, and most breakouts from them fail."}),
+ S("guess",{q:"Inside a range, the better trade is usually…",o:["Buy near support, sell near resistance","Buy every breakout above resistance","Buy in the middle"],a:0,e:"In a range, trading back from the edges works more often than chasing breakouts.",ex:"range"}),
+ S("drill",{kind:"sr",n:1}),
+ S("learn",{title:"Breakout or fake-out?",svg:"fake",text:"A real breakout closes outside the range and keeps going. A fake-out pokes out, then closes back inside and traps the breakout buyers."}),
+ S("drill",{kind:"brk",n:3}),
+ S("guess",{q:"Price breaks above a range, then quickly closes back inside. Where does it often go next?",o:["Toward the other side of the range","Straight back up","Nowhere, it freezes"],a:0,e:"Trapped breakout buyers sell to get out, which pushes price back across the range. A failed breakout is a trade signal of its own.",ex:"fake"}),
+ S("guess",{q:"Which is a good sign before a range breakout?",o:["Price presses the edge with higher lows and tighter swings","A sudden spike out of nowhere","A very wide, messy range"],a:0,e:"Pressure building at one edge, like rising lows into resistance, shows one side winning. Breakouts from tight, coiled ranges work better."}),
+ S("explain",{q:"Why do so many range breakouts fail?",model:"A range means buyers and sellers are in balance. Lots of traders sell at the top, so price needs real new demand to break out. Without it, it falls back in."})],
+ cards:[{q:"After a clean breakout, price often comes back to…",o:["Retest the old range edge from the other side","The range bottom","Where the range started"],a:0,e:"Old ceiling becomes the new floor: role reversal again.",ex:"flip"},
+  {q:"The classic target for a range breakout is…",o:["The range's height added to the breakout point","Twice the range","The last swing high"],a:0,e:"Project the range height from the breakout level. A rough guide, not a promise."}],chart:["brk"]},
+
+{id:"l12",n:12,lv:2,t:"Single and two-candle reversals",min:10,steps:[
+ S("hook",{text:"Japanese rice traders read candles 300 years ago. A few shapes still show the moment one side gives up."}),
+ S("guess",{q:"Small body at the top, long lower shadow, after a fall. This is a…",o:["Hammer","Hanging man","Shooting star"],a:0,e:"Hammer: sellers pushed price down hard and buyers drove it back up. The lower shadow is at least twice the body.",ex:"cdl:hammer"}),
+ S("guess",{q:"The same shape, but after a rally. Now it's called…",o:["Hanging man","Hammer","Doji"],a:0,e:"Same candle, different meaning. After a rise it's a hanging man, and it needs a lower close next to confirm.",ex:"cdl:hangman"}),
+ S("learn",{title:"Reversal candles",svg:"c12",text:"Long lower shadow: hammer (after a fall) or hanging man (after a rise). Long upper shadow: shooting star (after a rise) or inverted hammer (after a fall). Engulfing: a body that swallows the one before."}),
+ S("drill",{kind:"cdl12",n:3}),
+ S("guess",{q:"A big green candle, then a red one opens above its high and closes below its middle. This is…",o:["Dark cloud cover","Bullish engulfing","Piercing pattern"],a:0,e:"Dark cloud cover: the rally gets swamped. The deeper the close into the green body, the stronger it is.",ex:"cdl:dark"}),
+ S("guess",{q:"What matters most for any reversal candle?",o:["Where it shows up: after a clear move, at a key level","Its colour","The time of day"],a:0,e:"A reversal candle needs a trend to reverse. In the middle of a range it means little."}),
+ S("drill",{kind:"cdl12",n:1}),
+ S("explain",{q:"Why is a hanging man weaker than a hammer, and what do you wait for?",model:"Buyers did push back up during the candle, so it needs proof. I wait for the next candle to close below the hanging man's body.",ex:"cdl:hangman"})],
+ cards:[{q:"Bullish engulfing needs…",o:["A fall, then a green body that covers the previous red body","Any two green candles","A rally first"],a:0,e:"The second body must cover the first body completely. Shadows don't count.",ex:"cdl:bengulf"},
+  {q:"A shooting star is…",o:["A small body at the bottom with a long upper shadow, after a rise","A long lower shadow after a fall","A big green candle"],a:0,e:"Price spiked up and got slapped back down. Sellers showed up.",ex:"cdl:star"}],chart:["cdl12"]},
+
+{id:"l13",n:13,lv:2,t:"Stars, harami, doji and continuation candles",min:10,steps:[
+ S("hook",{text:"Some patterns show a trend stalling before it turns. Others show a trend just catching its breath."}),
+ S("guess",{q:"Big red candle, a small candle gapping lower, then a big green candle closing well into the red body. This is…",o:["Morning star","Evening star","Harami"],a:0,e:"Morning star: sellers, then indecision, then buyers take over. A bottom.",ex:"cdl:mstar"}),
+ S("learn",{title:"Stars, harami and doji",svg:"c13",text:"Star: a small body set apart between two big ones. Harami: a small body inside the previous big body. Doji: open equals close; after a long trend it's a warning."}),
+ S("drill",{kind:"cdl13",n:3}),
+ S("guess",{q:"A harami means…",o:["The trend has lost momentum, but it hasn't reversed yet","A strong reversal is confirmed","The trend is speeding up"],a:0,e:"Harami means \"pregnant\" in old Japanese. The small inside body shows the move running out of steam. It's weaker than engulfing.",ex:"cdl:bharami"}),
+ S("guess",{q:"Why does a doji after a long rally matter more than a doji in a range?",o:["Buyers who were in control are now only matching sellers","Dojis only appear at tops","Ranges don't have dojis"],a:0,e:"Indecision matters when one side had been winning. In a range, indecision is normal.",ex:"cdl:doji"}),
+ S("guess",{q:"A big green candle, three small red ones inside it, then another big green. What does this signal?",o:["The uptrend continues; the pause was just a rest","A top is forming","Nothing"],a:0,e:"Rising three methods. Sellers couldn't even break the first candle's low, so buyers carry on.",ex:"cdl:r3"}),
+ S("drill",{kind:"cdl13",n:1}),
+ S("explain",{q:"What does the small middle candle of a star tell you?",model:"Neither side is in control any more. The trend has stalled, and the third candle shows who takes over."})],
+ cards:[{q:"A gap between two candles is called a…",o:["Window","Star","Shadow"],a:0,e:"Japanese traders call gaps windows. A rising window tends to act as support later, a falling window as resistance."},
+  {q:"An evening star shows up…",o:["After a rally, and signals a top","After a fall, and signals a bottom","In the middle of a range"],a:0,e:"Big green, small star above, big red closing deep into the green body.",ex:"cdl:estar"}],chart:["cdl13"]},
+
+{id:"l14",n:14,lv:2,t:"Candles plus Western tools",min:9,steps:[
+ S("hook",{text:"A candle signal on its own is weak. The same signal at the right place is one of the best tools you'll have."}),
+ S("guess",{q:"A hammer forms right at a support zone that held twice before. Compared with a hammer in mid-air, it's…",o:["Much more meaningful","Exactly the same","Less meaningful"],a:0,e:"Two clues agreeing, a level and a candle, is called confluence. That's where the edge lives.",ex:"ctx"}),
+ S("learn",{title:"Confluence",svg:"conf",text:"Look for candle signals at support or resistance, at a trendline, or at the end of a normal pullback. Ignore signals in the middle of nowhere."}),
+ S("drill",{kind:"ctx",n:3}),
+ S("guess",{q:"A bullish engulfing forms just under strong resistance. Good buy?",o:["Risky: there's little room before the ceiling","A great buy","Only if it's green"],a:0,e:"Always check the room to the next level. Buying right under resistance gives a small reward for the risk."}),
+ S("guess",{q:"Where does the stop go after a hammer at support?",o:["Just below the hammer's low","At the hammer's close","No stop is needed"],a:0,e:"If price trades below the hammer's low, the buyers who made it have failed. That's the proof you're wrong.",ex:"ctx"}),
+ S("drill",{kind:"ctx",n:1}),
+ S("explain",{q:"Name three things that make a candle signal worth acting on.",model:"It comes after a clear move, it's at a key level like support, resistance or a trendline, and the next candle confirms it."})],
+ cards:[{q:"Candle signals tell you…",o:["Short-term shifts in control, not how far price will go","Exact price targets","The long-term trend"],a:0,e:"Candles are good for timing. For targets, use levels and patterns."},
+  {q:"A shooting star touches the top line of a down channel. That's…",o:["Confluence: a stronger sell signal","A buy signal","Meaningless"],a:0,e:"The candle and the line agree: sellers are defending that line."}],chart:["ctx"]},
+
+{id:"l15",n:15,lv:2,t:"Classical reversal patterns",min:10,steps:[
+ S("hook",{text:"Some chart shapes have been studied for a century. They mark the place where a trend runs out of buyers or sellers."}),
+ S("guess",{q:"Three peaks, the middle one highest, with a line under the two dips. This is…",o:["Head and shoulders","Triple top","Ascending triangle"],a:0,e:"A head and shoulders top. The line under the dips is the neckline.",ex:"pat:hs"}),
+ S("learn",{title:"Head and shoulders",svg:"hs",text:"Left shoulder, higher head, lower right shoulder. It only completes when price closes below the neckline. Target: the head-to-neckline height, projected down from the break."}),
+ S("drill",{kind:"pat15",n:2}),
+ S("guess",{q:"When is a double top confirmed?",o:["When price closes below the low between the two peaks","When the second peak forms","When volume rises"],a:0,e:"Until that middle low breaks, it's just a range. Many \"double tops\" turn into higher highs.",ex:"pat:dt"}),
+ S("guess",{q:"Head at 130, neckline at 110, the neckline breaks. Minimum target?",o:["90","100","70"],a:0,e:"Height = 130 − 110 = 20. Project it down from the break: 110 − 20 = 90. A guide, not a promise.",svg:"hs"}),
+ S("guess",{q:"After the neckline breaks, price often…",o:["Comes back up to test the neckline, which now acts as resistance","Goes straight down without a pause","Makes a new head"],a:0,e:"The return move to the neckline is common. It gives a second chance to sell, with a tight stop.",ex:"pat:hs"}),
+ S("drill",{kind:"pat15",n:1}),
+ S("explain",{q:"Why wait for the neckline break instead of selling the right shoulder?",model:"Until the neckline breaks, the trend's lows still hold, and many patterns never complete. The break is the proof."})],
+ cards:[{q:"An inverse head and shoulders is…",o:["A bottom, the mirror image of the top pattern","A top pattern","A continuation pattern"],a:0,e:"Three troughs, the middle one lowest. It completes on a close above the neckline.",ex:"pat:hsi"},
+  {q:"In a head and shoulders top, volume is often…",o:["Lighter on the head and right shoulder than on the left","Highest on the right shoulder","Unimportant"],a:0,e:"Fading volume on each new high shows buyers getting tired."}],chart:["pat15"]},
+
+{id:"l16",n:16,lv:2,t:"Continuation patterns",min:10,steps:[
+ S("hook",{text:"Most patterns aren't reversals. They're the trend catching its breath before the next leg."}),
+ S("guess",{q:"Flat top, rising lows. This is…",o:["Ascending triangle","Descending triangle","Head and shoulders"],a:0,e:"Buyers keep paying more each time while sellers defend one price. It usually breaks up.",ex:"pat:asc"}),
+ S("learn",{title:"Triangles and flags",svg:"cont",text:"Triangles: the swings get smaller as price coils. Flags: a short, sloping box right after a sharp move (the pole). Both usually break in the trend's direction."}),
+ S("drill",{kind:"pat16",n:3}),
+ S("guess",{q:"A flag's measured target is…",o:["The pole's height added to the breakout","The flag's own height","The last swing low"],a:0,e:"\"Flags fly at half-mast\": the move after a flag is often about as big as the move before it.",ex:"pat:bflag"}),
+ S("guess",{q:"A symmetrical triangle usually breaks…",o:["In the direction of the trend before it","Always up","Always down"],a:0,e:"It's a neutral shape, so the existing trend usually wins. Wait for the break.",ex:"pat:sym"}),
+ S("guess",{q:"Price drifts all the way to the tip of a triangle without breaking. That means…",o:["The pattern is losing its power","A huge move is guaranteed","Buy now"],a:0,e:"Breakouts work best about half to three quarters of the way into a triangle. At the tip it often just fizzles."}),
+ S("drill",{kind:"pat16",n:1}),
+ S("explain",{q:"What's the difference between a flag and a range?",model:"A flag is short, comes right after a sharp move and slopes against it. A range can last a long time and has no pole before it."})],
+ cards:[{q:"A descending triangle (flat bottom, falling highs) usually breaks…",o:["Down","Up","Sideways"],a:0,e:"Sellers keep pressing lower each time while buyers defend one price.",ex:"pat:desc"},
+  {q:"Flags usually last…",o:["A short time: a few candles to a few weeks","Many months","Exactly 10 candles"],a:0,e:"If a \"flag\" drags on, treat it as something else."}],chart:["pat16"]},
+
+{id:"l17",n:17,lv:2,t:"Volume and open interest",min:10,steps:[
+ S("hook",{text:"Price tells you what happened. Volume tells you how much conviction was behind it."}),
+ S("guess",{q:"Price breaks out of a range on twice the normal volume. This…",o:["Makes the breakout more believable","Means it will fail","Doesn't matter"],a:0,e:"Heavy volume on the break shows real new buying. Thin-volume breakouts fail more often.",ex:"volbrk"}),
+ S("learn",{title:"Volume confirms",svg:"vol",text:"In a healthy trend, volume grows in the trend's direction and shrinks on pullbacks. Price pushing on while volume fades is a warning."}),
+ S("drill",{kind:"vol",n:3}),
+ S("guess",{q:"BTC makes a new high, but volume is the lowest of the whole rally. That's…",o:["A warning: fewer buyers are pushing it","Very bullish","Normal and fine"],a:0,e:"Fading volume into a new high shows tiring buyers. It's not a sell signal alone, but a reason to be careful."}),
+ S("guess",{q:"Open interest is…",o:["The number of futures contracts still open","The day's trading volume","The contract's price"],a:0,e:"Each open contract has a buyer and a seller. Rising open interest means new money coming in; falling means positions closing."}),
+ S("guess",{q:"Price rising while open interest falls usually means…",o:["Shorts are closing (short covering), not fresh buying","Strong new buying","Nothing"],a:0,e:"Price up with open interest up = new longs, healthy. Price up with open interest down = shorts buying back, which often runs out of fuel."}),
+ S("guess",{q:"A huge volume spike after a long fall, with a long lower wick, often marks…",o:["A selling climax: the panic low","The start of a crash","Nothing special"],a:0,e:"Climax volume shows the last sellers giving up, like the panic low from Lesson 1.",ex:"panic"}),
+ S("drill",{kind:"vol",n:1}),
+ S("explain",{q:"Why should volume grow in the direction of the trend?",model:"Rising volume with the trend shows more traders joining it. If volume fades as price pushes on, fewer people believe in the move."})],
+ cards:[{q:"In crypto, a very high funding rate plus rising open interest means…",o:["Lots of leveraged longs: crowded and at risk of a flush","A safe, healthy rally","Shorts are in control"],a:0,e:"Crowded leverage can unwind fast. Long squeezes and liquidation cascades start this way."},
+  {q:"Crypto volume numbers are best used…",o:["To compare rising and falling volume on one big exchange, not as exact truth","As exact totals for the whole market","Not at all"],a:0,e:"Volume is spread over many exchanges and some of it is inflated. Look at the pattern, not the exact number."}],chart:["vol"]}
+);
+
 const SVGS={edge:svgEdge,cycle:svgCycle,candle:svgCandle,log:svgLog,book:svgBook,pivot:svgPivot,swings:svgSwings,trends:svgTrends,failure:svgFailure,flip:svgFlip,drawdown:svgDrawdown};
+Object.assign(SVGS,{tline:svgTline,channel:svgChannel,retr:svgRetr,fake:svgFake,c12:svgC12,c13:svgC13,conf:svgConf,hs:svgHS,cont:svgCont,vol:svgVol});
 const lessons=LESSONS; // for program map
 
 /* ---------- review card bank ---------- */
@@ -960,8 +1318,8 @@ const GATE_Q=[
  {l:8,f:()=>({q:"Which of these trading systems makes money over time?",o:["Wins 35% at 2.5R, loses 1R otherwise","Wins 60% at 0.5R, loses 1R otherwise","Wins 70% at 0.3R, loses 1R otherwise","Wins 25% at 2R, loses 1R otherwise"],a:0,e:"EVs: 0.35×2.5−0.65 = +0.225R; 0.6×0.5−0.4 = −0.1R; 0.7×0.3−0.3 = −0.09R; 0.25×2−0.75 = −0.25R. A high win rate means nothing on its own."})},
  {l:8,f:()=>({q:"You put $1,000 into each of 10 popular coins. How protected are you from a big crypto crash?",o:["Barely: crypto coins tend to crash together, so it's close to one big bet","Very: losses in one coin are offset by the others","Fully, as long as BTC is one of them","It depends only on how many coins you hold"],a:0,e:"In 2018, ten popular coins together lost about 61% in seven months. Stops and position sizing protect you; owning many correlated coins doesn't."})}
 ];
-function gateTheory(n){const by={};GATE_Q.forEach(q=>(by[q.l]=by[q.l]||[]).push(q));const out=[];Object.values(by).forEach(a=>out.push(...shuffle(a).slice(0,1)));
-  const rest=shuffle(GATE_Q.filter(q=>!out.includes(q)));while(out.length<n&&rest.length)out.push(rest.shift());return shuffle(out)}
+function gateTheory(n,bank){bank=bank||GATE_Q;const by={};bank.forEach(q=>(by[q.l]=by[q.l]||[]).push(q));const out=[];Object.values(by).forEach(a=>out.push(...shuffle(a).slice(0,1)));
+  const rest=shuffle(bank.filter(q=>!out.includes(q)));while(out.length<n&&rest.length)out.push(rest.shift());return shuffle(out)}
 
 function gate(m){
   const NCH=20,PASS=17;
@@ -991,29 +1349,106 @@ function gate(m){
         pivotRound(body,after,{strict:true,bars,type,meta:rw&&rw.meta,prompt:"Live prices aren't loading, so this one is from past data. Mark the swing highs and lows (3 candles each side)."})})}
     else srRound(body,after,{strict:true,prompt:"Place support and resistance (tap twice). Strict marking: both must be close to where the swing points cluster."})
   }
-  function finish(){const ok=passed>=PASS;state.best.g20=Math.max(state.best.g20||0,passed);if(ok)state.done.gate=true;save();renderNav();sfx(ok?"lesson":"wrong");
+  function finish(){const ok=passed>=PASS;state.best.g20=Math.max(state.best.g20||0,passed);if(ok){state.done.gate=true;lvlCheck()}save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 1 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You know the theory and can read trend, swings and levels reliably. Level 1 is done.`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions and numbers change every time.`),
       h("div",{class:"row"},h("button",{class:"primary",on:{click:start}},"Take the test again")))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
 }
 
+/* ---------- Level 2 test: harder theory questions from every lesson plus pattern charts ---------- */
+const GATE_Q2=[
+ // Lesson 9
+ {l:9,f:()=>({q:"An uptrend line has 3 touches. Price closes below it, but the last swing low still holds. What is the best read?",o:["A warning only: the trend isn't over until the swing structure breaks","A confirmed downtrend: sell","Nothing: lines never matter","The line was drawn wrong, so redraw it under the new low"],a:0,e:"A trendline break is an early warning. A reversal needs the swings to break too: a lower high and a lower low."})},
+ {l:9,f:()=>({q:"You keep redrawing your uptrend line steeper and steeper, and it keeps breaking. What's going on?",o:["Steep lines can't last; use the gentler line through the major lows","Steeper lines are more reliable, keep going","You should only use closing prices","Switch to a 1-minute chart"],a:0,e:"A very steep pace can't last. When a steep line breaks, the trend often continues at a gentler angle (the fan principle)."})},
+ {l:9,f:()=>({q:"In an up channel, the last rally stalls halfway to the top line. Then price closes below the lower line. What do the two clues say together?",o:["Buyers weakened, then sellers took over: the channel trend is likely ending","A great buying chance at a discount","Channel breaks always fail","Nothing until volume confirms"],a:0,e:"Failing to reach the channel top was the first sign. The break of the lower line adds a second. Now check the swing structure."})},
+ // Lesson 10
+ {l:10,f:()=>{const lo=pick([30000,40000,50000]),rng=pick([10000,20000]),k=pick([.25,.4,.5,.6,.8]);const pb=lo+rng-rng*k;const pct=Math.round(k*100);const cat=k<1/3?"Shallow: a strong trend":k<=2/3?"Normal: a healthy pullback":"Deep: the trend is in doubt";
+   return{q:`BTC rises from ${fmt(lo)} to ${fmt(lo+rng)}, then pulls back to ${fmt(pb)}. How much was retraced, and what does it say?`,...uniqOpts(`${pct}%. ${cat}`,[`${100-pct}%. ${cat}`,`${pct}%. ${k<1/3?"Deep: the trend is in doubt":"Shallow: a strong trend"}`,`${Math.round(pb/(lo+rng)*100)}%. Normal: a healthy pullback`]),
+   e:`It gave back ${fmt(lo+rng-pb)} of a ${fmt(rng)} rise = ${pct}%. Under ⅓ is shallow, ⅓ to ⅔ normal, over ⅔ deep.`}}},
+ {l:10,f:()=>{const a=pick([1000,2000,3000]),b=a+pick([500,1000,2000]);const f=b-(b-a)*.618;return{q:`ETH rises from ${fmt(a)} to ${fmt(b)}. Where is the 61.8% retracement?`,...uniqOpts(fmt(f),[fmt(a+(b-a)*.618),fmt(b-(b-a)*.382),fmt(b*.618)]),
+   e:`61.8% back from the top = ${fmt(b)} − 0.618 × ${fmt(b-a)} = ${fmt(f)}.`}}},
+ {l:10,f:()=>({q:"Two pullbacks both give back 45%. Pullback 1 drifts down on small overlapping candles. Pullback 2 drops in three huge red candles. Which is more likely the start of a reversal?",o:["Pullback 2","Pullback 1","They're the same: only depth matters","Neither, 45% is always safe"],a:0,e:"Speed and force matter, not just depth. Big, fast candles against the trend show real selling."})},
+ // Lesson 11
+ {l:11,f:()=>{const lo=pick([100,200,50]),hi=lo*1.1;return{q:`A range runs from ${fmt(lo)} to ${fmt(hi)}. Price spikes to ${fmt(hi*1.01,1)}, then closes at ${fmt(lo+(hi-lo)*.7,1)}. Best plan?`,o:[`Treat it as a fake-out; look for a move toward ${fmt(lo)}`,"Buy: the breakout is confirmed","Wait for a much higher high before doing anything","Short only if price goes above the spike"],a:0,e:"It closed back inside the range. Trapped breakout buyers often push price to the other side."}}},
+ {l:11,f:()=>{const lo=pick([90,100,120]),h=pick([10,15,20]);return{q:`A range runs from ${lo} to ${lo+h}. Price breaks out cleanly above ${lo+h}. Classic target?`,...uniqOpts(String(lo+2*h),[String(lo+h+h/2),String(lo+3*h),String(lo+h+5)]),e:`Add the range height (${h}) to the breakout point: ${lo+h} + ${h} = ${lo+2*h}. A rough guide only.`}}},
+ {l:11,f:()=>({q:"Which range breakout is most likely to work?",o:["Lows rising into the ceiling, then a close above it on strong volume","A sudden spike out of a quiet range on low volume","A break out of a wide, messy range","A break straight after a huge news candle the other way"],a:0,e:"Pressure building at one edge, a close outside and volume behind it are the signs of a real breakout."})},
+ // Lesson 12
+ {l:12,f:()=>({q:"A candle with a small body and a long lower shadow appears after a two-week rally. The next candle closes below its body. What do you have?",o:["A confirmed hanging man: a possible top","A hammer: a buy signal","A shooting star","Nothing, it's random"],a:0,e:"After a rally the hammer shape is called a hanging man. The lower close next is the confirmation it needs."})},
+ {l:12,f:()=>({q:"After a big green candle, a red candle opens above its high but closes only 20% of the way into the green body. Is it dark cloud cover?",o:["No: it must close below the middle of the green body","Yes","Only if volume is high","Yes, any red candle after a green one counts"],a:0,e:"Dark cloud cover needs a close below the midpoint of the green body. A shallow close is a much weaker signal."})},
+ {l:12,f:()=>({q:"Which is the strongest top signal of these?",o:["Bearish engulfing after a long rally","Dark cloud cover after a long rally","Bearish engulfing in the middle of a range","Hanging man with no confirmation"],a:0,e:"Engulfing is stronger than dark cloud because the red body covers all of the green one. Location (after a rally) matters too."})},
+ // Lesson 13
+ {l:13,f:()=>({q:"What makes a morning star stronger?",o:["Gaps around the star and a third candle closing deep into the first red body","A big middle candle","A third candle that only closes at the star's level","Appearing in the middle of a range"],a:0,e:"The star should be small and set apart, and the third candle should take back a big part of the first candle's fall."})},
+ {l:13,f:()=>({q:"Harami or engulfing: which shows the bigger shift in control?",o:["Engulfing: the new body covers the old one","Harami: the small body is stronger","They're equal","Neither ever works"],a:0,e:"A harami only says the move is slowing. Engulfing says the other side has taken over."})},
+ {l:13,f:()=>({q:"A doji appears in a quiet sideways range. What does it mean?",o:["Very little: indecision is normal in a range","A strong reversal is coming","A buy signal","The range is about to end"],a:0,e:"A doji matters after a trend, when one side was winning. In a range, balance is already the normal state."})},
+ // Lesson 14
+ {l:14,f:()=>{const up=pick([1,1.5,2]),dn=pick([3,4]);return{q:`A bullish engulfing forms at support. Resistance is ${up}% above, and a stop under the pattern would be ${dn}% below. Take the trade?`,o:["No: the reward is smaller than the risk","Yes: the pattern is strong","Yes, with double size","Only without a stop"],a:0,e:`You'd risk ${dn}% to make ${up}%. A good signal in a place with no room is still a poor trade.`}}},
+ {l:14,f:()=>({q:"Which shooting star deserves the most attention?",o:["One at a down-trendline in a downtrend, after a pullback up","One in the middle of a range","One after a three-day fall","One on a 1-minute chart"],a:0,e:"The candle, the trendline and the downtrend all agree: that's confluence."})},
+ {l:14,f:()=>({q:"You buy a hammer at support. Where is your idea proven wrong?",o:["A trade below the hammer's low","A close below the hammer's open","Any red candle next","Never, support always holds"],a:0,e:"The hammer's low is where buyers stepped in. If price goes below it, that buying has failed."})},
+ // Lesson 15
+ {l:15,f:()=>{const lo=pick([80,60,40]),h=pick([10,15,20]);return{q:`Double bottom: two lows near ${lo}, with a high of ${lo+h} between them. Price closes above ${lo+h}. Minimum target?`,...uniqOpts(String(lo+2*h),[String(lo+h),String(lo+h+Math.round(h/2)),String(lo+3*h)]),e:`Height = ${lo+h} − ${lo} = ${h}. Project it up from the break: ${lo+h} + ${h} = ${lo+2*h}.`}}},
+ {l:15,f:()=>{const nk=pick([40,100,60]),hd=nk+pick([10,20]);return{q:`Head and shoulders: head at ${hd}, neckline at ${nk}. The right shoulder is done and price is at ${nk+1}. Sell now?`,o:[`Wait: there's no pattern until a close below ${nk}`,"Yes, the pattern is complete","Buy instead","Sell only at the head"],a:0,e:"Until the neckline breaks, the uptrend's lows still hold and many patterns never complete."}}},
+ {l:15,f:()=>({q:"Two equal peaks form, but then price closes above both of them. What happened?",o:["The double top failed and the uptrend continues, often strongly","It's still a double top","It became a head and shoulders","Nothing changed"],a:0,e:"A failed pattern is a signal of its own. The trapped sellers now have to buy back."})},
+ // Lesson 16
+ {l:16,f:()=>{const pole=pick([5000,8000,10000]),brk=pick([60000,62000,65000]);return{q:`BTC rallies ${fmt(pole)} in a week, then drifts down in a tight channel for five days. It breaks above the channel at ${fmt(brk)}. Flag target?`,...uniqOpts(`About ${fmt(brk+pole)}`,[`About ${fmt(brk+pole/4)}`,`About ${fmt(brk-pole)}`,`About ${fmt(brk+pole*2)}`]),e:`Add the pole's height to the breakout: ${fmt(brk)} + ${fmt(pole)} = ${fmt(brk+pole)}.`}}},
+ {l:16,f:()=>({q:"A symmetrical triangle forms after a strong downtrend. Most likely break?",o:["Down","Up","No break at all","Sideways forever"],a:0,e:"A symmetrical triangle is neutral, so the trend before it usually wins."})},
+ {l:16,f:()=>({q:"An ascending triangle (flat top) breaks DOWN through its rising lows. What now?",o:["The pattern failed; respect the break, not the textbook","Buy: it's supposed to break up","Ignore it","Wait for the top to break first"],a:0,e:"Patterns are odds, not promises. A break the wrong way is information, and trapped buyers can push it further."})},
+ // Lesson 17
+ {l:17,f:()=>({q:"Price rising, volume rising, open interest rising. What's the read?",o:["Healthy: new money is backing the rise","Short covering","Exhaustion","Distribution"],a:0,e:"Rising open interest means new positions. With price and volume up, new longs are driving it."})},
+ {l:17,f:()=>({q:"Price falls sharply and open interest falls sharply too. What's happening?",o:["Longs are closing or being liquidated, not new shorts piling in","Fresh short selling","A healthy downtrend","Nothing"],a:0,e:"Falling open interest means positions closing. In a sharp drop, that's usually longs bailing out or being liquidated."})},
+ {l:17,f:()=>{const k=pick(["half","a third"]);return{q:`Price breaks above resistance on ${k} of the average volume. Best response?`,o:["Be skeptical: wait for a retest or more volume","Buy everything now","Short immediately","Volume never matters"],a:0,e:"Thin-volume breakouts fail more often. A retest that holds, or volume picking up, would add proof."}}}
+];
+
+function gate2(m){
+  const NCH=20,PASS=17,NTH=12;const ready=lvlLessonsDone(2);
+  const intro=h("section",{class:"card"},h("div",{class:"eyebrow"},"Level 2 test"),h("h2",{},"20 questions, pass with 17"),
+    h("p",{class:"task"},"12 theory questions covering all nine lessons, many with fresh numbers each time, mixed with 8 charts: draw a trendline, judge a pullback, name candle patterns and chart patterns, decide whether a signal is in the right place, and read volume. Support and resistance aren't shaded for you here. You need 17 of 20 (85%) to finish Level 2."),
+    h("p",{class:"score"},state.best.g2!=null?`Your best so far: ${state.best.g2} of ${NCH}`:(ready?"Not attempted yet":"Finish all nine Level 2 lessons first, so every question is something you've learned.")));
+  const area=h("section",{class:"card"});m.append(intro,area);
+  const tname={tline:"Trendline",retr:"Pullback",cdl:"Candles",pat:"Pattern",ctx:"Location",vol:"Volume",theory:"Theory"};
+  let idx=0,passed=0,plan=[],theory=[];
+  function start(){idx=0;passed=0;theory=gateTheory(NTH,GATE_Q2);plan=shuffle(["tline","retr","cdl","cdl","pat","pat","ctx","vol"].concat(Array(NTH).fill("theory")));nextQ()}
+  function nextQ(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
+    const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
+    const body=h("div");area.append(head,body);
+    const nb=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextQ()}}},idx===NCH-1?"See my result":"Next question");
+    const after=ok=>{pop(ok);if(ok)passed++;head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nb()))};
+    if(task==="theory"){const tq=theory.shift();const q=tq.f();const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
+      body.append(h("p",{class:"task"},q.q));mcq(body,q,ok=>{fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+q.e);after(ok)});body.append(f)}
+    else if(task==="tline")tlineRound(body,after);
+    else if(task==="retr")retrRound(body,after);
+    else if(task==="cdl")cdlRound(body,after,SET12.concat(SET13),{prompt:"Name the boxed candle pattern. Mind the trend before it: some shapes change name with context."});
+    else if(task==="pat")patRound(body,after,SET15.concat(SET16));
+    else if(task==="ctx")ctxRound(body,after,{hard:true});
+    else(R()<.5?volRound:brkRound)(body,after)}
+  function finish(){const ok=passed>=PASS;state.best.g2=Math.max(state.best.g2||0,passed);if(ok){state.done.gate2=true;lvlEnd(2)}save();renderNav();sfx(ok?"lesson":"wrong");
+    area.append(h("h3",{},ok?"Level 2 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You can read trendlines, pullbacks, ranges, candles, patterns and volume. Level 2 is done. ${lvlTimeText(2)}`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions change every time.`),
+      h("div",{class:"row"},h("button",{class:"primary",on:{click:start}},"Take the test again"),h("a",{href:"#home"},"Back to Today")))}
+  area.append(ready?h("button",{class:"primary",on:{click:start}},"Start the test"):h("div",{class:"row"},h("button",{class:"primary",on:{click:start}},"Start anyway"),h("a",{href:"#home"},"Back to lessons")));
+}
+
+/* ---------- levels: what's unlocked, and how long each one took ---------- */
+const LEVELS=[{n:1,gate:"gate",lessons:8},{n:2,gate:"gate2",lessons:9}];
+const lvlLessons=n=>LESSONS.filter(L=>L.lv===n);
+const lvlLessonsDone=n=>lvlLessons(n).every(L=>state.done[L.id]);
+/* a level opens once every lesson of the level before has been finished and its test passed */
+function lvlOpen(n){if(n<=1)return true;const p=LEVELS.find(x=>x.n===n-1);return !!p&&lvlLessonsDone(n-1)&&!!state.done[p.gate]&&n<=LEVELS.length}
+function topLevel(){let n=1;while(lvlOpen(n+1))n++;return n}
+function nextLesson(){return LESSONS.find(L=>lvlOpen(L.lv)&&!state.done[L.id])}
+function curLevel(){const nx=nextLesson();return nx?nx.lv:topLevel()}
+function lvlT(n){state.lvT=state.lvT||{};return state.lvT[n]=state.lvT[n]||{}}
+function lvlStart(n){const t=lvlT(n);if(!t.s){t.s=Date.now()}}
+function lvlEnd(n){const t=lvlT(n);if(!t.e){t.e=Date.now();if(!t.s)t.s=t.e}}
+function lvlTimeText(n){const t=(state.lvT||{})[n];const mins=(state.mins||{})[n];const days=(a,b)=>{const d=Math.max(1,Math.round((b-a)/864e5));return d+" day"+(d===1?"":"s")};
+  const pr=mins?" · "+(mins>=90?Math.round(mins/6)/10+" hours":mins+" min")+" of practice":"";
+  if(t&&t.e&&t.s)return "Completed in "+days(t.s,t.e)+pr+".";if(t&&t.s)return "Started "+days(t.s,Date.now())+" ago"+pr+".";return ""}
+
 const PROGRAM=[
- {n:1,time:"3 to 4 weeks",t:"Foundations",sub:"How markets and charts work, trend, support and resistance, risk",gate:"Read 10 charts: trend, swings and levels, mixed. Pass with 8.",ls:lessons.map(l=>[l.n,l.t])},
- {n:2,time:"about 4 weeks",t:"Core chart reading",sub:"Trendlines, ranges, candlesticks, classical patterns, volume",gate:"Name the pattern, its location and your action on 30 charts. Pass with 24.",ls:[[9,"Trendlines and channels"],[10,"Retracements and pullbacks"],[11,"Trading ranges"],[12,"Single and two-candle reversals"],[13,"Stars, harami, doji and continuation candles"],[14,"Candles plus Western tools"],[15,"Classical reversal patterns"],[16,"Continuation patterns"],[17,"Volume and open interest"]]},
+ {n:1,time:"3 to 4 weeks",t:"Foundations",sub:"How markets and charts work, trend, support and resistance, risk",gate:"20 questions: 12 theory questions from every lesson plus 8 charts (trend, swings, levels). Pass with 17.",ls:lessons.filter(l=>l.lv===1).map(l=>[l.n,l.t])},
+ {n:2,time:"about 4 weeks",t:"Core chart reading",sub:"Trendlines, ranges, candlesticks, classical patterns, volume",gate:"20 questions: 12 theory questions from all nine lessons plus 8 charts (trendlines, pullbacks, candles, patterns, location, volume). Pass with 17.",ls:lessons.filter(l=>l.lv===2).map(l=>[l.n,l.t])},
  {n:3,time:"about 4 weeks",t:"Indicators and structure",sub:"Moving averages, oscillators, the market cycle, timeframes, intermarket",gate:"Write a full top-down analysis of BTC, ETH and a stock index, then grade it 4 weeks later.",ls:[[18,"Moving averages"],[19,"RSI and stochastics"],[20,"MACD and momentum"],[21,"The market cycle and the four trades"],[22,"Trends, ranges and the shift between them"],[23,"Multiple timeframe analysis"],[24,"Long-term charts"],[25,"Intermarket analysis and breadth"],[26,"Point and figure, Elliott Wave, cycles"]]},
  {n:4,time:"3 to 4 weeks",t:"Auction and order flow",sub:"Market Profile, volume profile, order flow, failed moves",gate:"Call the day type on 10 profile days before the close. Pass with 7.",ls:[[27,"The market as an auction"],[28,"Market Profile basics"],[29,"Day types and the four steps"],[30,"Volume profile"],[31,"Profile setups"],[32,"Order book, footprint and delta"],[33,"Fake moves and failed patterns"],[34,"Liquidity, volatility and coin character"]]},
  {n:5,time:"4 to 6 weeks, plus your 50 paper trades",t:"Edge and mastery",sub:"Setups, trade management, sizing, backtesting, your plan, psychology",gate:"50 paper trades by your plan with positive expectancy, then go live at quarter size.",ls:[[35,"The four trade templates"],[36,"Trade management and exits"],[37,"Position sizing and risk of ruin"],[38,"Record keeping and statistics"],[39,"Backtesting ideas"],[40,"Crypto-specific trading"],[41,"Trading psychology and biases"],[42,"Your trading plan and going live"]]}];
-function mapView(m){
-  const n=lessons.filter(l=>state.done[l.id]).length;
-  m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"Your program"),h("h2",{},"42 lessons, 5 levels, about 6 to 8 months"),
-    h("p",{class:"task"},"Work through one level at a time, 2 to 3 lessons a week. Each lesson starts with short study notes, then hands-on drills on practice charts. Every level ends with a test you must pass before moving on."),
-    h("div",{class:"row"},h("a",{href:"#"+((lessons.find(l=>!state.done[l.id])||{id:"gate"}).id)},n?"Continue where you left off →":"Start Lesson 1 →"))));
-  PROGRAM.forEach(L=>{const open=L.n===1;const card=h("section",{class:"card"},h("div",{class:"done-row"},h("div",{},h("div",{class:"eyebrow"},"Level "+L.n+(open?"":" · coming next")),h("h3",{style:"margin:4px 0 2px"},L.t)),h("span",{class:"score"},open?n+" of 8 done":L.ls.length+" lessons")),
-      h("p",{class:"read",style:"margin:4px 0 10px"},L.sub),
-      h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},L.time),L.n<5?" (2 to 3 lessons a week, plus the test)":" (2 to 3 lessons a week)"),
-      h("div",{class:"maplist"},...L.ls.map(([num,t])=>{const les=lessons.find(x=>x.n===num);const lab=[h("span",{class:"n"},String(num).padStart(2,"0")),h("span",{},t),h("span",{class:"ok"},les&&state.done[les.id]?"✓":"")];
-        return les?h("a",{href:"#"+les.id,class:"mapitem"},...lab):h("div",{class:"mapitem locked"},...lab)})),
-      h("p",{class:"read"},h("b",{},"Level test: "),L.gate,open?" ":"",open?h("a",{href:"#gate"},"Take it →"):""));m.append(card)})}
+/* mapView lives with homeView */
 
 /* ---------- extra drill rounds ---------- */
 function coinRound(el,done){const isA=R()<.5;const rw=genRandomWalk(110),mk=genMarketLike(110);const A=isA?rw:mk,B=isA?mk:rw;
@@ -1137,7 +1572,197 @@ const EX={
    return{bars:b,o:{hlines:[{p:entry,c:"--accent",label:"Entry "+Math.round(entry).toLocaleString()},{p:sl,c:"--bad",dash:true,label:"Stop "+Math.round(sl).toLocaleString()+" (just under the last swing low)"}]},
    look:"Put the stop <b>just under the last swing low</b>, where your idea is proven wrong. Gap = "+Math.round(risk).toLocaleString()+" per coin. Risking $100: 100 ÷ "+Math.round(risk).toLocaleString()+" = <b>"+qty.toFixed(3)+" BTC</b>."}}
 };
-function exMake(key){const [k,arg]=key.split(":");if(k==="trend")return EX["trend:"+arg]();if(k==="candle")return EX.candle(arg);return EX[k]()}
+function exMake(key){if(EX[key])return EX[key]();const [k,arg]=key.split(":");if(k==="trend")return EX["trend:"+arg]();return EX[k](arg)}
+
+/* =====================================================================
+   Level 2: core chart reading. Generators, drills and example charts.
+   ===================================================================== */
+const optB=(j,label,fn)=>h("button",{class:"opt","data-key":String(j+1),on:{click:fn}},h("span",{class:"k"},String(j+1)),h("span",{},label));
+const mirrorBars=(b,m)=>b.map(x=>({o:m-x.o,c:m-x.c,h:m-x.l,l:m-x.h,v:x.v}));
+const jit=(n,k)=>n+rint(-(k||1),k||1);
+function addVol(b,base){b.forEach(x=>{if(x.v==null)x.v=(base||100)*(.7+Math.abs(gauss())*.45)});return b}
+
+/* ---------- candlestick patterns ---------- */
+const CDL={
+ hammer:{n:"Hammer",e:"<b>Hammer</b>: after a fall, a small body at the top and a long lower shadow. Sellers drove price down, buyers pushed it all the way back."},
+ hangman:{n:"Hanging man",e:"<b>Hanging man</b>: the same shape as a hammer, but after a rise. Sellers are testing. It needs a lower close next to confirm."},
+ star:{n:"Shooting star",e:"<b>Shooting star</b>: after a rise, a small body at the bottom and a long upper shadow. Buyers spiked it up and got rejected."},
+ ihammer:{n:"Inverted hammer",e:"<b>Inverted hammer</b>: the shooting-star shape, but after a fall. Buyers tried to lift price. It needs a higher close next to confirm."},
+ bengulf:{n:"Bullish engulfing",e:"<b>Bullish engulfing</b>: after a fall, a green body that completely covers the previous red body. Buyers took over."},
+ sengulf:{n:"Bearish engulfing",e:"<b>Bearish engulfing</b>: after a rise, a red body that completely covers the previous green body. Sellers took over."},
+ dark:{n:"Dark cloud cover",e:"<b>Dark cloud cover</b>: after a rise, a red candle opens above the last high but closes below the middle of the green body."},
+ pierce:{n:"Piercing pattern",e:"<b>Piercing pattern</b>: after a fall, a green candle opens below the last low but closes above the middle of the red body."},
+ mstar:{n:"Morning star",e:"<b>Morning star</b>: big red candle, a small star below it, then a big green candle closing deep into the red body. A bottom."},
+ estar:{n:"Evening star",e:"<b>Evening star</b>: big green candle, a small star above it, then a big red candle closing deep into the green body. A top."},
+ bharami:{n:"Bullish harami",e:"<b>Bullish harami</b>: after a fall, a small body sitting inside the previous big red body. The selling has lost steam."},
+ sharami:{n:"Bearish harami",e:"<b>Bearish harami</b>: after a rise, a small body inside the previous big green body. The buying has lost steam."},
+ doji:{n:"Doji after a rally",e:"<b>Doji after a rally</b>: open and close almost equal. Buyers who were winning are now in balance with sellers. A warning."},
+ r3:{n:"Rising three methods",e:"<b>Rising three methods</b>: a big green candle, three small pullback candles that stay inside it, then a new big green high. The uptrend continues."},
+ f3:{n:"Falling three methods",e:"<b>Falling three methods</b>: a big red candle, three small bounce candles inside it, then a new big red low. The downtrend continues."}};
+const TWIN={hammer:"hangman",hangman:"hammer",star:"ihammer",ihammer:"star",bengulf:"sengulf",sengulf:"bengulf",dark:"pierce",pierce:"dark",mstar:"estar",estar:"mstar",bharami:"sharami",sharami:"bharami",doji:"sharami",r3:"f3",f3:"r3"};
+const SET12=["hammer","hangman","star","ihammer","bengulf","sengulf","dark","pierce"],SET13=["mstar","estar","bharami","sharami","doji","r3","f3"];
+/* shapes for the patterns that come after a rise; the after-a-fall ones are their mirror images */
+const CDL_TOP={
+ hangman:(p,u)=>[{o:p+.1*u,c:p+.4*u,h:p+.48*u,l:p-1.4*u}],
+ star:(p,u)=>[{o:p+.35*u,c:p+.1*u,h:p+2*u,l:p+.04*u}],
+ sengulf:(p,u)=>[{o:p,c:p+.6*u,h:p+.7*u,l:p-.1*u},{o:p+.8*u,c:p-.3*u,h:p+.9*u,l:p-.4*u}],
+ dark:(p,u)=>[{o:p,c:p+1.7*u,h:p+1.8*u,l:p-.1*u},{o:p+2*u,c:p+.6*u,h:p+2.1*u,l:p+.5*u}],
+ estar:(p,u)=>[{o:p,c:p+1.7*u,h:p+1.8*u,l:p-.1*u},{o:p+2*u,c:p+2.08*u,h:p+2.3*u,l:p+1.9*u},{o:p+1.8*u,c:p+.5*u,h:p+1.85*u,l:p+.4*u}],
+ sharami:(p,u)=>[{o:p,c:p+1.8*u,h:p+1.9*u,l:p-.1*u},{o:p+1.3*u,c:p+.8*u,h:p+1.45*u,l:p+.7*u}],
+ doji:(p,u)=>[{o:p+.1*u,c:p+.13*u,h:p+u,l:p-.8*u}],
+ r3:(p,u)=>[{o:p,c:p+1.8*u,h:p+1.9*u,l:p-.1*u},{o:p+1.6*u,c:p+1.3*u,h:p+1.7*u,l:p+1.2*u},{o:p+1.3*u,c:p+1*u,h:p+1.4*u,l:p+.9*u},{o:p+1*u,c:p+.7*u,h:p+1.1*u,l:p+.5*u},{o:p+.8*u,c:p+2.4*u,h:p+2.5*u,l:p+.7*u}]};
+const CDL_MIR={hammer:"star",ihammer:"hangman",bengulf:"sengulf",pierce:"dark",mstar:"estar",bharami:"sharami",f3:"r3"};
+const cdlUp=k=>!CDL_MIR[k];
+function cdlAt(kind,p,u){const base=CDL_MIR[kind]||kind;let k=CDL_TOP[base](p,u);if(CDL_MIR[kind])k=k.map(x=>({o:2*p-x.o,c:2*p-x.c,h:2*p-x.l,l:2*p-x.h}));return k}
+function genCdl(kind){const up=cdlUp(kind);const n=rint(20,24);
+  const b=pathBars(100,[[n>>1,up?108+rint(0,4):92-rint(0,4)],[n-(n>>1),up?118+rint(0,4):82-rint(0,4)]],.55,.003).bars;
+  const p=b[b.length-1].c;const k=cdlAt(kind,p,p*.017);const at=b.length;b.push(...k);return{bars:b,at,n:k.length}}
+function optsFor(right,pool,names){const o=[right];if(TWIN[right]&&names[TWIN[right]])o.push(TWIN[right]);shuffle(pool).forEach(k=>{if(o.length<4&&!o.includes(k))o.push(k)});return shuffle(o)}
+/* name the boxed candle pattern */
+function cdlRound(el,done,set,opts={}){const kind=pick(set);const g=genCdl(kind);const cv=h("canvas",{class:"chart","aria-label":"Chart with a candle pattern boxed"});const f=h("div",{hidden:""});
+  mountChart(cv,()=>[g.bars,{box:{from:g.at,to:g.at+g.n-1}}]);
+  const pool=opts.pool||set.concat(SET12,SET13);const choices=optsFor(kind,pool,CDL);const btns={};
+  const row=h("div",{class:"opts"},...choices.map((k,j)=>btns[k]=optB(j,CDL[k].n,()=>answer(k))));
+  el.append(h("p",{class:"task"},opts.prompt||"Name the boxed candle pattern. Check which way price was going before it."),cv,row,f);
+  function answer(k){Object.values(btns).forEach(b=>b.disabled=true);const ok=k===kind;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[kind].classList.add("pick-good");
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+CDL[kind].e+(!ok&&TWIN[kind]===k?" Same shape, different trend before it: context decides the name.":""));done(ok,kind)}}
+
+/* ---------- classical chart patterns ---------- */
+const PATS={
+ hs:{n:"Head and shoulders top",s:88,legs:()=>[[jit(14,2),110],[jit(6),103],[jit(8),116],[jit(8),103.5],[jit(6),110],[jit(8),96]],lines:e=>[[e[1],103,e[3],103.5,"neckline"]],
+   e:"<b>Head and shoulders top</b>: three peaks, the middle one highest. It completes when price closes below the neckline (the line under the two dips)."},
+ dt:{n:"Double top",s:90,legs:()=>[[jit(14,2),112],[jit(8),103],[jit(8),112.2],[jit(9),97]],lines:e=>[[e[0],112,e[2],112.2,""],[e[1],103,e[3],103,"confirmation line"]],
+   e:"<b>Double top</b>: two peaks at about the same price. It's confirmed only when price breaks the low between them."},
+ asc:{n:"Ascending triangle",s:92,legs:()=>[[10,104],[6,98],[5,104],[4,100.5],[4,104],[3,102.2],[3,104],[jit(6),111]],lines:e=>[[e[0],104,e[6],104,"flat top"],[e[1],98,e[5],102.2,"rising lows"]],
+   e:"<b>Ascending triangle</b>: flat top, rising lows. Buyers keep paying more each time; it usually breaks up."},
+ sym:{n:"Symmetrical triangle",s:88,legs:()=>[[12,112],[6,101],[5,110],[4,103.5],[4,108],[3,105],[jit(7),116]],lines:e=>[[e[0],112,e[4],108,""],[e[1],101,e[5],105,""]],
+   e:"<b>Symmetrical triangle</b>: lower highs and higher lows squeezing together. It usually breaks in the direction of the trend before it."},
+ bflag:{n:"Bull flag",s:99,legs:()=>[[5,100],[7,116],[3,113.6],[2,115],[3,112.6],[2,114],[3,111.6],[jit(7),124]],lines:e=>[[e[1],116,e[5],114,""],[e[2],113.6,e[6],111.6,""]],
+   e:"<b>Bull flag</b>: a sharp rise (the pole), then a short drift down in a tight channel. It usually breaks up, often by about the pole's height."},
+ rect:{n:"Rectangle",s:92,legs:()=>[[9,110],[5,103],[5,110],[5,103],[5,110.2],[5,103.3],[jit(6),117]],lines:e=>[[e[0],110,e[4],110,""],[e[1],103,e[5],103,""]],
+   e:"<b>Rectangle</b>: a sideways box with a flat top and bottom inside a trend. Usually a pause before the trend carries on."}};
+const PAT_MIR={hsi:["hs","Inverse head and shoulders","<b>Inverse head and shoulders</b>: three troughs, the middle one lowest. It completes on a close above the neckline."],
+ db:["dt","Double bottom","<b>Double bottom</b>: two lows at about the same price. It's confirmed when price breaks above the high between them."],
+ desc:["asc","Descending triangle","<b>Descending triangle</b>: flat bottom, falling highs. Sellers keep pressing lower each time; it usually breaks down."],
+ sflag:["bflag","Bear flag","<b>Bear flag</b>: a sharp fall, then a short drift up in a tight channel. It usually breaks down."]};
+const patName=k=>PATS[k]?PATS[k].n:PAT_MIR[k][1],patExp=k=>PATS[k]?PATS[k].e:PAT_MIR[k][2];
+const SET15=["hs","hsi","dt","db"],SET16=["asc","desc","sym","bflag","sflag","rect"];
+function genPat(kind){const mir=PAT_MIR[kind];const P=PATS[mir?mir[0]:kind];const flip=!!mir||(kind==="sym"&&R()<.5);const r=pathBars(P.s,P.legs(),.45,.003);
+  let b=r.bars,lines=P.lines(r.ends);const M=200;if(flip){const sw={"flat top":"flat bottom","rising lows":"falling highs"};b=mirrorBars(b,M);lines=lines.map(([i1,p1,i2,p2,l])=>[i1,M-p1,i2,M-p2,sw[l]||l])}
+  return{bars:b,tl:lines.map(([i1,p1,i2,p2,l])=>({a:{i:i1,p:p1},b:{i:i2,p:p2},c:"--accent",ext:true,w:1.5,dash:true,label:l}))}}
+function patRound(el,done,set,opts={}){const kind=pick(set);const g=genPat(kind);let shown=false;const cv=h("canvas",{class:"chart","aria-label":"Chart with a classical pattern"});const f=h("div",{hidden:""});
+  mountChart(cv,()=>[g.bars,shown?{tlines:g.tl}:{}]);const all=SET15.concat(SET16);const btns={};
+  const ch=[kind];shuffle(set.length>=4?set:all).forEach(k=>{if(ch.length<4&&!ch.includes(k))ch.push(k)});shuffle(all).forEach(k=>{if(ch.length<4&&!ch.includes(k))ch.push(k)});
+  const row=h("div",{class:"opts"},...shuffle(ch).map((k,j)=>btns[k]=optB(j,patName(k),()=>answer(k))));
+  el.append(h("p",{class:"task"},opts.prompt||"Which pattern is this? Look at the whole shape, then where it broke out."),cv,row,f);
+  function answer(k){Object.values(btns).forEach(b=>b.disabled=true);const ok=k===kind;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[kind].classList.add("pick-good");shown=true;rerenderAll();
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+patExp(kind)+" The key lines are now drawn on the chart.");done(ok,kind)}}
+
+/* ---------- trendlines ---------- */
+function hullLine(bars,T,pv){const val=i=>T==="L"?bars[i].l:bars[i].h;const H=[];const cr=(o,a,b)=>(a-o)*(val(b)-val(o))-(val(a)-val(o))*(b-o);
+  pv.forEach(p=>{while(H.length>=2&&(T==="L"?cr(H[H.length-2],H[H.length-1],p)<=0:cr(H[H.length-2],H[H.length-1],p)>=0))H.pop();H.push(p)});
+  const lo=Math.min(...bars.map(b=>b.l)),hi=Math.max(...bars.map(b=>b.h)),tol=(hi-lo)*.02;let best=null,bs=-1;
+  for(let k=1;k<H.length;k++){const a=H[k-1],b=H[k];if(b-a<6)continue;const sl=val(b)-val(a);if(T==="L"?sl<=0:sl>=0)continue;
+    const at=i=>val(a)+sl*(i-a)/(b-a);const touch=pv.filter(p=>Math.abs(val(p)-at(p))<=tol).length;const s=touch*100+b;if(s>bs){bs=s;best=[a,b]}}
+  return best}
+function tlineRound(el,done,opts={}){const type=pick(["up","down"]);const rw=rwFind(type,60,60,{piv:[6,14]});const bars=rw?rw.bars:genSwing(type,60);
+  const T=type==="up"?"L":"H";const val=i=>T==="L"?bars[i].l:bars[i].h;const pv=pivots(bars,2).filter(p=>p.t===T).map(p=>p.i);const best=hullLine(bars,T,pv);
+  let pts=[],checked=false,ok=false;const cv=h("canvas",{class:"chart clickable","aria-label":"Tap two points to draw a trendline"});const f=h("div",{hidden:""});
+  const seg=(a,b,c,lab,dash)=>({a:{i:a,p:val(a)},b:{i:b,p:val(b)},c,ext:true,dash,label:lab});
+  mountChart(cv,()=>{const o={marks:pts.map(i=>({i,t:T,c:"--accent"})),tlines:[]};
+    if(pts.length===2){const [a,b]=pts.slice().sort((x,y)=>x-y);o.tlines.push(seg(a,b,checked?(ok?"--good":"--bad"):"--accent",checked?"your line":""))}
+    if(checked&&!ok&&best)o.tlines.push(seg(best[0],best[1],"--mark","a good line",true));return[bars,o]});
+  cv.addEventListener("click",ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);const g=cv._g;const i=snapI(bars,g.idx(p.x),T,snapR(g.slot),0,bars.length-1);
+    if(pts.length>=2)pts=[];if(!pts.includes(i))pts.push(i);sfx("tap");chk.disabled=pts.length<2;rerenderAll()});
+  const chk=h("button",{class:"primary",disabled:"",on:{click:check}},"Check my line");
+  el.append(h("p",{class:"task"},opts.prompt||("This market is in a "+(type==="up"?"uptrend":"downtrend")+". Tap two swing "+(T==="L"?"lows":"highs")+" to draw its trendline. Taps snap to the nearest "+(T==="L"?"low":"high")+". A third tap starts over.")),cv,h("div",{class:"row"},chk),f);
+  function check(){checked=true;chk.disabled=true;const [a,b]=pts.slice().sort((x,y)=>x-y);const why=[];const isPiv=i=>pv.some(p=>Math.abs(p-i)<=1);
+    const lo=Math.min(...bars.map(x=>x.l)),hi=Math.max(...bars.map(x=>x.h)),tol=(hi-lo)*.015;const at=i=>val(a)+(val(b)-val(a))*(i-a)/(b-a);
+    if(!isPiv(a)||!isPiv(b))why.push("both points should be clear swing "+(T==="L"?"lows":"highs"));
+    if(T==="L"?val(b)<=val(a):val(b)>=val(a))why.push(T==="L"?"an uptrend line slopes up":"a downtrend line slopes down");
+    if(b-a<6)why.push("the two points are too close; spread them across the trend");
+    let cut=0;for(let k=a;k<bars.length;k++)if(T==="L"?bars[k].c<at(k)-tol:bars[k].c>at(k)+tol)cut++;if(cut>1)why.push("the line cuts through "+cut+" candle closes");
+    const touch=pv.filter(p=>p!==a&&p!==b&&p>a&&Math.abs(val(p)-at(p))<=tol*1.5).length;ok=!why.length;rerenderAll();
+    fb(f,ok?"good":"bad",ok?"Good line. It sits "+(T==="L"?"under the rising lows":"along the falling highs")+" without slicing through candles."+(touch?" It has <b>"+touch+" more touch"+(touch>1?"es":"")+"</b>, which makes it stronger.":" A third touch would confirm it.")+rwTag(rw)
+      :"Not quite: "+why.join(", ")+". The dashed purple line shows one good answer."+rwTag(rw));done(ok)}}
+
+/* ---------- retracements ---------- */
+function retrRound(el,done,opts={}){const want=pick(["shallow","normal","deep"]);const f0=want==="shallow"?rint(15,25)/100:want==="normal"?rint(42,58)/100:rint(80,92)/100;
+  const lo0=100,hi0=lo0*(1+rint(20,30)/100);const r=pathBars(lo0-3,[[4,lo0],[rint(24,30),hi0],[rint(8,12),hi0-(hi0-lo0)*f0]],.45);const b0=r.bars;
+  let iH=0;for(let i=0;i<=r.ends[1]+1;i++)if(b0[i].h>b0[iH].h)iH=i;let iL=iH;for(let i=iH;i<b0.length;i++)if(b0[i].l<b0[iL].l)iL=i;let lo=Infinity;for(let i=0;i<iH;i++)lo=Math.min(lo,b0[i].l);
+  const hi=b0[iH].h,fr=(hi-b0[iL].l)/(hi-lo);const cat=fr<1/3?"shallow":fr<=2/3?"normal":"deep";const down=R()<.5,M=230,mp=p=>down?M-p:p;const bars=down?mirrorBars(b0,M):b0;
+  let shown=false;const lv=k=>mp(hi-(hi-lo)*k);const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});
+  mountChart(cv,()=>[bars,shown?{hlines:[{p:lv(1/3),c:"--muted",dash:true,w:1,label:"⅓ back"},{p:lv(.5),c:"--accent",dash:true,w:1.5,label:"half"},{p:lv(2/3),c:"--muted",dash:true,w:1,label:"⅔ back"}],
+    labels:[{i:iL,p:down?bars[iL].h:bars[iL].l,below:!down,text:Math.round(fr*100)+"% back",c:"--mark"}]}:{}]);
+  const names={shallow:"Shallow (under ⅓): strong trend",normal:"Normal (⅓ to ⅔): healthy pullback",deep:"Deep (over ⅔): trend in doubt"};const btns={};
+  const row=h("div",{class:"opts"},...["shallow","normal","deep"].map((k,j)=>btns[k]=optB(j,names[k],()=>answer(k))));
+  el.append(h("p",{class:"task"},opts.prompt||"How much of the last swing has this pullback given back, and what does that say?"),cv,row,f);
+  function answer(k){Object.values(btns).forEach(x=>x.disabled=true);const ok=k===cat;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[cat].classList.add("pick-good");shown=true;rerenderAll();
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+"It gave back about <b>"+Math.round(fr*100)+"%</b> of the "+(down?"fall":"rise")+". "+(cat==="shallow"?"Under a third: the trend is strong and buyers"+(down?" can't":"")+" barely let it dip.":cat==="normal"?"Between a third and two thirds: a normal, healthy pullback.":"Over two thirds: the trend is in serious doubt. Watch the last swing point."));done(ok)}}
+
+/* ---------- ranges: breakout or fake-out, and volume ---------- */
+function genBrk(real,volMode){let c=pathBars(102,[[8,109.6],[6,100.5],[6,109.8],[6,100.4],[6,109.5],[5,104],[4,109.2]],.45,.003).bars;addVol(c);const at=c.length;
+  if(real){const r=pathBars(109.2,real==="short"?[[2,112.8]]:[[3,113.5],[3,112.4],[5,118]],.35,.003).bars;addVol(r);if(volMode)r.forEach((x,k)=>x.v*=volMode==="strong"?(k<3?3:2):.55);c=c.concat(r)}
+  else{const p=109.2;c.push({o:p,c:108.4,h:112.6,l:108.1,v:150});const r=pathBars(108.4,[[7,102.6]],.4,.003).bars;addVol(r);c=c.concat(r)}
+  return{bars:c,at,top:110,bot:100}}
+function brkRound(el,done,opts={}){const real=R()<.5;const g=genBrk(real);const down=R()<.5,M=210;const bars=down?mirrorBars(g.bars,M):g.bars;const T=down?M-g.top:g.top,Bt=down?M-g.bot:g.bot;
+  const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});mountChart(cv,()=>[bars,{hlines:[{p:T,c:"--muted",dash:true,w:1.5},{p:Bt,c:"--muted",dash:true,w:1.5}]}]);
+  const btns={};const nm={real:"Real breakout",fake:"Fake-out"};const want=real?"real":"fake";
+  const row=h("div",{class:"row"},...["real","fake"].map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
+  el.append(h("p",{class:"task"},opts.prompt||"Price left this range. Real breakout or fake-out? Watch where the candles close."),cv,row,f);
+  function answer(k){Object.values(btns).forEach(x=>x.disabled=true);const ok=k===want;btns[k].className=ok?"pick-good":"pick-bad";if(!ok)btns[want].className="pick-good";
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(real?"Price <b>closed outside the range and kept going</b>. That's a real breakout. The old edge often gets retested from the other side.":"Price <b>poked out, then closed back inside</b>. The breakout traders are trapped, and their exits push price back across the range."));done(ok)}}
+function volRound(el,done,opts={}){const strong=R()<.5;const g=genBrk("short",strong?"strong":"weak");const bars=g.bars;
+  const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});mountChart(cv,()=>[bars,{vol:true,hlines:[{p:g.top,c:"--muted",dash:true,w:1.5,label:"range top"}]}]);
+  const btns={};const nm={yes:"Trust it more",no:"Be suspicious"};const want=strong?"yes":"no";
+  const row=h("div",{class:"row"},...["yes","no"].map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
+  el.append(h("p",{class:"task"},opts.prompt||"Price just broke out of the range. Look at the volume bars under the chart. How much do you trust this breakout?"),cv,row,f);
+  function answer(k){Object.values(btns).forEach(x=>x.disabled=true);const ok=k===want;btns[k].className=ok?"pick-good":"pick-bad";if(!ok)btns[want].className="pick-good";
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(strong?"Volume <b>jumped</b> on the breakout: lots of new buyers stepped in. That backs the move.":"Volume <b>shrank</b> on the breakout: few traders believe it. Thin breakouts fail more often, so wait for a retest or more volume."));done(ok)}}
+
+/* ---------- candles in context ---------- */
+const BULLC=["hammer","bengulf","pierce","mstar"],BEARC=["star","sengulf","dark","estar"];
+function genCtx(cs){const base=[[7,111.5],[7,100.5],[7,111.3],[7,100.8]];const tail=cs==="sup"?[[7,100.7]]:cs==="res"?[[7,111.4]]:cs==="midb"?[[6,111],[5,106]]:[[6,106]];
+  const b=pathBars(104,base.concat(tail),.45,.003).bars;const p=b[b.length-1].c;const kind=pick(cs==="sup"||cs==="midb"?BULLC:BEARC);const k=cdlAt(kind,p,p*.008);const at=b.length;b.push(...k);
+  return{bars:b,at,n:k.length,kind,act:cs==="sup"||cs==="res"}}
+function ctxRound(el,done,opts={}){const cs=pick(["sup","res","midb","mids"]);const g=genCtx(cs);const zones=[{hi:101.6,lo:99.9,tint:"--up"},{hi:112.2,lo:110.6,tint:"--down"}];let shown=!opts.hard;
+  const cv=h("canvas",{class:"chart"});const f=h("div",{hidden:""});mountChart(cv,()=>[g.bars,{box:{from:g.at,to:g.at+g.n-1},zones:shown?zones:[]}]);
+  const btns={};const nm={yes:"Act on it",no:"Skip it"};const want=g.act?"yes":"no";const bull=BULLC.includes(g.kind);
+  const row=h("div",{class:"row"},...["yes","no"].map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
+  el.append(h("p",{class:"task"},opts.prompt||("The boxed candles are a "+CDL[g.kind].n.toLowerCase()+". Would you act on this signal here?"+(opts.hard?" Find the range's support and resistance yourself.":" Shaded bands are support and resistance."))),cv,row,f);
+  function answer(k){Object.values(btns).forEach(x=>x.disabled=true);const ok=k===want;btns[k].className=ok?"pick-good":"pick-bad";if(!ok)btns[want].className="pick-good";shown=true;rerenderAll();
+    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+(g.act?"A "+(bull?"bullish":"bearish")+" signal right at "+(bull?"support":"resistance")+": the candle and the level agree. That's confluence, and it gives a clear stop just "+(bull?"below the pattern's low":"above the pattern's high")+".":"The signal is in the <b>middle of the range</b>, far from any level. There's no reason for buyers or sellers to care here, and no logical place for a stop."));done(ok)}}
+
+/* ---------- example charts for the Level 2 questions ---------- */
+Object.assign(EX,{
+ tline(dir){const type=dir==="down"?"down":"up";const b=genSwing(type,80);const T=type==="up"?"L":"H";const pv=pivots(b,2).filter(p=>p.t===T).map(p=>p.i);const best=hullLine(b,T,pv);const val=i=>T==="L"?b[i].l:b[i].h;
+   if(!best)return EX["trend:up"]();const [a,c]=best;const at=i=>val(a)+(val(c)-val(a))*(i-a)/(c-a);const lo=Math.min(...b.map(x=>x.l)),hi=Math.max(...b.map(x=>x.h));const tch=pv.filter(p=>Math.abs(val(p)-at(p))<=(hi-lo)*.02);
+   return{bars:b,o:{tlines:[{a:{i:a,p:val(a)},b:{i:c,p:val(c)},c:"--accent",ext:true}],marks:tch.map(i=>({i,t:T,ring:true,c:"--accent"}))},
+     look:"The line runs "+(T==="L"?"<b>under the rising swing lows</b>":"<b>along the falling swing highs</b>")+". Two points draw it; each extra touch (circled) confirms it. A few wicks poking through are fine."}},
+ tbreak(){const r=pathBars(100,[[8,108],[4,104],[8,113],[4,109],[8,118],[4,114],[6,119],[9,107]],.4,.003);const b=r.bars,e=r.ends;
+   return{bars:b,o:{tlines:[{a:{i:e[1],p:104},b:{i:e[3],p:109},c:"--accent",ext:true,label:"uptrend line"}],hlines:[{p:114,c:"--muted",dash:true,w:1,label:"last swing low"}],
+     labels:[{i:Math.min(b.length-3,e[6]+5),p:b[Math.min(b.length-3,e[6]+5)].l,below:true,text:"Closes below: warning",c:"--down"}]},
+     look:"Price <b>closes below the trendline</b>. That's an early warning. The trend is only confirmed over when the swing structure also breaks (here, the last swing low)."}},
+ channel(){const r=pathBars(100,[[7,110],[4,104],[7,115],[4,109],[7,120],[4,114],[5,121],[7,111]],.35,.003);const b=r.bars,e=r.ends;
+   return{bars:b,o:{tlines:[{a:{i:e[1],p:104},b:{i:e[3],p:109},c:"--accent",ext:true,label:"trendline"},{a:{i:e[0],p:110},b:{i:e[2],p:115},c:"--muted",ext:true,dash:true,label:"channel line"}],
+     labels:[{i:e[6],p:121,text:"Falls short of the top line",c:"--mark"}]},
+     look:"The channel line is drawn <b>parallel</b> to the trendline across the peaks. The last rally <b>failed to reach it</b>: buyers are weakening, and then the lower line breaks."}},
+ twoleg(){const r=pathBars(100,[[22,125],[5,117],[3,121],[5,114],[14,133]],.4,.003);const b=r.bars,e=r.ends;
+   return{bars:b,o:{labels:[{i:e[1],p:b[e[1]].l,below:true,text:"A",c:"--down"},{i:e[2],p:b[e[2]].h,text:"B",c:"--muted"},{i:e[3],p:b[e[3]].l,below:true,text:"C",c:"--down"}]},
+     look:"The pullback comes in <b>two legs</b>: down (A), a small bounce (B), down again (C). The second leg shakes out the last nervous buyers, then the trend carries on."}},
+ range(){return EX.sr()},
+ fake(){const g=genBrk(false);return{bars:g.bars,o:{zones:[{hi:110.6,lo:109.4,tint:"--down"},{hi:100.6,lo:99.4,tint:"--up"}],labels:[{i:g.at,p:112.6,text:"Pokes out, closes back in",c:"--mark"}]},
+   look:"Price spikes above the ceiling but <b>closes back inside</b>. Breakout buyers are trapped, and as they sell, price heads to the <b>other side</b> of the range."}},
+ cdl(kind){const g=genCdl(kind);return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},labels:[{i:g.at,p:cdlUp(kind)?Math.max(...g.bars.slice(g.at).map(x=>x.h)):Math.min(...g.bars.slice(g.at).map(x=>x.l)),below:!cdlUp(kind),text:CDL[kind].n,c:"--mark"}]},look:CDL[kind].e}},
+ pat(kind){const g=genPat(kind);return{bars:g.bars,o:{tlines:g.tl},look:patExp(kind)}},
+ ctx(){const g=genCtx("sup");return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},zones:[{hi:101.6,lo:99.9,tint:"--up"},{hi:112.2,lo:110.6,tint:"--down"}],labels:[{i:g.at,p:99.5,below:true,text:CDL[g.kind].n+" at support",c:"--up"}]},
+   look:"A bullish candle signal <b>right at a support zone</b> that held before. Two clues agree, and the stop goes just under the pattern's low."}},
+ volbrk(){const g=genBrk("short","strong");return{bars:g.bars,o:{vol:true,hlines:[{p:g.top,c:"--muted",dash:true,w:1.5,label:"range top"}],labels:[{i:g.at+1,p:g.bars[g.at+1].h,text:"Breakout on big volume",c:"--up"}]},
+   look:"The bars under the chart are volume. On the breakout they <b>jump far above normal</b>: lots of traders back the move."}}});
+
+Object.assign(ROUNDS,{tline:(el,d)=>tlineRound(el,d),retr:(el,d)=>retrRound(el,d),brk:(el,d)=>brkRound(el,d),vol:(el,d)=>volRound(el,d),ctx:(el,d)=>ctxRound(el,d),
+  cdl12:(el,d)=>cdlRound(el,d,SET12,{pool:SET12}),cdl13:(el,d)=>cdlRound(el,d,SET13,{pool:SET13}),pat15:(el,d)=>patRound(el,d,SET15),pat16:(el,d)=>patRound(el,d,SET16)});
+
 function exBlock(key){if(!key)return null;let cur=exMake(key);const cv=h("canvas",{class:"chart","aria-label":"Example chart with the pattern marked"});const look=h("p",{class:"look",html:"<b>What to look for:</b> "+cur.look});
   const box=h("div",{class:"ex"},h("div",{class:"eyebrow"},"Here's what it looks like on a chart"),cv,look,
     h("div",{class:"row",style:"margin-top:0"},h("button",{on:{click:()=>{cur=exMake(key);look.innerHTML="<b>What to look for:</b> "+cur.look;draw()}}},"↻ Show another example")));
@@ -1157,13 +1782,20 @@ function buildSession(kind,lid){const steps=[];let reviewEnd=0;
     reviewEnd=steps.length}
   if(kind==="mixed"){const kinds=[...new Set(CARDS.filter(c=>c.type==="chart"&&state.cards[c.id]).map(c=>c.kind))];const pool=kinds.length?kinds:["trend","sr","pivot","phase"];
     steps.push({t:"label",eyebrow:"Mixed practice",text:"6 charts, all different types, in random order.",sub:"Mixing them up is harder, and that's why it works."});for(let i=0;i<6;i++)steps.push({t:"round",kind:pool[i%pool.length]});shuffleTail(steps,1)}
-  let L=null;if(kind==="today"||kind==="lesson"){L=lid?LESSONS.find(x=>x.id===lid):LESSONS.find(x=>!state.done[x.id]);
-    if(L){const start=(kind==="today"&&state.pos[L.id])||0;steps.push({t:"label",eyebrow:"Lesson "+L.n+" of 8",text:L.t,sub:"About "+L.min+" minutes. One step at a time."+(start?" Picking up where you left off.":"")});
+  let L=null;if(kind==="today"||kind==="lesson"){L=lid?LESSONS.find(x=>x.id===lid):nextLesson();
+    if(L){lvlStart(L.lv);const start=(kind==="today"&&state.pos[L.id])||0;const ls0=steps.length+1;steps.push({t:"label",eyebrow:"Lesson "+L.n+" · Level "+L.lv,text:L.t,sub:"About "+L.min+" minutes. One step at a time."+(start?" Picking up where you left off.":"")});
       L.steps.slice(start).forEach((s,k)=>{if(s.t==="drill")for(let i=0;i<s.n;i++)steps.push({t:"round",kind:s.kind,lesson:L.id,idx:start+k});else steps.push({...s,lesson:L.id,idx:start+k})});
+      /* throwbacks: questions from earlier lessons that aren't 100% remembered yet keep turning up inside new lessons */
+      const tb=throwbacks(L.id,steps,2);tb.forEach(c=>{const at=rint(ls0+2,Math.max(ls0+2,steps.length-1));steps.splice(at,0,{t:"review",card:c,retry:true,throw:true})});
       steps.push({t:"lessonDone",lesson:L.id})}
-    else if(kind==="today"){steps.push({t:"label",eyebrow:"All 8 lessons done",text:"Mixed chart practice",sub:"Keep your skills sharp, then try the Level 1 test."});["trend","sr","pivot","phase"].forEach(k=>steps.push({t:"round",kind:k}))}}
+    else if(kind==="today"){const lv=curLevel();const passed=state.done[LEVELS[lv-1].gate];const pool=lv===1?["trend","sr","pivot","phase"]:["tline","retr","cdl12","cdl13","pat15","pat16","ctx","vol"];
+      steps.push({t:"label",eyebrow:"All Level "+lv+" lessons done",text:"Mixed chart practice",sub:passed?"Level "+(lv+1)+" is on its way. Keep your skills sharp meanwhile.":"Keep your skills sharp, then take the Level "+lv+" test."});shuffle(pool).slice(0,4).forEach(k=>steps.push({t:"round",kind:k}));
+      throwbacks(null,steps,3).forEach(c=>steps.splice(rint(2,steps.length),0,{t:"review",card:c,retry:true,throw:true}))}}
   steps.push({t:"summary"});
   return{steps,i:0,reviewEnd,right:0,asked:0,start:Date.now(),kind,lesson:L&&L.id}}
+function throwbacks(lid,steps,n){const have=new Set(steps.filter(s=>s.card).map(s=>s.card.id));
+  const pool=CARDS.filter(c=>c.type==="mcq"&&c.lesson!==lid&&state.done[c.lesson]&&state.cards[c.id]&&state.cards[c.id].box<3&&!have.has(c.id));
+  return shuffle(pool).sort((a,b)=>state.cards[a.id].box-state.cards[b.id].box).slice(0,n)}
 function shuffleTail(a,from){const t=shuffle(a.slice(from));a.splice(from,t.length,...t)}
 
 function startSession(kind,lid){SESSION=buildSession(kind,lid);document.body.classList.add("focus");renderStep()}
@@ -1179,7 +1811,7 @@ function renderStep(){live.clear();app.innerHTML="";const S_=SESSION;const st=S_
   else if(T==="hook"){card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Why this matters"),h("h2",{class:"hero"},st.text),st.sub?h("p",{class:"lead"},st.sub):null,nextBtn("Let's go",go))}
   else if(T==="learn"){card.append(h("div",{class:"eyebrow"},"Key idea"),h("h2",{},st.title),svgBlock(st.svg),h("p",{class:"lead"},st.text),nextBtn("Got it",go))}
   else if(T==="guess"||T==="review"&&st.card.type==="mcq"){const q=T==="guess"?st:st.card;const f=h("div",{hidden:""});const nb=h("div",{hidden:""});
-    card.append(h("div",{class:"eyebrow"},T==="guess"?"Guess first, then learn":"From memory"+(st.retry?" · second try":"")),h("h2",{},q.q));
+    card.append(h("div",{class:"eyebrow"},T==="guess"?"Guess first, then learn":st.throw?"Throwback · Lesson "+((LESSONS.find(x=>x.id===q.lesson)||{}).n||"")+" isn't 100% yet":"From memory"+(st.retry?" · second try":"")),h("h2",{},q.q));
     mcq(card,q,ok=>{S_.asked++;if(ok)S_.right++;if(T==="review"){grade(q.id,ok);if(!ok&&!st.retry){S_.steps.splice(S_.reviewEnd,0,{t:"review",card:q,retry:true});S_.reviewEnd++}save()}
       fb(f,ok?"good":"bad",(ok?(T==="guess"?"Nice guess. ":"Correct. "):(T==="guess"?"Good try. Here's the answer: ":"Not this time. "))+q.e+(T==="review"&&!ok&&!st.retry?" It comes back at the end of the warm-up.":""));
       const fig=svgBlock(q.svg);if(fig)f.after(fig);const exb=exBlock(q.ex);if(exb)(fig||f).after(exb);nb.hidden=false;pop(ok)});
@@ -1194,10 +1826,10 @@ function renderStep(){live.clear();app.innerHTML="";const S_=SESSION;const st=S_
     reveal.append(h("div",{class:"model"},h("b",{},"A good answer: "),st.model),exBlock(st.ex),h("p",{class:"task",style:"margin-top:14px"},"How close were you?"),
       h("div",{class:"opts row"},...[["Nailed it","Great. You'll see this again in a few days to lock it in."],["Partly","Normal. Saying it again later is how it sticks."],["Missed it","That's useful to know. It'll come back soon."]].map(([l,m],k)=>h("button",{"data-key":String(k+1),on:{click:e=>{[...e.currentTarget.parentNode.children].forEach(b=>b.disabled=true);e.currentTarget.classList.add("pick-good");
         const n=h("p",{class:"read"},m);reveal.append(n);reveal.append(nextBtn("Continue",go))}}},l))))}
-  else if(T==="lessonDone"){sfx("lesson");const L=LESSONS.find(x=>x.id===st.lesson);const first=!state.done[L.id];state.done[L.id]=true;delete state.pos[L.id];unlockLesson(L.id);save();
+  else if(T==="lessonDone"){sfx("lesson");const L=LESSONS.find(x=>x.id===st.lesson);const first=!state.done[L.id];state.done[L.id]=true;delete state.pos[L.id];unlockLesson(L.id);lvlCheck();save();
     card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Lesson "+L.n+" complete"),h("h2",{class:"hero"},L.t+": done"),
       h("p",{class:"lead"},first?"Its questions now join your review deck. They'll come back tomorrow, then in 3 days, a week, two weeks and a month.":"Nice refresher."),nextBtn("Continue",go));pop(true)}
-  else if(T==="summary"){setTimeout(()=>sfx("session"),150);bumpStreak();save();const mins=Math.max(1,Math.round((Date.now()-S_.start)/60000));const due=CARDS.filter(c=>state.cards[c.id]&&state.cards[c.id].due===addDays(today(),1)).length;
+  else if(T==="summary"){setTimeout(()=>sfx("session"),150);bumpStreak();const mins=Math.max(1,Math.round((Date.now()-S_.start)/60000));if(!S_.counted){S_.counted=true;state.mins=state.mins||{};const lv=S_.lesson?(LESSONS.find(x=>x.id===S_.lesson)||{}).lv||1:curLevel();state.mins[lv]=(state.mins[lv]||0)+mins}save();const due=CARDS.filter(c=>state.cards[c.id]&&state.cards[c.id].due===addDays(today(),1)).length;
     card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Session complete"),h("h2",{class:"hero"},"That's today done."),
       h("div",{class:"stats"},...[["Time",mins+" min"],["Answered right",S_.right+" of "+S_.asked],["Streak",streakNow()+" day"+(streakNow()===1?"":"s")],["Back tomorrow",due+" card"+(due===1?"":"s")]].map(([k,v])=>h("div",{class:"stat"},h("div",{class:"k"},k),h("div",{class:"v"},v)))),
       h("p",{class:"lead"},"Stopping here is a win. A break now helps your brain store what you just did. Come back tomorrow for a fresh 10 minutes."),
@@ -1230,8 +1862,21 @@ document.addEventListener("keydown",e=>{if(!SESSION)return;if(e.target.tagName==
 
 /* ---------- home, map, notes ---------- */
 function ring(p){const r=16,c=2*Math.PI*r;return h("span",{class:"ring",html:`<svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true"><circle cx="20" cy="20" r="${r}" class="rbg"/><circle cx="20" cy="20" r="${r}" class="rfg" stroke-dasharray="${(p*c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 20 20)"/></svg>`})}
-function homeView(m){const next=LESSONS.find(x=>!state.done[x.id]);const due=dueCards().length;const nDone=LESSONS.filter(x=>state.done[x.id]).length;
-  const plan=[];if(due)plan.push(Math.min(due,5)+" warm-up question"+(Math.min(due,5)>1?"s":""));if(next)plan.push("Lesson "+next.n+": "+next.t+(state.pos[next.id]?" (continue)":""));else plan.push("Mixed chart practice");
+function lvlCheck(){LEVELS.forEach(L=>{if(lvlLessonsDone(L.n)&&state.done[L.gate])lvlEnd(L.n)})}
+function lockText(n){const p=n-1;const miss=lvlLessons(p).filter(L=>!state.done[L.id]).map(L=>L.n);const parts=[];
+  if(miss.length)parts.push("finish "+(miss.length===1?"Lesson ":"Lessons ")+(miss.length>2?miss.slice(0,-1).join(", ")+" and "+miss[miss.length-1]:miss.join(" and ")));
+  if(!state.done[LEVELS[p-1].gate])parts.push("pass the Level "+p+" test");
+  return "🔒 Unlocks when you "+parts.join(" and ")+"."}
+function lvlCard(n,next){const P=PROGRAM[n-1];const ls=lvlLessons(n);const nD=ls.filter(x=>state.done[x.id]).length;const gp=state.done[LEVELS[n-1].gate];const tt=lvlTimeText(n);
+  const head=h("div",{class:"done-row"},h("h3",{style:"margin:0"},"Level "+n+" · "+P.t),h("span",{class:"score"},nD+" of "+ls.length+" lessons"+(gp?" · test ✓":"")));
+  if(!lvlOpen(n))return h("section",{class:"card"},head,h("p",{class:"read",style:"margin:6px 0 4px"},P.sub),h("p",{class:"task"},lockText(n)),h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},P.time)));
+  const g=h("div",{class:"lgrid"});ls.forEach(L=>{const p=mastery(L.id);g.append(h("button",{class:"ltile"+(state.done[L.id]?" done":"")+(next&&next.id===L.id?" next":""),on:{click:()=>startSession("lesson",L.id)},title:"Lesson "+L.n},
+    ring(state.done[L.id]?Math.max(p,.08):0),h("span",{class:"n"},"Lesson "+L.n),h("span",{class:"t"},L.t),h("span",{class:"s"},state.done[L.id]?Math.round(p*100)+"% remembered":(next&&next.id===L.id?"Up next":"Not started"))))});
+  return h("section",{class:"card"},head,h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},P.time),tt?". "+tt:", about 2 to 3 lessons a week"),
+    h("p",{class:"read",style:"margin:4px 0 12px"},"The ring fills as you keep remembering a lesson over days and weeks. Until it's full, its questions keep popping up in your sessions."),g)}
+function homeView(m){const next=nextLesson();const due=dueCards().length;const lv=curLevel(),top=topLevel();const G=LEVELS[lv-1].gate;const lsDone=lvlLessonsDone(lv);
+  const plan=[];if(due)plan.push(Math.min(due,5)+" warm-up question"+(Math.min(due,5)>1?"s":""));if(next)plan.push("Lesson "+next.n+": "+next.t+(state.pos[next.id]?" (continue)":""));else plan.push("Mixed chart practice"+(state.done[G]?"":", then the Level "+lv+" test"));
+  const tb=throwbacks(next&&next.id,[],2).length;if(tb)plan.push(tb+" throwback question"+(tb>1?"s":"")+" from lessons not yet at 100%");
   const mins=Math.round(Math.min(due,5)*.5+(next?next.min:5));
   m.append(h("section",{class:"card today"},h("div",{class:"eyebrow"},"Today · about "+mins+" minutes"),h("h2",{class:"hero"},next?next.t:"Keep it sharp"),
     h("ul",{class:"plan"},...plan.map(p=>h("li",{},p))),
@@ -1239,14 +1884,25 @@ function homeView(m){const next=LESSONS.find(x=>!state.done[x.id]);const due=due
   m.append(h("div",{class:"quick"},
     h("button",Object.assign({class:"tile",on:{click:()=>startSession("review")}},due?{}:{disabled:""}),h("b",{},"Quick review"),h("span",{},due?due+" due · 3 min":"Nothing due today")),
     h("button",{class:"tile",on:{click:()=>startSession("mixed")}},h("b",{},"Mixed chart practice"),h("span",{},"6 charts · 4 min")),
-    h("a",{class:"tile",href:"#gate"},h("b",{},"Level 1 test"),h("span",{},nDone<8?"Best after all 8 lessons":"10 charts · ready"))));
-  const g=h("div",{class:"lgrid"});LESSONS.forEach(L=>{const p=mastery(L.id);g.append(h("button",{class:"ltile"+(state.done[L.id]?" done":"")+(next&&next.id===L.id?" next":""),on:{click:()=>startSession("lesson",L.id)},title:"Replay lesson "+L.n},
-    ring(state.done[L.id]?Math.max(p,.08):0),h("span",{class:"n"},"Lesson "+L.n),h("span",{class:"t"},L.t),h("span",{class:"s"},state.done[L.id]?Math.round(p*100)+"% remembered":(next&&next.id===L.id?"Up next":"Not started"))))});
-  m.append(h("section",{class:"card"},h("div",{class:"done-row"},h("h3",{style:"margin:0"},"Level 1 · Foundations"),h("span",{class:"score"},nDone+" of 8 lessons")),
-    h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},PROGRAM[0].time),", about 2 to 3 lessons a week"),h("p",{class:"read",style:"margin:4px 0 12px"},"The ring fills as you keep remembering a lesson over days and weeks, not just when you finish it."),g));
+    h("a",{class:"tile",href:"#"+G},h("b",{},"Level "+lv+" test"),h("span",{},state.done[G]?"Passed ✓ · retake any time":lsDone?"20 questions · ready":"Best after all "+lvlLessons(lv).length+" lessons"))));
+  const order=[lv];if(top+1<=LEVELS.length&&!order.includes(top+1))order.push(top+1);for(let n=LEVELS.length;n>=1;n--)if(!order.includes(n)&&n<=top)order.push(n);
+  order.forEach(n=>m.append(lvlCard(n,next)));
   const sb=document.getElementById("start");if(sb)sb.focus({preventScroll:true})}
+function mapView(m){const nx=nextLesson();const lv=curLevel();
+  m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"Your program"),h("h2",{},"42 lessons, 5 levels, about 6 to 8 months"),
+    h("p",{class:"task"},"Work through one level at a time, 2 to 3 lessons a week. Each lesson starts with short study notes, then hands-on drills on practice charts. Every level ends with a test you must pass, and every lesson of a level must be finished, before the next level opens."),
+    h("div",{class:"row"},h("a",{href:"#"+(nx?nx.id:LEVELS[lv-1].gate)},nx?"Continue: Lesson "+nx.n+" →":"Take the Level "+lv+" test →"))));
+  PROGRAM.forEach(L=>{const built=L.n<=LEVELS.length;const open=built&&lvlOpen(L.n);const ls=lvlLessons(L.n);const nD=ls.filter(x=>state.done[x.id]).length;const G=built?LEVELS[L.n-1].gate:null;const tt=built?lvlTimeText(L.n):"";
+    const card=h("section",{class:"card"},h("div",{class:"done-row"},h("div",{},h("div",{class:"eyebrow"},"Level "+L.n+(open?"":built?" · locked":" · coming later")),h("h3",{style:"margin:4px 0 2px"},L.t)),h("span",{class:"score"},built?nD+" of "+ls.length+" done":L.ls.length+" lessons")),
+      h("p",{class:"read",style:"margin:4px 0 10px"},L.sub),
+      h("p",{class:"ltime"},"⏱ Recommended time: ",h("b",{},L.time),tt?". "+tt:(L.n<5?" (2 to 3 lessons a week, plus the test)":" (2 to 3 lessons a week)")),
+      built&&!open?h("p",{class:"task"},lockText(L.n)):null,
+      h("div",{class:"maplist"},...L.ls.map(([num,t])=>{const les=lessons.find(x=>x.n===num);const lab=[h("span",{class:"n"},String(num).padStart(2,"0")),h("span",{},t),h("span",{class:"ok"},les&&state.done[les.id]?"✓":"")];
+        return les&&open?h("a",{href:"#"+les.id,class:"mapitem"},...lab):h("div",{class:"mapitem locked"},...lab)})),
+      h("p",{class:"read"},h("b",{},"Level test: "),L.gate,open?" ":"",open?h("a",{href:"#"+G},state.done[G]?"Passed ✓ · retake →":"Take it →"):""));m.append(card)})}
 /* ---------- Lesson notes as a slide deck with an index ---------- */
-function noteSlides(){const out=[];LESSONS.forEach(L=>{out.push({L,title:L.t,cover:true});const tmp=document.createElement("div");tmp.innerHTML=NOTES[L.id]||"";
+function noteLessons(){return LESSONS.filter(L=>lvlOpen(L.lv))}
+function noteSlides(){const out=[];noteLessons().forEach(L=>{out.push({L,title:L.t,cover:true});const tmp=document.createElement("div");tmp.innerHTML=NOTES[L.id]||"";
   [...tmp.children].forEach(el=>{const h4=el.querySelector("h4");out.push({L,title:h4?h4.textContent:(el.classList.contains("remember")?"Remember":"Notes"),html:el.outerHTML,remember:el.classList.contains("remember")})})});return out}
 function notesView(m){const S=noteSlides();let cur=0;try{cur=Math.min(S.length-1,Math.max(0,+localStorage.getItem("cs-notes-pos")||0))}catch(e){}
   const side=h("nav",{class:"deckside card","aria-label":"Notes index"}),main=h("div",{class:"deckmain"}),deck=h("div",{class:"deck"},side,main);m.append(deck);
@@ -1257,7 +1913,7 @@ function notesView(m){const S=noteSlides();let cur=0;try{cur=Math.min(S.length-1
   main.append(h("div",{class:"deckhead"},eyebrow,count),slide,dots,h("div",{class:"deckbar"},prev,idxBtn,next));
   /* index: every lesson with its slides */
   side.append(h("div",{class:"deckside-head"},h("b",{},"Index"),h("button",{class:"ghost deckclose",on:{click:()=>side.classList.remove("open")}},"✕")));
-  const links=[];LESSONS.forEach(L=>{const g=h("div",{class:"deckgroup"});g.append(h("div",{class:"deckles"},h("span",{class:"n"},String(L.n).padStart(2,"0")),L.t));
+  const links=[];noteLessons().forEach(L=>{const g=h("div",{class:"deckgroup"});g.append(h("div",{class:"deckles"},h("span",{class:"n"},String(L.n).padStart(2,"0")),L.t));
     S.forEach((x,k)=>{if(x.L!==L||x.cover)return;const a=h("button",{class:"decklink",on:{click:()=>{go(k);side.classList.remove("open")}}},x.title);links[k]=a;g.append(a)});
     g.firstChild.addEventListener("click",()=>{go(S.findIndex(x=>x.L===L));side.classList.remove("open")});side.append(g)});
   function go(k,quiet){if(k<0||k>=S.length)return;const dir=k>cur?1:-1;cur=k;try{localStorage.setItem("cs-notes-pos",k)}catch(e){}
@@ -1849,11 +2505,11 @@ const top=document.getElementById("topnav");
 function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";[["home","Today"],["map","Program"],["chart","Chart"],["tv","TradingView"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id?"on":""},l)));
   const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
 function route(){if(SESSION||TVS)return;live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();document.body.classList.toggle("wide",id==="chart");
-  if(id==="gate"){gate(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="tv"){tvView(app)}else if(id==="chart"){chartView(app)}
+  if(id==="gate"){gate(app)}else if(id==="gate2"){gate2(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="tv"){tvView(app)}else if(id==="chart"){chartView(app)}
   else if(LESSONS.find(x=>x.id===id)){history.replaceState(null,"","#home");startSession("lesson",id);return}
   else homeView(app);window.scrollTo(0,0)}
 document.addEventListener("keydown",e=>{if(SESSION)return;if(e.key==="Enter"&&document.activeElement&&document.activeElement.id==="start"){e.preventDefault();startSession("today")}});
-LESSONS.forEach(L=>{if(state.done[L.id])unlockLesson(L.id)});if(Object.keys(state.done).length||Object.keys(state.cards).length)save();
+LESSONS.forEach(L=>{if(state.done[L.id])unlockLesson(L.id)});if(LESSONS.some(L=>L.lv===1&&state.done[L.id])&&!lvlT(1).s)lvlT(1).s=new Date(2026,9,28).getTime();lvlCheck();if(Object.keys(state.done).length||Object.keys(state.cards).length)save();
 window.addEventListener("hashchange",route);route();startSync();
 
 })();
