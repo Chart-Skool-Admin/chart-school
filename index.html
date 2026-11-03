@@ -464,7 +464,7 @@ function pivotRound(el,done,opts={}){
   const args=()=>{let marks=user.map(m=>({...m}));if(checked){marks=user.map(m=>({...m,c:m.ok?tok("--good"):tok("--bad")})).concat(truth.filter(t=>!t.hit).map(t=>({...t,ring:true,c:tok("--mark")})))}return[bars,{marks}]};
   mountChart(cv,args);
   cv.addEventListener("click",ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);const g=cv._g;const i=g.idx(p.x);const b=bars[i];const mid=(g.Y(b.h)+g.Y(b.l))/2;const t=p.y<mid?"H":"L";
-    const ex=user.findIndex(m=>m.i===i&&m.t===t);if(ex>=0)user.splice(ex,1);else user.push({i,t});sc.textContent=user.length+" marked";rerenderAll()});
+    const ex=user.findIndex(m=>m.i===i&&m.t===t);if(ex>=0){user.splice(ex,1);sfx("untap")}else{user.push({i,t});sfx("tap")}sc.textContent=user.length+" marked";rerenderAll()});
   const chk=h("button",{class:"primary",on:{click:check}},"Check my marks");const clr=h("button",{on:{click:()=>{if(checked)return;user=[];sc.textContent="0 marked";rerenderAll()}}},"Clear");
   el.append(h("p",{class:"task"},opts.prompt||"Click every swing high (above a candle) and swing low (below a candle). A swing high is a candle whose high is above the 3 candles on each side. Click a mark again to remove it."),
     cv,h("div",{class:"legend"},h("span",{style:"--c:var(--mark)"},"your marks / missed pivots (rings)"),h("span",{style:"--c:var(--good)"},"correct"),h("span",{style:"--c:var(--bad)"},"wrong")),
@@ -483,7 +483,7 @@ function srRound(el,done,opts={}){
   let lines=[];let checked=false;
   const cv=h("canvas",{class:"chart clickable","aria-label":"Click to place support and resistance"});const f=h("div",{hidden:""});
   mountChart(cv,()=>{const hl=lines.map((p,k)=>({p,c:tok("--accent"),label:"your line "+(k+1)}));const zones=checked?[{hi:R_+rng*.08,lo:R_-rng*.08},{hi:S_+rng*.08,lo:S_-rng*.08}]:[];return[bars,{visible:vis,scaleAll:true,hlines:hl,zones}]});
-  cv.addEventListener("click",ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);const price=cv._g.inv(p.y);if(lines.length>=2)lines.shift();lines.push(price);chk.disabled=lines.length<2;rerenderAll()});
+  cv.addEventListener("click",ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);const price=cv._g.inv(p.y);if(lines.length>=2)lines.shift();lines.push(price);sfx("tap");chk.disabled=lines.length<2;rerenderAll()});
   const chk=h("button",{class:"primary",disabled:"",on:{click:check}},"Check my levels");
   el.append(h("p",{class:"task"},opts.prompt||"This market is in a range. Click twice to place your support and resistance: where buyers keep stepping in, and where sellers keep turning price down. Use only the visible candles."),cv,h("div",{class:"row"},chk),f);
   function check(){checked=true;chk.disabled=true;const [a,b]=lines.slice().sort((x,y)=>x-y);const eS=Math.abs(a-S_)/rng,eR=Math.abs(b-R_)/rng;const ok=eS<=.15&&eR<=.15;vis=bars.length;rerenderAll();
@@ -1114,6 +1114,8 @@ function sfxPlay(kind){try{const c=sfxCtx;
   else if(kind==="wrong"){note(220,0,.22,"sine",.7);note(196,.09,.28,"sine",.6)}
   else if(kind==="lesson"){[523.25,659.25,783.99,1046.5].forEach((f,i)=>note(f,i*.1,.45,"triangle",.7));note(1567.98,.42,.6,"sine",.35)}
   else if(kind==="session"){[392,523.25,659.25,783.99,1046.5].forEach((f,i)=>note(f,i*.09,.5,"triangle",.6));[1046.5,1318.5,1567.98].forEach(f=>note(f,.5,.9,"sine",.3))}
+  else if(kind==="tap"){note(1760,0,.05,"sine",.9);note(2637,.005,.035,"triangle",.35)}
+  else if(kind==="untap"){note(1174.66,0,.05,"sine",.7)}
   else if(kind==="streak"){note(659.25,0,.12,"square",.25);note(987.77,.1,.35,"square",.25)}}catch(e){}}
 function pop(ok){sfx(ok?"right":"wrong");if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const p=h("div",{class:"pop "+(ok?"ok":"no")},ok?"✓":"•");document.body.append(p);setTimeout(()=>p.remove(),700)}
 
@@ -1518,7 +1520,7 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   ["gesturestart","gesturechange"].forEach(t=>cv.addEventListener(t,e=>e.preventDefault()));
   cv.addEventListener("pointerdown",ev=>{if(pinch)return;if(!G)return;const p=pt(ev);if(p.x>G.pw)return;
     if(prac&&prac.kind==="swings"&&!prac.checked){const i=Math.round(G.I(p.x));const b=bars[i];if(!b||i>i1v())return;const t=p.y<(G.Y(b.h)+G.Y(b.l))/2?"H":"L";
-      const ex=prac.user.findIndex(m=>m.i===i&&m.t===t);if(ex>=0)prac.user.splice(ex,1);else prac.user.push({i,t});prac.count.textContent=prac.user.length+" marked";draw();return}
+      const ex=prac.user.findIndex(m=>m.i===i&&m.t===t);if(ex>=0){prac.user.splice(ex,1);sfx("untap")}else{prac.user.push({i,t});sfx("tap")}prac.count.textContent=prac.user.length+" marked";draw();return}
     if(tool==="cursor"){const hd=handleAt(p);const hitD=hd?sel:hitTest(p);
       if(hitD){sel=hitD;selUI();drag={d:hitD,w:hd&&hd.w!==0?hd.w:null,x:p.x,y:p.y,o:JSON.parse(JSON.stringify(hitD)),moved:false};cv.setPointerCapture(ev.pointerId);draw();return}
       if(sel){sel=null;selUI()}pan={x:p.x,s:view.start,id:ev.pointerId};cv.setPointerCapture(ev.pointerId);sync();draw();return}
