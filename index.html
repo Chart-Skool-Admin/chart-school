@@ -391,6 +391,7 @@ body{margin:0}
 .opt.picked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .confrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.confrow .cq{width:100%;margin:0;font-size:14px;font-weight:600;color:var(--ink)}.confrow button{flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:8px}.confrow .k{font-family:var(--f-mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
 .scstat{display:block;margin-top:6px;font-size:13px;opacity:.85}
+.scenrow{align-items:center;justify-content:space-between;margin-top:8px}.scenlive{margin:0;font-family:var(--f-mono);font-size:14px;color:var(--muted)}.scenlive.up{color:var(--good)}.scenlive.dn{color:var(--bad)}.scskip{font-size:13px;padding:6px 10px}
 .scstudy{margin-top:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--accent);background:var(--panel)}.scstudy div{margin-top:3px}.scstudy .n{font-family:var(--f-mono);font-size:12px;color:var(--accent);margin-right:4px}.scstudy .hint{display:block;margin-top:4px}
 canvas.chart.scen{height:380px}html.is-phone canvas.chart.scen{height:400px}
 .studypill{border:1px solid var(--accent);background:var(--grad-soft),var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
@@ -2536,7 +2537,13 @@ function scenarioRound(el,done){const g=scPick();const b=g.bars,i0=SC.ctx-1;cons
     if(k!=="aside"){const r=k==="buy"?L:S;lines=[{p:e,c:"--muted",w:1,label:"entry"},{p:r.stop,c:"--bad",w:1.5,dash:true,label:"stop"},{p:r.tgt,c:"--good",w:1.5,dash:true,label:"target"}]}
     const end=k==="buy"?L.at:k==="sell"?S.at:b.length-1;shown=true;
     /* play the future candle by candle */
-    const step=()=>{vis=Math.min(end+1,vis+1);rerenderAll();if(vis<end+1)setTimeout(step,45);else finish()};setTimeout(step,120);
+    /* play the future slowly, one candle at a time, with a live score; it slows down when price nears the stop or target. Tap Skip to jump to the end */
+    const dir=k==="buy"?1:k==="sell"?-1:0,tr=k==="buy"?L:k==="sell"?S:null;let skip=false,tm=null;
+    const liveEl=h("p",{class:"scenlive"},"Watching what happens next…");const skipB=h("button",{class:"ghost scskip",on:{click:()=>{skip=true;clearTimeout(tm);vis=end+1;wrap.remove();finish()}}},"Skip ▶▶");const wrap=h("div",{class:"row scenrow"},liveEl,skipB);f.before(wrap);
+    const step=()=>{if(!cv.isConnected)return;vis=Math.min(end+1,vis+1);rerenderAll();const j=vis-1,n=j-i0,c=b[j].c;let near=false;
+      if(dir){const r=dir*(c-e)/risk;near=r<-.6||r>SC.tgtR-.6;liveEl.textContent=`Candle ${n} of ${b.length-1-i0} · ${fmtR(r)}${near?(r<0?" · close to your stop…":" · close to your target…"):""}`;liveEl.className="scenlive "+(r>=0?"up":"dn")}
+      else{const pc=(c-e)/e*100;liveEl.textContent=`Candle ${n} of ${b.length-1-i0} · price ${pc>=0?"+":"−"}${Math.abs(pc).toFixed(1)}% since the box`;liveEl.className="scenlive"}
+      if(vis<end+1)tm=setTimeout(step,near?480:260);else{tm=setTimeout(()=>{if(!skip){wrap.remove();finish()}},500)}};tm=setTimeout(step,600);
     function finish(){vis=b.length;rerenderAll();
       const ok=k===best||mine>0;const how=r=>r.how==="target"?"hit the target, "+fmtR(r.r):r.how==="stop"?"stopped out, −1R":"ran out of time at "+fmtR(r.r);
       const cd=scCandle(b,i0);cdl=cd;rerenderAll();const study=(!ok||!pr.ok)?scStudy(k,rd,pr,cd,ok):[];scPinSave(study);
