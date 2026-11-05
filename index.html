@@ -390,6 +390,7 @@ body{margin:0}
 .opt.picked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .confrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.confrow .cq{width:100%;margin:0;font-size:14px;font-weight:600;color:var(--ink)}.confrow button{flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:8px}.confrow .k{font-family:var(--f-mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
 .scstat{display:block;margin-top:6px;font-size:13px;opacity:.85}
+canvas.chart.scen{height:380px}html.is-phone canvas.chart.scen{height:400px}
 .studypill{border:1px solid var(--accent);background:var(--grad-soft),var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
 .decklink.pin{color:var(--ink);font-weight:600}.decklink.pin::before{content:"📌 "}.deckles.pin::after{content:" 📌"}
 .studygroup{padding-bottom:8px;border-bottom:1px solid var(--line)}
@@ -2460,8 +2461,8 @@ function ewRound(el,done,opts={}){const want=pick(["ok","ok","w2","w3","w4"]);co
 Object.assign(ROUNDS,{ma:(el,d)=>maRound(el,d),rsi:(el,d)=>rsiRound(el,d),macd:(el,d)=>macdRound(el,d),trade4:(el,d)=>trade4Round(el,d),squeeze:(el,d)=>squeezeRound(el,d),
   mtf:(el,d)=>mtfRound(el,d),big:(el,d)=>bigRound(el,d),rel:(el,d)=>relRound(el,d),ew:(el,d)=>ewRound(el,d)});
 /* ---------- "What would you do?": a real chart stops at a random candle. Buy, sell or stand aside, then watch what happened next.
-   Every trade gets the same rules: stop 1.5 ATR away, target 2x the risk, 30 candles to work. ---------- */
-const SC={ctx:70,fut:30,stopA:1.5,tgtR:2};
+   Every trade gets the same rules: stop 1.5 ATR away, target 2x the risk, 25 candles to work. ---------- */
+const SC={ctx:48,fut:25,stopA:1.5,tgtR:2};
 function atrAt(b,i,n){n=n||14;let s=0,k=0;for(let j=Math.max(1,i-n+1);j<=i;j++){s+=Math.max(b[j].h-b[j].l,Math.abs(b[j].h-b[j-1].c),Math.abs(b[j].l-b[j-1].c));k++}return k?s/k:b[i].h-b[i].l}
 function scSim(b,i0,dir,risk){const e=b[i0].c,stop=e-dir*risk,tgt=e+dir*risk*SC.tgtR;
   for(let j=i0+1;j<b.length;j++){const x=b[j];if(dir>0?x.l<=stop:x.h>=stop)return{r:-1,at:j,how:"stop",stop,tgt};if(dir>0?x.h>=tgt:x.l<=tgt)return{r:SC.tgtR,at:j,how:"target",stop,tgt}}
@@ -2480,16 +2481,18 @@ function scProcess(act,rd){if(act==="aside")return rd.trend==="up"||rd.trend==="
   return{ok:false,t:"With no clear trend, a trade here is closer to a coin flip."}}
 const fmtR=r=>(r>=0?"+":"−")+Math.abs(r).toFixed(1)+"R";
 function scenarioRound(el,done){const g=scPick();const b=g.bars,i0=SC.ctx-1;const risk=SC.stopA*atrAt(b,i0);let vis=SC.ctx,lines=[];
-  const cv=h("canvas",{class:"chart"});mountChart(cv,()=>[b,{visible:vis,box:{from:i0,to:i0,c:"--accent"},hlines:lines}]);
+  const cv=h("canvas",{class:"chart scen"});let shown=false;
+  /* before you choose, only the past is drawn, so the candles fill the chart and stay easy to read */
+  mountChart(cv,()=>shown?[b,{visible:vis,box:{from:i0,to:i0,c:"--accent"},hlines:lines}]:[b.slice(0,SC.ctx),{box:{from:i0,to:i0,c:"--accent"}}]);
   const f=h("div",{hidden:""});const btns={};const nm={buy:"Buy",sell:"Sell (short)",aside:"Stand aside"};
   const row=h("div",{class:"row"},...Object.keys(nm).map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
   const src=g.meta?`Real ${g.meta.sym} ${g.meta.iv==="D"?"daily":"4-hour"} chart`:"Practice chart";
-  el.append(h("p",{class:"task",html:src+". It stops at the boxed candle. What would you do?"}),cv,row,h("p",{class:"hint"},"Each trade: stop 1.5 ATR away, target 2× the risk, 30 candles to work."),f);
+  el.append(h("p",{class:"task",html:src+". It stops at the boxed candle. What would you do?"}),cv,row,h("p",{class:"hint"},"Each trade: stop 1.5 ATR away, target 2× the risk, 25 candles to work."),f);
   function answer(k){Object.values(btns).forEach(x=>x.disabled=true);btns[k].classList.add("pick-good");
     const L=scSim(b,i0,1,risk),S=scSim(b,i0,-1,risk);const res={buy:L.r,sell:S.r,aside:0};const mine=res[k];const best=Object.keys(res).reduce((a,c)=>res[c]>res[a]?c:a,"aside");
     const rd=scRead(b,i0);const pr=scProcess(k,rd);const e=b[i0].c;
     if(k!=="aside"){const r=k==="buy"?L:S;lines=[{p:e,c:"--muted",w:1,label:"entry"},{p:r.stop,c:"--bad",w:1.5,dash:true,label:"stop"},{p:r.tgt,c:"--good",w:1.5,dash:true,label:"target"}]}
-    const end=k==="buy"?L.at:k==="sell"?S.at:b.length-1;
+    const end=k==="buy"?L.at:k==="sell"?S.at:b.length-1;shown=true;
     /* play the future candle by candle */
     const step=()=>{vis=Math.min(end+1,vis+1);rerenderAll();if(vis<end+1)setTimeout(step,45);else finish()};setTimeout(step,120);
     function finish(){vis=b.length;rerenderAll();
