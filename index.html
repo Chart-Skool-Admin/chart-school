@@ -2680,7 +2680,7 @@ function mcq(el,q,onAnswer){const order=shuffle(q.o.map((t,i)=>i));const box=h("
     requestAnimationFrame(()=>setTimeout(()=>onAnswer(ok),0))}}},h("span",{class:"k"},String(k+1)),h("span",{},q.o[i]))));
   el.append(box)}
 
-function buildSession(kind,lid){const steps=[];let reviewEnd=0;
+function buildSession(kind,lid){const steps=[];let reviewEnd=0,gate=null;
   if(kind!=="lesson"&&kind!=="mixed"){let due=shuffle(dueCards());const cap=kind==="review"?10:5;due=due.slice(0,cap);
     if(due.length){steps.push({t:"label",eyebrow:"Warm-up",text:due.length+" quick question"+(due.length>1?"s":"")+" from earlier lessons.",sub:"Recalling from memory is what makes it stick. Getting some wrong is normal."});due.forEach(c=>steps.push({t:"review",card:c}))}
     reviewEnd=steps.length}
@@ -2695,10 +2695,15 @@ function buildSession(kind,lid){const steps=[];let reviewEnd=0;
       const tb=throwbacks(L.id,steps,2);tb.forEach(c=>{const at=rint(ls0+2,Math.max(ls0+2,steps.length-1));steps.splice(at,0,{t:"review",card:c,retry:true,throw:true})});
       steps.push({t:"lessonDone",lesson:L.id})}
     else if(kind==="today"){const lv=curLevel();const passed=state.done[LEVELS[lv-1].gate];const pool=lv===1?["trend","sr","pivot","phase"]:lv===2?["tline","retr","cdl12","cdl13","pat15","pat16","ctx","vol"]:["ma","rsi","macd","trade4","squeeze","mtf","big","rel","ew"];
-      steps.push({t:"label",eyebrow:"All Level "+lv+" lessons done",text:"Mixed chart practice",sub:passed?"Level "+(lv+1)+" is on its way. Keep your skills sharp meanwhile.":"Keep your skills sharp, then take the Level "+lv+" test."});shuffle(pool).slice(0,4).forEach(k=>steps.push({t:"round",kind:k}));
-      throwbacks(null,steps,3).forEach(c=>steps.splice(rint(2,steps.length),0,{t:"review",card:c,retry:true,throw:true}))}}
-  steps.push({t:"summary"});
+      /* same order as the Today card: warm-up, then throwbacks, then mixed charts, then the level test */
+      const tb=throwbacks(null,steps,2);
+      if(tb.length){steps.push({t:"label",eyebrow:"Throwbacks",text:tb.length+" question"+(tb.length>1?"s":"")+" you haven't fully locked in yet.",sub:"These come from lessons whose ring isn't full. They keep coming back until they stick."});tb.forEach(c=>steps.push({t:"review",card:c,retry:true,throw:true}))}
+      steps.push({t:"label",eyebrow:"All Level "+lv+" lessons done",text:"Mixed chart practice",sub:passed?"Level "+(lv+1)+" is on its way. Keep your skills sharp meanwhile.":"4 charts to get your eye in, then the Level "+lv+" test."});shuffle(pool).slice(0,4).forEach(k=>steps.push({t:"round",kind:k}));
+      if(todayTest(lv))gate=LEVELS[lv-1].gate}}
+  steps.push({t:"summary",gate,lv:curLevel()});
   return{steps,i:0,reviewEnd,right:0,asked:0,start:Date.now(),kind,lesson:L&&L.id}}
+/* the level test belongs in Today once every lesson of the level is done and the test isn't passed yet */
+function todayTest(lv){const G=LEVELS[lv-1]&&LEVELS[lv-1].gate;return !!G&&!nextLesson()&&lvlOpen(lv)&&lvlLessonsDone(lv)&&!state.done[G]}
 function throwbacks(lid,steps,n){const have=new Set(steps.filter(s=>s.card).map(s=>s.card.id));
   const pool=CARDS.filter(c=>c.type==="mcq"&&c.lesson!==lid&&state.done[c.lesson]&&state.cards[c.id]&&state.cards[c.id].box<3&&!have.has(c.id));
   return shuffle(pool).sort((a,b)=>state.cards[a.id].box-state.cards[b.id].box).slice(0,n)}
@@ -2758,10 +2763,14 @@ function renderStep(){STEP_AT=Date.now();try{document.activeElement&&document.ac
     card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Lesson "+L.n+" complete"),h("h2",{class:"hero"},L.t+": done"),
       h("p",{class:"lead"},first?"Its questions now join your review deck. They'll come back tomorrow, then in 3 days, a week, two weeks and a month.":"Nice refresher."),nextBtn("Continue",go));pop(true)}
   else if(T==="summary"){setTimeout(()=>sfx("session"),150);bumpStreak();const mins=Math.max(1,Math.round((Date.now()-S_.start)/60000));if(!S_.counted){S_.counted=true;state.mins=state.mins||{};const lv=S_.lesson?(LESSONS.find(x=>x.id===S_.lesson)||{}).lv||1:curLevel();state.mins[lv]=(state.mins[lv]||0)+mins}save();const due=CARDS.filter(c=>state.cards[c.id]&&state.cards[c.id].due===addDays(today(),1)).length;
-    card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Session complete"),h("h2",{class:"hero"},"That's today done."),
+    if(st.gate){const G=st.gate;card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Practice done · "+S_.right+" of "+S_.asked+" right"),h("h2",{class:"hero"},"Now the Level "+st.lv+" test"),
+      h("p",{class:"lead"},"20 questions, pass with 17. Take your time. If you'd rather do it fresh later, it waits for you on Today."),
+      nextBtn("Start the test ▶",()=>{SESSION=null;document.body.classList.remove("focus");live.clear();save();location.hash=G;route()}),
+      h("div",{class:"row"},h("button",{class:"ghost",on:{click:exitSession}},"Not now")))}
+    else{card.classList.add("hook");card.append(h("div",{class:"eyebrow"},"Session complete"),h("h2",{class:"hero"},"That's today done."),
       h("div",{class:"stats"},...[["Time",mins+" min"],["Answered right",S_.right+" of "+S_.asked],["Streak",streakNow()+" day"+(streakNow()===1?"":"s")],["Back tomorrow",due+" card"+(due===1?"":"s")]].map(([k,v])=>h("div",{class:"stat"},h("div",{class:"k"},k),h("div",{class:"v"},v)))),
       h("p",{class:"lead"},"Stopping here is a win. A break now helps your brain store what you just did. Come back tomorrow for a fresh 10 minutes."),
-      nextBtn("Back to home",exitSession))}
+      nextBtn("Back to home",exitSession))}}
   const nx=document.getElementById("next");if(nx&&!nx.closest("[hidden]"))nx.focus({preventScroll:true});window.scrollTo(0,0)}
 /* ---------- achievement sounds: made on the fly with Web Audio, no sound files ---------- */
 let sfxCtx=null;
@@ -2840,9 +2849,10 @@ function levelPath(next){const lv=curLevel();if(HOME_LV==null||HOME_LV>PROGRAM.l
     if(Math.abs(dx)>50&&Math.abs(dy)<40){const k=HOME_LV+(dx<0?1:-1);if(k>=1&&k<=PROGRAM.length){HOME_LV=k;sfx("tap");draw(dx<0?1:-1)}}},{passive:true});
   draw(0);return card}
 function homeView(m){const next=nextLesson();const due=dueCards().length;const lv=curLevel();const G=LEVELS[lv-1].gate;const lsDone=lvlLessonsDone(lv);
-  const plan=[];if(due)plan.push("🔁 "+Math.min(due,5)+" warm-up");if(next)plan.push("📘 Lesson "+next.n+(state.pos[next.id]?" (continue)":""));else plan.push("📈 Mixed charts"+(state.done[G]?"":" + Level "+lv+" test"));
-  const tb=throwbacks(next&&next.id,[],2).length;if(tb)plan.push("↩ "+tb+" throwback"+(tb>1?"s":""));
-  const mins=Math.round(Math.min(due,5)*.5+(next?next.min:5));
+  const plan=[];if(due)plan.push("🔁 "+Math.min(due,5)+" warm-up");const tb=throwbacks(next&&next.id,[],2).length;const tst=todayTest(lv);
+  if(next){plan.push("📘 Lesson "+next.n+(state.pos[next.id]?" (continue)":""));if(tb)plan.push("↩ "+tb+" throwback"+(tb>1?"s":""))}
+  else{if(tb)plan.push("↩ "+tb+" throwback"+(tb>1?"s":""));plan.push("📈 4 mixed charts");if(tst)plan.push("🏁 Level "+lv+" test")}
+  const mins=Math.round(Math.min(due,5)*.5+(next?next.min:5)+(tst?12:0));
   m.append(h("section",{class:"card today"},h("div",{class:"eyebrow"},"Today · about "+mins+" min"+(next?" · step "+next.n+" of "+PROGRAM.reduce((t,P)=>t+P.ls.length,0):"")),h("h2",{class:"hero"},next?next.t:"Keep it sharp"),
     h("div",{class:"herorow"},h("div",{class:"plan chips"},...plan.map(p=>h("span",{},p))),
       h("div",{class:"row"},h("span",{class:"hint"},"Enter ↵"),h("button",{class:"primary big",id:"start",on:{click:()=>startSession("today")}},"Start ▶")))));
