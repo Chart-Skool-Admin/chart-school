@@ -478,7 +478,9 @@ html.is-phone .step .look{font-size:14px;margin:0;line-height:1.45}html.is-phone
 html.is-phone .step button.opt{padding:10px 12px;font-size:15px}html.is-phone .step .opts{gap:8px}
 html.is-phone .step .foot{position:sticky;bottom:0;background:var(--panel);margin:0 -14px -16px;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));z-index:3}
 html.is-phone .step .foot .primary.big{width:100%}
-html.is-phone .step .ex{gap:6px}html.is-phone .step figure.dg{margin:0}html.is-phone .step figcaption{font-size:13px}
+html.is-phone .step .ex{gap:6px}html.is-phone .step figure.dg{margin:0}
+/* phone: diagrams are drawn 600 wide and shrunk to ~330, so their labels need a bigger size to stay readable */
+html.is-phone .dg text{font-family:var(--f-body);font-size:15px}html.is-phone .step figcaption{font-size:13px}
 html.is-phone .step .model{padding:10px 12px;font-size:14px}
 html.is-phone .sbar{padding:4px 0}
 html.is-phone .sheet .badge .bn{display:none}html.is-phone .sheet .shelf{grid-template-columns:repeat(4,1fr);gap:6px}html.is-phone .sheet .badge{padding:6px 2px}html.is-phone .sheet .badge .bi{font-size:22px}html.is-phone .badge .bt{font-size:10px}
@@ -587,6 +589,8 @@ const R=Math.random;
 const gauss=()=>{let u=0,v=0;while(!u)u=R();while(!v)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
 const rint=(a,b)=>a+Math.floor(R()*(b-a+1));
 const pick=a=>a[Math.floor(R()*a.length)];
+/* pick, but not the answer you just had in this kind of drill, so back-to-back charts are different */
+const FRESH={};function pickFresh(key,a){const last=FRESH[key]||[];const ok=a.filter(x=>!last.includes(x));const x=pick(ok.length?ok:a);FRESH[key]=a.length<4?[]:[x].concat(last).slice(0,a.length>=8?2:1);return x}
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
 function barsFromCloses(c,wick){const b=[];for(let i=1;i<c.length;i++){const o=c[i-1],cl=c[i];const w=wick*Math.max(o,cl);
@@ -965,7 +969,7 @@ function svgTline(){return `<svg viewBox="0 0 580 210" role="img" aria-label="Up
 <line x1="10" y1="196" x2="470" y2="86" class="s-acc"/>
 <circle cx="120" cy="150" r="7" class="s-mk"/><circle cx="240" cy="125" r="7" class="s-mk"/><circle cx="360" cy="100" r="7" class="s-mk"/>
 <text x="100" y="178" class="ink">1</text><text x="222" y="152" class="ink">2</text><text x="345" y="128" class="ink">3rd touch confirms</text>
-<circle cx="500" cy="104" r="6" class="dn"/><text x="450" y="200" style="fill:var(--down)" class="b">close below: warning</text></svg>`}
+<circle cx="500" cy="104" r="6" class="dn"/><text x="575" y="200" text-anchor="end" style="fill:var(--down)" class="b">close below: warning</text></svg>`}
 function svgChannel(){return `<svg viewBox="0 0 580 210" role="img" aria-label="Up channel with a failed rally">
 <line x1="10" y1="190" x2="570" y2="70" class="s-acc"/><line x1="10" y1="120" x2="570" y2="0" class="s-mut"/>
 <path class="s-ink" d="M30 180 L110 104 L150 158 L230 78 L270 132 L350 52 L390 107 L450 62 L500 120"/>
@@ -994,7 +998,7 @@ function svgHS(){return `<svg viewBox="0 0 580 230" role="img" aria-label="Head 
 <path class="s-acc" d="M20 190 L110 80 L160 130 L260 30 L330 132 L410 85 L460 128 L490 150 L520 136 L560 205"/>
 <line x1="140" y1="130" x2="570" y2="130" class="s-ink" style="stroke-dasharray:6 4"/>
 <text x="90" y="70" class="ink b">left shoulder</text><text x="240" y="20" class="ink b">head</text><text x="380" y="75" class="ink b">right shoulder</text><text x="150" y="124">neckline</text>
-<line x1="270" y1="30" x2="270" y2="130" class="s-mut"/><line x1="530" y1="130" x2="530" y2="230" class="s-mut"/><text x="276" y="88">height</text><text x="460" y="225">target = same height down</text>
+<line x1="270" y1="30" x2="270" y2="130" class="s-mut"/><line x1="530" y1="130" x2="530" y2="230" class="s-mut"/><text x="276" y="88">height</text><text x="590" y="225" text-anchor="end">target = same height down</text>
 <circle cx="520" cy="136" r="5" class="mk"/><text x="470" y="170">return move</text></svg>`}
 function svgCont(){return `<svg viewBox="0 0 600 190" role="img" aria-label="Ascending triangle, symmetrical triangle and bull flag">
 <line x1="20" y1="40" x2="170" y2="40" class="s-mut"/><line x1="20" y1="140" x2="170" y2="50" class="s-mut"/><path class="s-acc" d="M20 140 L45 40 L70 110 L95 40 L120 85 L145 40 L160 62 L185 10"/><text x="20" y="180" class="ink b">Ascending triangle</text>
@@ -1212,7 +1216,7 @@ function svgBook(){const asks=[[50.25,3],[50.20,6],[50.15,4],[50.10,8],[50.05,5]
   s+=`<rect x="60" y="134" width="340" height="22" class="zn"/><text x="70" y="149" class="ink b">spread 0.10</text>`;
   bids.forEach(([p,q],k)=>{const y=160+k*24;s+=`<text x="150" y="${y+15}" text-anchor="end" class="ink">${p.toFixed(2)}</text><rect x="160" y="${y+2}" width="${q*22}" height="18" rx="3" class="up" opacity=".8"/>`});
   s+=`<text x="20" y="30" class="b" style="fill:var(--down)">ASKS</text><text x="20" y="176" class="b" style="fill:var(--up)">BIDS</text>
-<text x="400" y="122">market buy fills</text><text x="400" y="136">here (50.05) ↑</text><text x="400" y="176">limit buy waits</text><text x="400" y="190">here (49.95) ↓</text></svg>`;return s}
+<text x="400" y="122">market buy fills</text><text x="400" y="140">here (50.05) ↑</text><text x="400" y="176">limit buy waits</text><text x="400" y="194">here (49.95) ↓</text></svg>`;return s}
 
 function bar(x,o,c,h,l){const up=c>=o;return `<line x1="${x}" y1="${h}" x2="${x}" y2="${l}" class="${up?"s-up":"s-dn"}"/><rect x="${x-8}" y="${Math.min(o,c)}" width="16" height="${Math.max(2,Math.abs(c-o))}" class="${up?"up":"dn"}"/>`}
 function svgPivot(){let s=`<svg viewBox="0 0 560 200" role="img" aria-label="Pivot highs">`;
@@ -2129,12 +2133,13 @@ const CDL_TOP={
 const CDL_MIR={hammer:"star",ihammer:"hangman",bengulf:"sengulf",pierce:"dark",mstar:"estar",bharami:"sharami",f3:"r3"};
 const cdlUp=k=>!CDL_MIR[k];
 function cdlAt(kind,p,u){const base=CDL_MIR[kind]||kind;let k=CDL_TOP[base](p,u);if(CDL_MIR[kind])k=k.map(x=>({o:2*p-x.o,c:2*p-x.c,h:2*p-x.l,l:2*p-x.h}));return k}
-function genCdl(kind){const up=cdlUp(kind);const n=rint(20,24);
-  const b=pathBars(100,[[n>>1,up?108+rint(0,4):92-rint(0,4)],[n-(n>>1),up?118+rint(0,4):82-rint(0,4)]],.55,.003).bars;
-  const p=b[b.length-1].c;const k=cdlAt(kind,p,p*.017);const at=b.length;b.push(...k);return{bars:b,at,n:k.length}}
+/* fewer, bigger candles so the pattern itself is easy to see on a phone */
+function genCdl(kind){const up=cdlUp(kind);const n=rint(14,18);
+  const b=pathBars(100,[[n>>1,up?105+rint(0,2):95-rint(0,2)],[n-(n>>1),up?111+rint(0,2):89-rint(0,2)]],.55,.003).bars;
+  const p=b[b.length-1].c;const k=cdlAt(kind,p,p*.028);const at=b.length;b.push(...k);return{bars:b,at,n:k.length}}
 function optsFor(right,pool,names){const o=[right];if(TWIN[right]&&names[TWIN[right]])o.push(TWIN[right]);shuffle(pool).forEach(k=>{if(o.length<4&&!o.includes(k))o.push(k)});return shuffle(o)}
 /* name the boxed candle pattern */
-function cdlRound(el,done,set,opts={}){const kind=pick(set);const rw=rwCdl(kind);const g=rw||genCdl(kind);const cv=h("canvas",{class:"chart","aria-label":"Chart with a candle pattern boxed"});const f=h("div",{hidden:""});
+function cdlRound(el,done,set,opts={}){const kind=pickFresh("cdl",set);const rw=rwCdl(kind);const g=rw||genCdl(kind);const cv=h("canvas",{class:"chart","aria-label":"Chart with a candle pattern boxed"});const f=h("div",{hidden:""});
   mountChart(cv,()=>[g.bars,{box:{from:g.at,to:g.at+g.n-1}}]);
   const pool=opts.pool||set.concat(SET12,SET13);const choices=optsFor(kind,pool,CDL);const btns={};
   const row=h("div",{class:"opts"},...choices.map((k,j)=>btns[k]=optB(j,CDL[k].n,()=>answer(k))));
@@ -2165,7 +2170,7 @@ const SET15=["hs","hsi","dt","db"],SET16=["asc","desc","sym","bflag","sflag","re
 function genPat(kind){const mir=PAT_MIR[kind];const P=PATS[mir?mir[0]:kind];const flip=!!mir||(kind==="sym"&&R()<.5);const r=pathBars(P.s,P.legs(),.45,.003);
   let b=r.bars,lines=P.lines(r.ends);const M=200;if(flip){const sw={"flat top":"flat bottom","rising lows":"falling highs"};b=mirrorBars(b,M);lines=lines.map(([i1,p1,i2,p2,l])=>[i1,M-p1,i2,M-p2,sw[l]||l])}
   return{bars:b,tl:lines.map(([i1,p1,i2,p2,l])=>({a:{i:i1,p:p1},b:{i:i2,p:p2},c:"--accent",ext:true,w:1.5,dash:true,label:l}))}}
-function patRound(el,done,set,opts={}){const kind=pick(set);const rw=rwPat(kind);const g=rw||genPat(kind);let shown=false;const cv=h("canvas",{class:"chart","aria-label":"Chart with a classical pattern"});const f=h("div",{hidden:""});
+function patRound(el,done,set,opts={}){const kind=pickFresh("pat",set);const rw=rwPat(kind);const g=rw||genPat(kind);let shown=false;const cv=h("canvas",{class:"chart","aria-label":"Chart with a classical pattern"});const f=h("div",{hidden:""});
   mountChart(cv,()=>[g.bars,shown?{tlines:g.tl}:{}]);const all=SET15.concat(SET16);const btns={};
   const ch=[kind];shuffle(set.length>=4?set:all).forEach(k=>{if(ch.length<4&&!ch.includes(k))ch.push(k)});shuffle(all).forEach(k=>{if(ch.length<4&&!ch.includes(k))ch.push(k)});
   const row=h("div",{class:"opts"},...shuffle(ch).map((k,j)=>btns[k]=optB(j,patName(k),()=>answer(k))));
@@ -3905,7 +3910,7 @@ function rwCdlScan(){if(RW.cscan===RW.sets.length)return RW.cdls;RW.cscan=RW.set
     ["hammer","ihammer","bengulf","pierce","mstar","bharami","r3","doji"].forEach(kind=>{if(mir&&kind==="doji")return;let last=-99;
       for(let i=12;i<v.length-3;i++){const r=rwCdlAt(v,i,a,kind);if(r&&r[0]-last>6){last=r[0];const name=mir?RW_CMIR[kind]:kind;(RW.cdls[name]=RW.cdls[name]||[]).push({set,at:r[0],n:r[1],mir,i})}}})}});return RW.cdls}
 /* a window around a real candle pattern: lead-in before it and a few candles after */
-function rwCdl(kind,after){const C=rwCdlScan()[kind];if(!C||!C.length)return null;const x=pick(C);const b=x.set.bars;const from=Math.max(0,x.at-rint(20,26)),to=Math.min(b.length-1,x.at+x.n-1+(after==null?rint(2,4):after));
+function rwCdl(kind,after){const C=rwCdlScan()[kind];if(!C||!C.length)return null;const x=pick(C);const b=x.set.bars;const from=Math.max(0,x.at-rint(14,18)),to=Math.min(b.length-1,x.at+x.n-1+(after==null?rint(2,4):after));
   return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c,v:y.v})),at:x.at-from,n:x.n,kind,x,from,meta:{sym:x.set.sym,iv:x.set.iv,t:b[from].t}}}
 /* a real candle signal either right at a level that held before ("act") or far from any level ("skip") */
 function rwCtx(want){const kinds=BULLC.concat(BEARC);for(let t=0;t<150;t++){const kind=pick(kinds);const C=rwCdlScan()[kind];if(!C||!C.length)continue;const x=pick(C);const b=x.set.bars;
