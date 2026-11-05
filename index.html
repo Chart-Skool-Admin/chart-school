@@ -486,7 +486,8 @@ html.is-phone .sbar{padding:4px 0}
 html.is-phone .sheet .badge .bn{display:none}html.is-phone .sheet .shelf{grid-template-columns:repeat(4,1fr);gap:6px}html.is-phone .sheet .badge{padding:6px 2px}html.is-phone .sheet .badge .bi{font-size:22px}html.is-phone .badge .bt{font-size:10px}
 /* lesson steps on phone: charts sized to the screen so a step fits without scrolling */
 html.is-phone .step{padding:16px 14px;min-height:0;gap:10px}html.is-phone .step h2{font-size:21px}
-html.is-phone .pair{gap:4px}html.is-phone .pair figure{position:relative}html.is-phone .pair figcaption{position:absolute;top:2px;right:60px;z-index:1;font-size:11px;margin:0;background:var(--panel);padding:0 4px;border-radius:4px}html.is-phone canvas.chart{height:min(260px,30vh)}html.is-phone canvas.chart.clickable{height:min(380px,46vh)}
+html.is-phone .pair{gap:4px}html.is-phone .pair figure{position:relative}html.is-phone .pair figcaption{position:absolute;top:2px;right:60px;z-index:1;font-size:11px;margin:0;background:var(--panel);padding:0 4px;border-radius:4px}html.is-phone canvas.chart{height:min(260px,30vh)}html.is-phone canvas.chart.ind{height:min(340px,40vh)}
+.whyov{position:fixed;inset:0;z-index:60;background:var(--bg);padding:max(12px,env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;overflow:auto}.whyhead{display:flex;justify-content:space-between;align-items:center}.whyov canvas.chart.whyc{height:min(60vh,520px)!important;flex:none}.whybtn{font-size:14px}html.is-phone canvas.chart.clickable{height:min(380px,46vh)}
 html.is-phone .step textarea{min-height:0}html.is-phone .lead{font-size:16px}
 html.is-phone .mapintro h2{font-size:15px!important}html.is-phone .mapintro .row{margin-top:2px}
 html.is-phone details.mapdet{padding:8px 12px}
@@ -619,6 +620,8 @@ function pivots(b,N){const out=[];for(let i=N;i<b.length-N;i++){let hi=true,lo=t
 const live=new Set();
 function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
 function drawChart(cv,bars,o={}){
+  /* charts with an indicator pane get a taller box on phones (see .ind) */
+  if(o.osc&&cv.classList&&cv.classList.contains("chart")&&!cv.classList.contains("ind")){cv.classList.add("ind");if(typeof fitPhone==="function")fitPhone()}
   const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
   const W_=Math.round(w*dpr),H_=Math.round(h*dpr);if(cv.width!==W_||cv.height!==H_){cv.width=W_;cv.height=H_}const x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);
   const C={grid:tok("--grid"),muted:tok("--muted"),up:tok("--up"),down:tok("--down"),ink:tok("--ink"),mark:tok("--mark"),zone:tok("--zone"),accent:tok("--accent"),good:tok("--good"),bad:tok("--bad"),panel:tok("--panel")};
@@ -685,7 +688,13 @@ function drawOsc(x,os,vis,g){const y0=g.T,y1=g.T+g.ph;let lo=os.lo,hi=os.hi;
   (os.series||[]).forEach(s=>{x.strokeStyle=g.rc(s.c)||g.C.accent;x.lineWidth=s.w||1.8;x.setLineDash(s.dash?[5,4]:[]);x.beginPath();let on=false;for(let i=0;i<vis;i++){const v=s.v[i];if(v==null){on=false;continue}on?x.lineTo(g.X(i),OY(v)):x.moveTo(g.X(i),OY(v));on=true}x.stroke();x.setLineDash([])});
   (os.lines||[]).forEach(l=>{x.strokeStyle=g.rc(l.c)||g.C.mark;x.lineWidth=2.4;x.beginPath();x.moveTo(g.X(l.a.i),OY(l.a.v));x.lineTo(g.X(l.b.i),OY(l.b.v));x.stroke();[l.a,l.b].forEach(p=>{x.beginPath();x.arc(g.X(p.i),OY(p.v),4,0,6.283);x.fillStyle=g.rc(l.c)||g.C.mark;x.fill()})});
   x.restore();x.fillStyle=g.C.muted;x.fillText(os.label||"",g.L+4,y0+6)}
-function mountChart(cv,getArgs){const draw=()=>{const [b,o]=getArgs();drawChart(cv,b,o)};draw._cv=cv;live.add(draw);const ro=new ResizeObserver(()=>{if(!cv.isConnected){ro.disconnect();live.delete(draw);return}draw()});ro.observe(cv);draw();return draw}
+function mountChart(cv,getArgs){cv._args=getArgs;const draw=()=>{const [b,o]=getArgs();drawChart(cv,b,o)};draw._cv=cv;live.add(draw);const ro=new ResizeObserver(()=>{if(!cv.isConnected){ro.disconnect();live.delete(draw);return}draw()});ro.observe(cv);draw();return draw}
+/* "Show me why": after a wrong chart answer, open the same chart big, with its answer lines and the explanation */
+function whyBtn(area){const cv=[...area.querySelectorAll("canvas.chart")].find(c=>c._args);if(!cv)return null;
+  return h("button",{class:"whybtn",on:{click:()=>{const big=h("canvas",{class:"chart whyc","aria-label":"The chart, bigger, with the answer marked"});const fbs=[...area.querySelectorAll(".fb")].filter(e=>!e.closest("[hidden]"));
+    const close=()=>{ov.remove();document.removeEventListener("keydown",esc)};const esc=e=>{if(e.key==="Escape")close()};
+    const ov=h("div",{class:"whyov",role:"dialog","aria-label":"Why this answer"},h("div",{class:"whyhead"},h("b",{},"🔍 Why"),h("button",{class:"ghost",on:{click:close}},"✕ Close")),big,...fbs.map(f=>h("div",{class:"fb "+[...f.classList].filter(c=>c!=="fb").join(" "),html:f.innerHTML})),h("p",{class:"hint"},"The lines and labels on the chart show what the answer is based on."),h("button",{class:"primary big",on:{click:close}},"Got it"));
+    document.body.append(ov);document.addEventListener("keydown",esc);mountChart(big,cv._args);sfx("tap")}}},"🔍 Show me why")}
 function rerenderAll(){live.forEach(d=>{if(d._cv&&!d._cv.isConnected){live.delete(d);return}d()})}
 try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",rerenderAll)}catch(e){}
 new MutationObserver(rerenderAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
@@ -1847,7 +1856,7 @@ function gate(m){if(testLock(m,1))return;
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
     const nextBtn=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextChart()}}},idx===NCH-1?"See my result":"Next question");
-    let cur={task};const after=ok=>{pop(ok);if(ok)passed++;else miss.push(cur);if(!cur.l)kstat(taskKind("gate",cur.task),ok);head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nextBtn()))};
+    let cur={task};const after=ok=>{pop(ok);if(ok)passed++;else miss.push(cur);if(!cur.l)kstat(taskKind("gate",cur.task),ok);head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},ok?null:whyBtn(body),nextBtn()))};
     if(task==="theory"){const tq=theory.shift();const q=tq.f();cur={l:tq.l,txt:q.q+" "+(q.e||""),tq};const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
       body.append(h("p",{class:"task"},q.q));if(!q.chart){const pf=qPic(q);if(pf)body.append(pf)}if(q.chart){const cv=h("canvas",{class:"chart qchart"});body.append(cv);mountChart(cv,q.chart)}mcq(body,q,(ok,c)=>{fb(f,ok?"good":"bad",calNote(c,ok)+(ok?"Correct. ":"Not quite. ")+q.e);after(ok)},{conf:true});body.append(f)}
     else if(task==="trend"){const want=pick(["up","down","side"]);const rw=rwFind(want,60,60,{piv:[6,14]});const type=rw?rw.type:want;const bars=rw?rw.bars:genSwing(type,60);
@@ -1930,7 +1939,7 @@ function gate2(m){if(testLock(m,2))return;
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
     const nb=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextQ()}}},idx===NCH-1?"See my result":"Next question");
-    let cur={task};const after=ok=>{pop(ok);if(ok)passed++;else miss.push(cur);if(!cur.l)kstat(taskKind("gate2",cur.task),ok);head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nb()))};
+    let cur={task};const after=ok=>{pop(ok);if(ok)passed++;else miss.push(cur);if(!cur.l)kstat(taskKind("gate2",cur.task),ok);head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},ok?null:whyBtn(body),nb()))};
     if(task==="theory"){const tq=theory.shift();const q=tq.f();cur={l:tq.l,txt:q.q+" "+(q.e||""),tq};const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
       body.append(h("p",{class:"task"},q.q));if(!q.chart){const pf=qPic(q);if(pf)body.append(pf)}if(q.chart){const cv=h("canvas",{class:"chart qchart"});body.append(cv);mountChart(cv,q.chart)}mcq(body,q,(ok,c)=>{fb(f,ok?"good":"bad",calNote(c,ok)+(ok?"Correct. ":"Not quite. ")+q.e);after(ok)},{conf:true});body.append(f)}
     else if(task==="tline")tlineRound(body,after);
@@ -2071,7 +2080,7 @@ const EX={
  pivot(){const b=genSwing("side",64);const pv=pivots(b,3);const fH=pv.find(p=>p.t==="H"),fL=pv.find(p=>p.t==="L");const labels=[];
    if(fH)labels.push({i:fH.i,p:b[fH.i].h,text:"Pivot high",c:"--up"});if(fL)labels.push({i:fL.i,p:b[fL.i].l,below:true,text:"Pivot low",c:"--down"});
    return{bars:b,o:{marks:pv.map(p=>({i:p.i,t:p.t})),labels},look:"Each dot is a candle whose high (or low) <b>sticks out past the 3 candles on each side</b>. Those are the turning points. Ignore the small wiggles in between."}},
- sr(){const b=genSwing("side",96);const pv=pivots(b,3);const H=pv.filter(p=>p.t==="H"),Lo=pv.filter(p=>p.t==="L");const av=a=>a.reduce((x,y)=>x+y,0)/a.length;
+ sr(b0){const b=b0||genSwing("side",96);const pv=pivots(b,3);const H=pv.filter(p=>p.t==="H"),Lo=pv.filter(p=>p.t==="L");const av=a=>a.reduce((x,y)=>x+y,0)/a.length;
    const rh=av(H.map(p=>b[p.i].h)),sl=av(Lo.map(p=>b[p.i].l)),w=(rh-sl)*.06;
    return{bars:b,o:{zones:[{hi:rh+w,lo:rh-w,tint:"--down"},{hi:sl+w,lo:sl-w,tint:"--up"}],
      marks:pv.map(p=>({i:p.i,t:p.t,ring:true,c:p.t==="H"?"--down":"--up"})),
@@ -2696,7 +2705,7 @@ function gate3(m){if(testLock(m,3))return;
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
     const nb=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextQ()}}},idx===NCH-1?"See my result":"Next question");
-    let cur={task};const after=ok=>{pop(ok);if(ok)passed++;else miss.push(cur);if(!cur.l)kstat(taskKind("gate3",cur.task),ok);head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nb()))};
+    let cur={task};const after=ok=>{pop(ok);if(ok)passed++;else miss.push(cur);if(!cur.l)kstat(taskKind("gate3",cur.task),ok);head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},ok?null:whyBtn(body),nb()))};
     if(task==="theory"){const tq=theory.shift();const q=tq.f();cur={l:tq.l,txt:q.q+" "+(q.e||""),tq};const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
       body.append(h("p",{class:"task"},q.q));if(!q.chart){const pf=qPic(q);if(pf)body.append(pf)}if(q.chart){const cv=h("canvas",{class:"chart qchart"});body.append(cv);mountChart(cv,q.chart)}mcq(body,q,(ok,c)=>{fb(f,ok?"good":"bad",calNote(c,ok)+(ok?"Correct. ":"Not quite. ")+q.e);after(ok)},{conf:true});body.append(f)}
     else ROUNDS[task](body,after)}
@@ -2893,8 +2902,8 @@ function fitPhone(){if(!IS_PHONE()||FIT_Q||!(document.body.classList.contains("f
   const els=[...app.querySelectorAll("canvas.chart:not(.mcanvas),figure.dg svg")].filter(e=>e.offsetParent!==null);
   els.forEach(e=>{e.style.height="";e.style.maxHeight=""});
   /* 2. shrink charts and diagrams, 3. then tighten the text if it still doesn't fit */
-  const shrink=min=>{if(!els.length||over()<=0)return;const hs=els.map(e=>e.getBoundingClientRect().height);const room=hs.reduce((t,v)=>t+Math.max(0,v-min),0);if(room<=0)return;
-    const k=Math.min(1,over()/room);els.forEach((e,i)=>{const nh=Math.round(hs[i]-Math.max(0,hs[i]-min)*k);if(e.tagName==="svg"){e.style.maxHeight=nh+"px";e.style.width="auto";e.style.margin="0 auto";e.style.display="block"}else e.style.height=nh+"px"})};
+  const shrink=min0=>{if(!els.length||over()<=0)return;const mn=e=>e.classList&&e.classList.contains("ind")?Math.max(min0,190):min0;const hs=els.map(e=>e.getBoundingClientRect().height);const room=hs.reduce((t,v,i)=>t+Math.max(0,v-mn(els[i])),0);if(room<=0)return;
+    const k=Math.min(1,over()/room);els.forEach((e,i)=>{const nh=Math.round(hs[i]-Math.max(0,hs[i]-mn(e))*k);if(e.tagName==="svg"){e.style.maxHeight=nh+"px";e.style.width="auto";e.style.margin="0 auto";e.style.display="block"}else e.style.height=nh+"px"})};
   shrink(120);if(over()>0&&step){step.classList.add("tight");shrink(95);shrink(75)}})}
 new MutationObserver(fitPhone).observe(document.getElementById("app"),{childList:true,subtree:true,attributes:true,attributeFilter:["hidden"]});
 window.addEventListener("resize",fitPhone);
@@ -2917,7 +2926,7 @@ function renderStep(){STEP_AT=Date.now();try{document.activeElement&&document.ac
     card.append(f,nb);nb.append(nextBtn("Continue",go))}
   else if(T==="round"||T==="review"&&st.card.type==="chart"){const kind=T==="round"?st.kind:st.card.kind;const area=h("div");const nb=h("div",{hidden:""});
     card.append(h("div",{class:"eyebrow"},T==="review"?"From memory · chart":st.pin?"📌 Test mistake · Lesson "+st.n:kind==="wwyd"?"What would you do?":st.old?"Throwback chart · earlier level":"Practice chart"),area,nb);
-    ROUNDS[kind](area,ok=>{S_.asked++;if(ok)S_.right++;if(kind!=="wwyd")kstat(kind,ok);if(st.pin)pinGrade(st.pin,ok);if(T==="review"){grade(st.card.id,ok);save()}nb.hidden=false;nb.append(nextBtn("Continue",go));pop(ok)})}
+    ROUNDS[kind](area,ok=>{S_.asked++;if(ok)S_.right++;if(kind!=="wwyd")kstat(kind,ok);if(st.pin)pinGrade(st.pin,ok);if(T==="review"){grade(st.card.id,ok);save()}nb.hidden=false;const wb=ok?null:whyBtn(area);if(wb)nb.append(h("div",{class:"row"},wb));nb.append(nextBtn("Continue",go));pop(ok)})}
   else if(T==="tool"){card.append(h("div",{class:"eyebrow"},"Try it yourself"));TOOLS[st.kind](card);card.append(nextBtn("Continue",go))}
   else if(T==="explain"){const ta=h("textarea",{id:"explain-"+st.lesson,rows:"3",placeholder:"Type a few words, or just say it out loud."});const reveal=h("div",{hidden:""});
     const show=h("button",{class:"primary big",id:"next",on:{click:()=>{show.remove();reveal.hidden=false;
@@ -3952,11 +3961,23 @@ function rwRangeScan(){if(RW.rscan===RW.sets.length)return RW.rngs;RW.rscan=RW.s
       RW.rngs.push({set,mir,s,e0,j,top:mir?-top:top,bot:mir?-bot:bot,kind,vr})}}});return RW.rngs}
 function rwRange(kind,volWant){const P=rwRangeScan().filter(x=>x.kind===kind&&(!volWant||(!x.mir&&(volWant==="strong"?x.vr>=1.6:x.vr>0&&x.vr<=1))));if(!P.length)return null;
   const x=pick(P);const b=x.set.bars;const from=Math.max(0,x.s-rint(4,8)),to=Math.min(b.length-1,x.j+(volWant?0:rint(4,6)));
-  return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c,v:y.v})),top:x.top,bot:x.bot,down:x.mir,meta:{sym:x.set.sym,iv:x.set.iv,t:b[from].t}}}
+  return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c,v:y.v})),at:x.j-from,top:x.top,bot:x.bot,down:x.mir,meta:{sym:x.set.sym,iv:x.set.iv,t:b[from].t}}}
 /* the lesson example charts use real candles too when they're loaded */
 {const _p=EX.pat,_c=EX.cdl,_x=EX.ctx;
  EX.pat=k=>{const rw=rwPat(k);return rw?{bars:rw.bars,o:{tlines:rw.tl},look:patExp(k)+rwTag(rw)}:_p(k)};
  EX.cdl=k=>{const g=rwCdl(k);if(!g)return _c(k);const seg=g.bars.slice(g.at,g.at+g.n);return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},labels:[{i:g.at,p:cdlUp(k)?Math.max(...seg.map(x=>x.h)):Math.min(...seg.map(x=>x.l)),below:!cdlUp(k),text:CDL[k].n,c:"--mark"}]},look:CDL[k].e+rwTag(g)}};
+ /* trends, ranges, pullbacks and breakouts from real coins too (made-up charts only when prices can't load) */
+ const _tu=EX["trend:up"],_ts=EX["trend:side"],_rt=EX.retrace,_sr=EX.sr,_fk=EX.fake,_vb=EX.volbrk;
+ EX["trend:up"]=()=>{const rw=rwFind("up",70,70,{piv:[6,14]});if(!rw)return _tu();const s=swingLabels(rw.bars);const e=_tu();return{bars:rw.bars,o:{marks:s.marks,labels:s.labels},look:e.look+rwTag(rw)}};
+ EX["trend:side"]=()=>{const rw=rwFind("side",64,64,{sr:true})||rwFind("side",64,64,{piv:[6,14]});if(!rw)return _ts();const b=rw.bars,pv=pivots(b,3);const H=pv.filter(p=>p.t==="H").map(p=>b[p.i].h),Lo=pv.filter(p=>p.t==="L").map(p=>b[p.i].l);if(H.length<2||Lo.length<2)return _ts();
+   const av=a=>a.reduce((x,y)=>x+y,0)/a.length;const e=_ts();return{bars:b,o:{marks:pv.map(p=>({i:p.i,t:p.t,c:"--muted"})),hlines:[{p:av(H),c:"--muted",dash:true,w:1.5,label:"highs keep stopping here"},{p:av(Lo),c:"--muted",dash:true,w:1.5,label:"lows keep stopping here"}]},look:e.look+rwTag(rw)}};
+ EX.retrace=()=>{const rw=rwRetr("normal");if(!rw)return _rt();const b=rw.bars,dn=rw.down;let iH=0;b.forEach((x,i)=>{if(dn?x.l<b[iH].l:x.h>b[iH].h)iH=i});const lv=k=>rw.hi-(rw.hi-rw.lo)*k;const e=_rt();
+   return{bars:b,o:{hlines:[{p:lv(1/3),c:"--muted",dash:true,w:1,label:"⅓ back"},{p:lv(.5),c:"--accent",dash:true,w:1.5,label:"half back"},{p:lv(2/3),c:"--muted",dash:true,w:1,label:"⅔ back"}],
+     labels:[{i:iH,p:dn?b[iH].l:b[iH].h,below:dn,text:dn?"Bottom of the fall":"Top of the rise",c:dn?"--down":"--up"},{i:rw.iL,p:dn?b[rw.iL].h:b[rw.iL].l,below:!dn,text:(dn?"Bounce: ":"Pullback: ")+Math.round(rw.fr*100)+"% back",c:"--mark"}]},look:e.look+rwTag(rw)}};
+ EX.sr=EX.range=()=>{const rw=rwFind("side",64,64,{sr:true})||rwFind("side",64,64,{piv:[6,14]});if(!rw)return _sr();const e=_sr(rw.bars);e.look+=rwTag(rw);return e};
+ EX.fake=()=>{const g=rwRange("fake");if(!g)return _fk();const w=(g.top-g.bot)*.04,d=g.down,x=g.bars[g.at];const e=_fk();
+   return{bars:g.bars,o:{zones:[{hi:g.top+w,lo:g.top-w,tint:"--down"},{hi:g.bot+w,lo:g.bot-w,tint:"--up"}],labels:[{i:g.at,p:d?x.l:x.h,below:d,text:"Pokes out, closes back in",c:"--mark"}]},look:(d?"Price spikes below the floor but <b>closes back inside</b>. Breakdown sellers are trapped, and as they buy back, price heads to the <b>other side</b> of the range.":e.look)+rwTag(g)}};
+ EX.volbrk=()=>{const g=rwRange("real","strong");if(!g)return _vb();const e=_vb();return{bars:g.bars,o:{vol:true,hlines:[{p:g.top,c:"--muted",dash:true,w:1.5,label:"range top"}],labels:[{i:g.at,p:g.bars[g.at].h,text:"Breakout on big volume",c:"--up"}]},look:e.look+rwTag(g)}};
  EX.ctx=()=>{const g=rwCtx(true);if(!g)return _x();return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},zones:g.zones},look:"A "+CDL[g.kind].n.toLowerCase()+" right at a level that held before. Two clues agree, and the stop goes just past the pattern."+rwTag(g)}}}
 
 const SB_DOM="@users.chartschool.app";const sbName=e=>String(e||"").replace(SB_DOM,"");
