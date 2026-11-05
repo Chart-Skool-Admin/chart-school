@@ -251,6 +251,7 @@ body.mcfull{padding:0!important;overflow:hidden}body.mcfull .topbar,body.mcfull 
 .mcpclose{position:absolute;top:4px;right:4px;z-index:2}
 .mctb{display:flex;align-items:center;gap:6px;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--panel)}
 .mctb .mctools{flex:1;gap:2px;flex-wrap:nowrap}.mctb .mctools button{border:0;background:transparent;padding:8px 10px;border-radius:10px;color:var(--muted)}
+.mctools .ms{display:none}.mctb .mctools button{flex-direction:column;gap:1px;padding:4px 8px}.mctb .mctools .ms{display:block;font-size:10px;font-family:var(--f-ui,inherit);line-height:1.1}
 .mctb .mctools button.on{background:var(--bg);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.mctb .mctools .mi{font-size:18px}
 .mcpracbtn{padding:8px 12px;font-size:14px;white-space:nowrap}
 .mcgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.mcgrid button{padding:10px}
@@ -3452,8 +3453,8 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   const ivRow=h("div",{class:"tvchips",role:"group","aria-label":"Timeframe"},...MC_IVS.map(([l,v])=>h("button",{"data-v":v,on:{click:()=>{cfg.iv=v;mcSave();reload()}}},l)));
   const logB=h("button",{class:"mctog",on:{click:()=>{cfg.log=!cfg.log;mcSave();sync();draw()}},title:"Log scale (Alt+L)"},"log");
   const magB=h("button",{class:"mctog",on:{click:()=>{cfg.mag=!cfg.mag;mcSave();sync()}},title:"Magnet: snap to candle highs and lows"},"🧲 magnet");
-  const TOOLS=[["cursor","↖","Move (Esc)"],["h","─","Horizontal line (Alt+H)"],["t","╱","Trend line (Alt+T)"],["z","▭","Zone (Alt+Shift+R)"],["erase","⌫","Erase: click a drawing"]];
-  const toolRow=h("div",{class:"mctools",role:"group","aria-label":"Drawing tools"},...TOOLS.map(([k,i,t])=>h("button",{"data-v":k,title:t,"aria-label":t,on:{click:()=>setTool(k)}},h("span",{class:"mi"},i),h("span",{class:"ml"},t.split(" (")[0].split(":")[0]))));
+  const TOOLS=[["cursor","↖","Move (Esc)","Move"],["h","─","Horizontal line (Alt+H)","Line"],["t","╱","Trend line (Alt+T)","Trend"],["z","▭","Zone (Alt+Shift+R)","Zone"],["erase","⌫","Erase: click a drawing","Erase"]];
+  const toolRow=h("div",{class:"mctools",role:"group","aria-label":"Drawing tools"},...TOOLS.map(([k,i,t,sh])=>h("button",{"data-v":k,title:t,"aria-label":t,on:{click:()=>setTool(k)}},h("span",{class:"mi"},i),h("span",{class:"ml"},t.split(" (")[0].split(":")[0]),h("span",{class:"ms"},sh))));
   let clearArm=null;const clearB=h("button",{class:"mctog",on:{click:()=>{if(!drawsOf().length)return;if(clearArm){clearTimeout(clearArm);clearArm=null;cfg.draw[cfg.sym]=[];sel=null;selUI();mcSave();clearB.textContent="Clear all";draw();return}
     clearB.textContent="Tap again to clear";clearArm=setTimeout(()=>{clearArm=null;clearB.textContent="Clear all"},3000)}}},"Clear all");
   const refB=h("button",{class:"mctog",title:"Refresh prices",on:{click:()=>reload(true)}},"↻");
@@ -3461,6 +3462,9 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   function delSel(){if(!sel)return;const ds=drawsOf();const i=ds.indexOf(sel);if(i>=0)ds.splice(i,1);sel=null;mcSave();selUI();draw()}
   function selUI(){selBar.innerHTML="";selBar.hidden=!sel;if(!sel)return;const nm={h:"Horizontal line",t:"Trend line",z:"Zone"}[sel.k];
     selBar.append(h("span",{class:"score"},nm+" · drag to move, dots to reshape"));
+    /* turn a line into a zone around it (half a typical candle range each side), or a zone back into a line at its middle */
+    if(sel.k==="h")selBar.append(h("button",{class:"mctog",on:{click:()=>{const r=bars.slice(-14),w=r.length?r.reduce((q,c)=>q+(c.h-c.l),0)/r.length/2:sel.p*.01;const d=sel;const p=d.p;d.k="z";d.p1=p+w;d.p2=p-w;delete d.p;mcSave();selUI();draw()}}},"▭ Make zone"));
+    if(sel.k==="z")selBar.append(h("button",{class:"mctog",on:{click:()=>{const d=sel;d.k="h";d.p=(d.p1+d.p2)/2;delete d.p1;delete d.p2;mcSave();selUI();draw()}}},"─ Make line"));
     if(sel.k==="t")selBar.append(h("button",{class:"mctog"+(sel.ext?" on":""),on:{click:()=>{sel.ext=!sel.ext;mcSave();selUI();draw()}}},"Extend right"));
     selBar.append(h("button",{class:"mctog",title:"Delete (Backspace)",on:{click:delSel}},"🗑 Delete"))}
   const msg=h("div",{class:"mcmsg",hidden:""});
