@@ -383,6 +383,11 @@ body{margin:0}
 .deck{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start}
 .deckside{position:sticky;top:12px;max-height:calc(100vh - 110px);overflow:auto;padding:12px}
 .deckside-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.deckclose{display:none}
+.studybox{margin:14px 0;padding:14px 16px;border-radius:14px;border:1px solid var(--accent);background:var(--grad-soft),var(--bg)}.studybox .studyls{display:grid;gap:6px;margin:10px 0}.studybox .studyls .n{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-right:8px}
+.studyflag{margin:0 0 12px;padding:8px 12px;border-radius:10px;background:var(--grad-soft),var(--bg);border:1px solid var(--accent);font-size:14px;font-weight:600}
+.studypill{border:1px solid var(--accent);background:var(--grad-soft),var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
+.decklink.pin{color:var(--ink);font-weight:600}.decklink.pin::before{content:"📌 "}.deckles.pin::after{content:" 📌"}
+.studygroup{padding-bottom:8px;border-bottom:1px solid var(--line)}
 .deckgroup{margin-bottom:10px}.deckles{font-family:var(--f-display);font-weight:700;font-size:14px;padding:6px 6px;cursor:pointer;display:flex;gap:8px}.deckles .n{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:400}
 .decklink{display:block;width:100%;text-align:left;border:0;background:transparent;padding:6px 8px 6px 30px;font-size:13px;color:var(--muted);border-radius:8px;line-height:1.3}
 .decklink.on{background:var(--grad-soft),var(--bg);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--accent)}
@@ -419,6 +424,7 @@ html.is-phone .today .hero{font-size:22px!important;margin:2px 0 0}
 html.is-phone .today .eyebrow{font-size:10px}
 html.is-phone .herorow{margin-top:8px;flex-wrap:nowrap;align-items:flex-end}html.is-phone .herorow .plan.chips{min-width:0}html.is-phone .herorow .row{flex:0 0 auto}
 html.is-phone .herorow .plan.chips{margin:0}
+html.is-phone .studybox{margin:8px 0;padding:10px 12px;font-size:13px}html.is-phone .studybox .studyls{gap:3px;margin:6px 0}html.is-phone .studybox .hint{display:none}html.is-phone .studyflag{font-size:12px;padding:6px 10px;margin-bottom:8px}
 html.is-phone .plan.chips span{font-size:11px;padding:3px 8px}
 html.is-phone .today button.big{padding:8px 18px;font-size:15px}
 html.is-phone .quick{gap:6px}
@@ -1815,14 +1821,14 @@ function gate(m){if(testLock(m,1))return;
     h("p",{class:"score"},state.best.g20!=null?`Your best so far: ${state.best.g20} of ${NCH}`:(state.done.gate?"You passed the old chart-only test. This harder one is worth taking.":"Not attempted yet")));
   const area=h("section",{class:"card"});m.append(intro,area);
   const names={up:"Uptrend",down:"Downtrend",side:"Sideways"},tname={trend:"Trend",swings:"Swings",levels:"Levels",theory:"Theory"};
-  let idx=0,passed=0,plan=[],liveSets=[],theory=[];
-  function start(){idx=0;passed=0;if(IS_PHONE())intro.hidden=true;theory=gateTheory(12);plan=shuffle(["trend","trend","trend","swings","swings","swings","levels","levels"].concat(Array(12).fill("theory")));liveSets=shuffle([["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"],["SOL","D"]]);nextChart()}
+  let miss=[],idx=0,passed=0,plan=[],liveSets=[],theory=[];
+  function start(){idx=0;passed=0;miss=[];if(IS_PHONE())intro.hidden=true;theory=gateTheory(12);plan=shuffle(["trend","trend","trend","swings","swings","swings","levels","levels"].concat(Array(12).fill("theory")));liveSets=shuffle([["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"],["SOL","D"]]);nextChart()}
   function nextChart(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
     const nextBtn=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextChart()}}},idx===NCH-1?"See my result":"Next question");
-    const after=ok=>{pop(ok);if(ok)passed++;head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nextBtn()))};
-    if(task==="theory"){const tq=theory.shift();const q=tq.f();const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
+    let cur={task};const after=ok=>{pop(ok);if(ok)passed++;else miss.push(cur);head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nextBtn()))};
+    if(task==="theory"){const tq=theory.shift();const q=tq.f();cur={l:tq.l,txt:q.q+" "+(q.e||"")};const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
       body.append(h("p",{class:"task"},q.q));if(!q.chart){const pf=qPic(q);if(pf)body.append(pf)}if(q.chart){const cv=h("canvas",{class:"chart qchart"});body.append(cv);mountChart(cv,q.chart)}mcq(body,q,ok=>{fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+q.e);after(ok)});body.append(f)}
     else if(task==="trend"){const want=pick(["up","down","side"]);const rw=rwFind(want,60,60,{piv:[6,14]});const type=rw?rw.type:want;const bars=rw?rw.bars:genSwing(type,60);
       const cv=h("canvas",{class:"chart"});mountChart(cv,()=>[bars,{}]);const btns={};const f=h("div",{hidden:""});
@@ -1836,9 +1842,9 @@ function gate(m){if(testLock(m,1))return;
         pivotRound(body,after,{strict:true,bars,type,meta:rw&&rw.meta,prompt:"Live prices aren't loading, so this one is from past data. Mark the swing highs and lows (3 candles each side)."})})}
     else srRound(body,after,{strict:true,prompt:"Place support and resistance (tap twice). Strict marking: both must be close to where the swing points cluster."})
   }
-  function finish(){const ok=passed>=PASS;state.best.g20=Math.max(state.best.g20||0,passed);if(ok){state.done.gate=true;lvlCheck()}save();renderNav();sfx(ok?"lesson":"wrong");
+  function finish(){const ok=passed>=PASS;studySave("gate",miss);state.best.g20=Math.max(state.best.g20||0,passed);if(ok){state.done.gate=true;lvlCheck()}save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 1 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You know the theory and can read trend, swings and levels reliably. Level 1 is done.`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions and numbers change every time.`),
-      lvlNextRow(1,ok,start))}
+      studyBlock("gate"),lvlNextRow(1,ok,start))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
 }
 
@@ -1898,24 +1904,24 @@ function gate2(m){if(testLock(m,2))return;
     h("p",{class:"score"},state.best.g2!=null?`Your best so far: ${state.best.g2} of ${NCH}`:(ready?"Not attempted yet":"Finish all nine Level 2 lessons first, so every question is something you've learned.")));
   const area=h("section",{class:"card"});m.append(intro,area);
   const tname={tline:"Trendline",retr:"Pullback",cdl:"Candles",pat:"Pattern",ctx:"Location",vol:"Volume",theory:"Theory"};
-  let idx=0,passed=0,plan=[],theory=[];
-  function start(){idx=0;passed=0;if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q2);plan=shuffle(["tline","retr","cdl","cdl","pat","pat","ctx","vol"].concat(Array(NTH).fill("theory")));nextQ()}
+  let miss=[],idx=0,passed=0,plan=[],theory=[];
+  function start(){idx=0;passed=0;miss=[];if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q2);plan=shuffle(["tline","retr","cdl","cdl","pat","pat","ctx","vol"].concat(Array(NTH).fill("theory")));nextQ()}
   function nextQ(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
     const nb=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextQ()}}},idx===NCH-1?"See my result":"Next question");
-    const after=ok=>{pop(ok);if(ok)passed++;head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nb()))};
-    if(task==="theory"){const tq=theory.shift();const q=tq.f();const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
+    let cur={task};const after=ok=>{pop(ok);if(ok)passed++;else miss.push(cur);head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nb()))};
+    if(task==="theory"){const tq=theory.shift();const q=tq.f();cur={l:tq.l,txt:q.q+" "+(q.e||"")};const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
       body.append(h("p",{class:"task"},q.q));if(!q.chart){const pf=qPic(q);if(pf)body.append(pf)}if(q.chart){const cv=h("canvas",{class:"chart qchart"});body.append(cv);mountChart(cv,q.chart)}mcq(body,q,ok=>{fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+q.e);after(ok)});body.append(f)}
     else if(task==="tline")tlineRound(body,after);
     else if(task==="retr")retrRound(body,after);
     else if(task==="cdl")cdlRound(body,after,SET12.concat(SET13),{prompt:"Name the boxed candle pattern. Mind the trend before it: some shapes change name with context."});
     else if(task==="pat")patRound(body,after,SET15.concat(SET16));
     else if(task==="ctx")ctxRound(body,after,{hard:true});
-    else(R()<.5?volRound:brkRound)(body,after)}
-  function finish(){const ok=passed>=PASS;state.best.g2=Math.max(state.best.g2||0,passed);if(ok){state.done.gate2=true;lvlEnd(2)}save();renderNav();sfx(ok?"lesson":"wrong");
+    else{const v=R()<.5;cur={task:v?"vol":"brk"};(v?volRound:brkRound)(body,after)}}
+  function finish(){const ok=passed>=PASS;studySave("gate2",miss);state.best.g2=Math.max(state.best.g2||0,passed);if(ok){state.done.gate2=true;lvlEnd(2)}save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 2 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You can read trendlines, pullbacks, ranges, candles, patterns and volume. Level 2 is done. ${lvlTimeText(2)}`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions change every time.`),
-      lvlNextRow(2,ok,start))}
+      studyBlock("gate2"),lvlNextRow(2,ok,start))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
 }
 
@@ -2599,19 +2605,19 @@ function gate3(m){if(testLock(m,3))return;
     h("p",{class:"score"},state.best.g3!=null?`Your best so far: ${state.best.g3} of ${NCH}`:(ready?"Not attempted yet":"Finish all nine Level 3 lessons first, so every question is something you've learned.")));
   const area=h("section",{class:"card"});m.append(intro,area);
   const tname={ma:"Moving averages",rsi:"RSI",macd:"MACD",trade4:"Four trades",squeeze:"Volatility",mtf:"Timeframes",big:"Big picture",rel:"Relative strength",ew:"Elliott Wave",theory:"Theory"};
-  let idx=0,passed=0,plan=[],theory=[];
-  function start(){idx=0;passed=0;if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q3);plan=shuffle(["ma","rsi","macd","trade4","squeeze","mtf",pick(["big","rel"]),"ew"].concat(Array(NTH).fill("theory")));nextQ()}
+  let miss=[],idx=0,passed=0,plan=[],theory=[];
+  function start(){idx=0;passed=0;miss=[];if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q3);plan=shuffle(["ma","rsi","macd","trade4","squeeze","mtf",pick(["big","rel"]),"ew"].concat(Array(NTH).fill("theory")));nextQ()}
   function nextQ(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
     const nb=()=>h("button",{class:"primary",on:{click:()=>{idx++;nextQ()}}},idx===NCH-1?"See my result":"Next question");
-    const after=ok=>{pop(ok);if(ok)passed++;head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nb()))};
-    if(task==="theory"){const tq=theory.shift();const q=tq.f();const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
+    let cur={task};const after=ok=>{pop(ok);if(ok)passed++;else miss.push(cur);head.lastChild.textContent=`${passed} passed so far`;body.append(h("div",{class:"row"},nb()))};
+    if(task==="theory"){const tq=theory.shift();const q=tq.f();cur={l:tq.l,txt:q.q+" "+(q.e||"")};const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
       body.append(h("p",{class:"task"},q.q));if(q.chart){const cv=h("canvas",{class:"chart qchart"});body.append(cv);mountChart(cv,q.chart)}mcq(body,q,ok=>{fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+q.e);after(ok)});body.append(f)}
     else ROUNDS[task](body,after)}
-  function finish(){const ok=passed>=PASS;state.best.g3=Math.max(state.best.g3||0,passed);if(ok){state.done.gate3=true;lvlEnd(3)}save();renderNav();sfx(ok?"lesson":"wrong");
+  function finish(){const ok=passed>=PASS;studySave("gate3",miss);state.best.g3=Math.max(state.best.g3||0,passed);if(ok){state.done.gate3=true;lvlEnd(3)}save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 3 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You can read moving averages, oscillators, MACD, volatility, several timeframes, the big picture and ratio charts, and you know which of the four trades you're taking. Level 3 is done. ${lvlTimeText(3)}`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions change every time.`),
-      lvlNextRow(3,ok,start))}
+      studyBlock("gate3"),lvlNextRow(3,ok,start))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
 }
 
@@ -2948,6 +2954,28 @@ function mapView(m){const nx=nextLesson();const lv=curLevel();
 /* Program levels work like an accordion: opening one closes the others */
 document.addEventListener("toggle",e=>{const d=e.target;if(d.matches&&d.matches("details.mapdet")&&d.open)document.querySelectorAll("details.mapdet[open]").forEach(x=>{if(x!==d)x.open=false})},true);
 /* ---------- Lesson notes as a slide deck with an index ---------- */
+/* ---------- study list: what you got wrong in a level test is pinned in the Notes tab until you've reread it ---------- */
+const TEST_TASK_LESSON={gate:{trend:[6],swings:[5],levels:[7]},gate2:{tline:[9],retr:[10],cdl:[12,13],pat:[15,16],ctx:[14],vol:[17],brk:[11]},
+  gate3:{ma:[18],rsi:[19],macd:[20],trade4:[21],squeeze:[22],mtf:[23],big:[24],rel:[25],ew:[26]}};
+const STOP=new Set("the a an and or of to in on at is are be it its this that for with as by from you your what which when price".split(" "));
+const words=t=>(t||"").toLowerCase().replace(/<[^>]+>/g," ").match(/[a-z][a-z0-9%-]{2,}/g)||[];
+/* the notes slide that best matches a missed question, or null when nothing clearly matches */
+function studySlide(L,txt){const want=new Set(words(txt).filter(w=>!STOP.has(w)));if(!want.size)return null;const tmp=document.createElement("div");tmp.innerHTML=NOTES[L.id]||"";let best=null,bs=0;
+  [...tmp.children].forEach(el=>{const h4=el.querySelector("h4");const title=h4?h4.textContent:(el.classList.contains("remember")?"Remember":"Notes");const ws=new Set(words(el.textContent));let sc=0;want.forEach(w=>{if(ws.has(w))sc++});if(sc>bs){bs=sc;best=title}});return bs>=3?best:null}
+function studySave(G,miss){state.study=state.study||{};const items=[];const add=(n,slide)=>{if(!items.some(x=>x.n===n&&x.slide===slide))items.push({n,slide,seen:false})};
+  miss.forEach(m=>{if(m.l){const L=LESSONS.find(x=>x.n===m.l);if(L)add(m.l,studySlide(L,m.txt))}else((TEST_TASK_LESSON[G]||{})[m.task]||[]).forEach(n=>add(n,null))});
+  if(items.length)state.study[G]={t:Date.now(),lv:(LEVELS.find(x=>x.gate===G)||{}).n,items};else delete state.study[G]}
+/* every open study pin, one per lesson+slide */
+function studyItems(){const out=[];Object.entries(state.study||{}).forEach(([G,v])=>(v.items||[]).forEach(it=>{if(!it.seen)out.push(Object.assign({G,lv:v.lv},it))}));return out}
+function studyBlock(G){const v=(state.study||{})[G];if(!v||!v.items.length)return null;const ns=[...new Set(v.items.map(x=>x.n))].sort((a,b)=>a-b);
+  return h("div",{class:"studybox"},h("b",{},"📌 Study these before your next try"),
+    h("div",{class:"studyls"},...ns.map(n=>{const L=LESSONS.find(x=>x.n===n);const sl=v.items.filter(x=>x.n===n&&x.slide).map(x=>x.slide);return h("div",{},h("span",{class:"n"},"Lesson "+n),(L?L.t:"")+(sl.length?": "+sl.join(", "):""))})),
+    h("p",{class:"hint"},"They're pinned in the Notes tab. A pin clears once you've read that part."),
+    h("div",{class:"row"},h("button",{class:"primary",on:{click:()=>openStudy()}},"Open my study notes")))}
+function openStudy(){const S=noteSlides();const k=S.findIndex(x=>studyPin(x));try{if(k>=0)localStorage.setItem("cs-notes-pos",k)}catch(e){}location.hash="notes"}
+/* is this slide (or, for a whole-lesson pin, this lesson's cover) pinned? */
+function studyPin(x){return studyItems().find(it=>it.n===x.L.n&&(it.slide?it.slide===x.title&&!x.cover:x.cover))||null}
+function studySeen(x,last){let ch=false;Object.values(state.study||{}).forEach(v=>(v.items||[]).forEach(it=>{if(it.seen||it.n!==x.L.n)return;if((it.slide&&it.slide===x.title&&!x.cover)||(!it.slide&&last)){it.seen=true;ch=true}}));if(ch)save()}
 function noteLessons(){return LESSONS.filter(L=>lvlOpen(L.lv))}
 function noteSlides(){const out=[];noteLessons().forEach(L=>{out.push({L,title:L.t,cover:true});const tmp=document.createElement("div");tmp.innerHTML=NOTES[L.id]||"";
   [...tmp.children].forEach(el=>{const h4=el.querySelector("h4");out.push({L,title:h4?h4.textContent:(el.classList.contains("remember")?"Remember":"Notes"),html:el.outerHTML,remember:el.classList.contains("remember")})})});return out}
@@ -2957,10 +2985,13 @@ function notesView(m){const S=noteSlides();let cur=0;try{cur=Math.min(S.length-1
   const prev=h("button",{"aria-label":"Previous slide",on:{click:()=>go(cur-1)}},"‹ Back"),next=h("button",{class:"primary","aria-label":"Next slide",on:{click:()=>go(cur+1)}},"Next ›");
   const idxBtn=h("button",{class:"deckidx",on:{click:()=>side.classList.add("open")}},"☰ Index");
   const dots=h("div",{class:"deckdots"});
-  main.append(h("div",{class:"deckhead"},eyebrow,count),slide,dots,h("div",{class:"deckbar"},prev,idxBtn,next));
+  const pinBtn=h("button",{class:"studypill",hidden:"",on:{click:()=>{const k=nextPin();if(k>=0)go(k)}}});
+  main.append(h("div",{class:"deckhead"},eyebrow,h("span",{class:"row",style:"gap:8px;align-items:center"},pinBtn,count)),slide,dots,h("div",{class:"deckbar"},prev,idxBtn,next));
   /* index: every lesson with its slides */
   side.append(h("div",{class:"deckside-head"},h("b",{},"Index"),h("button",{class:"ghost deckclose",on:{click:()=>side.classList.remove("open")}},"✕")));
-  const links=[];noteLessons().forEach(L=>{const g=h("div",{class:"deckgroup"});g.append(h("div",{class:"deckles"},h("span",{class:"n"},String(L.n).padStart(2,"0")),L.t));
+  /* pinned after a test: what to reread first */
+  const pinGroup=h("div",{class:"deckgroup studygroup"});side.append(pinGroup);
+  const lessHeads={};const links=[];noteLessons().forEach(L=>{const g=h("div",{class:"deckgroup"});lessHeads[L.n]=h("div",{class:"deckles"},h("span",{class:"n"},String(L.n).padStart(2,"0")),L.t);g.append(lessHeads[L.n]);
     S.forEach((x,k)=>{if(x.L!==L||x.cover)return;const a=h("button",{class:"decklink",on:{click:()=>{go(k);side.classList.remove("open")}}},x.title);links[k]=a;g.append(a)});
     g.firstChild.addEventListener("click",()=>{go(S.findIndex(x=>x.L===L));side.classList.remove("open")});side.append(g)});
   function go(k,quiet){if(k<0||k>=S.length)return;const dir=k>cur?1:-1;cur=k;try{localStorage.setItem("cs-notes-pos",k)}catch(e){}
@@ -2968,10 +2999,17 @@ function notesView(m){const S=noteSlides();let cur=0;try{cur=Math.min(S.length-1
     slide.className="card notes slide"+(x.cover?" cover":"")+(x.remember?" rem":"");slide.innerHTML="";
     if(x.cover)slide.append(h("div",{class:"eyebrow"},"Lesson "+x.L.n),h("h2",{class:"hero"},x.L.t),h("p",{class:"read"},(inL.length-1)+" slides · swipe or use the arrows"));
     else slide.innerHTML=x.html;
+    const pin=studyPin(x);if(pin)slide.prepend(h("div",{class:"studyflag"},"📌 "+(x.cover?"You missed a chart question from this lesson in the Level "+pin.lv+" test. Read it through to the end.":"You missed a question on this in the Level "+pin.lv+" test.")));
+    studySeen(x,pos===inL.length-1);paintPins();
     if(!quiet&&!matchMedia("(prefers-reduced-motion: reduce)").matches){slide.style.animation="none";void slide.offsetWidth;slide.style.animation=(dir>0?"slidein":"slideback")+" .25s ease-out"}
     dots.innerHTML="";inL.forEach((y,j)=>dots.append(h("button",{class:"dot"+(y===x?" on":""),"aria-label":"Slide "+(j+1),on:{click:()=>go(S.indexOf(y))}})));
     prev.disabled=k===0;next.disabled=k===S.length-1;next.textContent=k<S.length-1&&S[k+1].cover?"Next lesson ›":"Next ›";
     links.forEach((a,j)=>a&&a.classList.toggle("on",j===k));const on=links[k];if(on&&side.scrollHeight>side.clientHeight)on.scrollIntoView({block:"nearest"})}
+  function nextPin(){const n=S.length;for(let j=1;j<=n;j++){const k=(cur+j)%n;if(studyPin(S[k]))return k}return studyPin(S[cur])?cur:-1}
+  function paintPins(){const its=studyItems();pinBtn.hidden=!its.length;pinBtn.textContent="📌 "+its.length+" to study";
+    links.forEach((a,j)=>a&&a.classList.toggle("pin",!!studyPin(S[j])));Object.entries(lessHeads).forEach(([n,el])=>el.classList.toggle("pin",its.some(it=>it.n===+n)));
+    pinGroup.innerHTML="";if(!its.length){pinGroup.hidden=true;return}pinGroup.hidden=false;pinGroup.append(h("div",{class:"deckles"},"📌 Study list"));
+    its.forEach(it=>{const k=S.findIndex(x=>x.L.n===it.n&&(it.slide?x.title===it.slide&&!x.cover:x.cover));if(k<0)return;pinGroup.append(h("button",{class:"decklink pin",on:{click:()=>{go(k);side.classList.remove("open")}}},"Lesson "+it.n+": "+(it.slide||S[k].L.t)))})}
   /* swipe on phones, arrow keys on the Mac */
   let sx=null,sy=0;slide.addEventListener("pointerdown",e=>{sx=e.clientX;sy=e.clientY});slide.addEventListener("pointerup",e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5)go(cur+(dx<0?1:-1))});
   const key=e=>{if(!deck.isConnected){document.removeEventListener("keydown",key);return}if(e.target.closest&&e.target.closest("input,textarea"))return;if(e.key==="ArrowRight"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowLeft"){go(cur-1);e.preventDefault()}};document.addEventListener("keydown",key);
