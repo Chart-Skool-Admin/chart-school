@@ -2796,7 +2796,9 @@ function sfxPlay(kind){try{const c=sfxCtx;
   else if(kind==="tap"){note(1760,0,.05,"sine",.9);note(2637,.005,.035,"triangle",.35)}
   else if(kind==="untap"){note(1174.66,0,.05,"sine",.7)}
   else if(kind==="streak"){note(659.25,0,.12,"square",.25);note(987.77,.1,.35,"square",.25)}}catch(e){}}
-function pop(ok){sfx(ok?"right":"wrong");if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const p=h("div",{class:"pop "+(ok?"ok":"no")},ok?"✓":"•");document.body.append(p);setTimeout(()=>p.remove(),700)}
+/* any answered question counts toward the day's streak: a lesson, review, test or live-chart practice, even if you stop before the end */
+function dayPractised(){const was=state.streak.last;bumpStreak();if(was!==state.streak.last){save();paintStreak()}}
+function pop(ok){dayPractised();sfx(ok?"right":"wrong");if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const p=h("div",{class:"pop "+(ok?"ok":"no")},ok?"✓":"•");document.body.append(p);setTimeout(()=>p.remove(),700)}
 
 document.addEventListener("keydown",e=>{if(!SESSION)return;if(e.target.tagName==="TEXTAREA"&&e.key!=="Enter")return;if(e.target.tagName==="INPUT")return;
   if(e.key==="Enter"&&!(e.target.tagName==="TEXTAREA"&&e.shiftKey)){const b=document.getElementById("next");if(b&&!b.closest("[hidden]")&&!b.disabled){e.preventDefault();b.click()}return}
@@ -3773,7 +3775,8 @@ function syncView(m){if(SBC&&!window.__CS_NATIVE)return sbView(m);const card=h("
   card2.append(h("h3",{},"Bring progress from the Mac app"),h("p",{class:"task"},"Only needed once. In the old Chart School app press Move my progress, then paste the code here."),ta,h("div",{class:"row"},imp),f)}
 const top=document.getElementById("topnav");
 function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";const fl=["floor","chart","tv"].includes(cur);[["home","Today"],["map","Program"],["floor","Trading"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id||(id==="floor"&&fl)?"on":""},l)));
-  const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
+  paintStreak()}
+function paintStreak(){const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
 function route(){if(SESSION||TVS)return;document.body.classList.remove("mcfull");live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();document.body.classList.toggle("wide",id==="chart");
   if(id==="gate"){gate(app)}else if(id==="gate2"){gate2(app)}else if(id==="gate3"){gate3(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="floor"){floorView(app)}else if(id==="tv"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));tvOpen()?tvView(app):tvLocked(app)}else if(id==="chart"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));chartView(app)}
   else if(LESSONS.find(x=>x.id===id)){history.replaceState(null,"","#home");startSession("lesson",id);return}
