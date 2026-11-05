@@ -3927,7 +3927,10 @@ function rwRetr(want){const cat=fr=>fr<1/3?"shallow":fr<=2/3?"normal":"deep";
     const c=[];for(let k=0;k+2<q.length;k++){const [L1,H,L2]=q.slice(k,k+3);if(L1.t!=="L")continue;const leg=H.v-L1.v;if(leg/Math.abs(H.v)<thr||H.i-L1.i<8||H.i-L1.i>60||L2.i-H.i<3||L2.i-H.i>30)continue;
       const fr=(H.v-L2.v)/leg;if(fr<=.05||fr>=.97||cat(fr)!==want)continue;c.push({L1,H,L2,fr})}
     if(!c.length)continue;const x=pick(c);const b=set.bars;const from=Math.max(0,x.L1.i-rint(4,8)),to=Math.min(b.length-1,x.L2.i+rint(2,3));
-    const sg=mir?-1:1;return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c})),hi:x.H.v*sg,lo:x.L1.v*sg,iL:x.L2.i-from,fr:x.fr,cat:want,down:mir,meta:{sym:set.sym,iv:set.iv,t:b[from].t}}}
+    /* measure the swing you can see: lowest low before the top, highest high, lowest low after it. A small pivot inside the rise must not count as the start */
+    let iH=from;for(let i=from;i<=to;i++)if(v[i].h>v[iH].h)iH=i;if(iH>=to-1)continue;let lo=Infinity;for(let i=from;i<iH;i++)lo=Math.min(lo,v[i].l);let iP=iH;for(let i=iH;i<=to;i++)if(v[i].l<v[iP].l)iP=i;
+    const hi=v[iH].h,fr=(hi-v[iP].l)/(hi-lo||1);if(!(fr>.05&&fr<.97)||cat(fr)!==want||Math.abs(fr-1/3)<.04||Math.abs(fr-2/3)<.04)continue;
+    const sg=mir?-1:1;return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c})),hi:hi*sg,lo:lo*sg,iL:iP-from,fr,cat:want,down:mir,meta:{sym:set.sym,iv:set.iv,t:b[from].t}}}
   return null}
 /* real ranges and what happened when price left them: a real breakout or a fake-out, with the volume on the break */
 function rwRangeScan(){if(RW.rscan===RW.sets.length)return RW.rngs;RW.rscan=RW.sets.length;RW.rngs=[];
