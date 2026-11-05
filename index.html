@@ -391,6 +391,14 @@ body{margin:0}
 .studypill{border:1px solid var(--accent);background:var(--grad-soft),var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
 .decklink.pin{color:var(--ink);font-weight:600}.decklink.pin::before{content:"📌 "}.deckles.pin::after{content:" 📌"}
 .studygroup{padding-bottom:8px;border-bottom:1px solid var(--line)}
+.nhub .nsearch{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px;margin:8px 0 10px}
+.npins{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;align-items:center;margin:0 0 10px}.npins::-webkit-scrollbar{display:none}.npins b{font-size:13px;flex:0 0 auto}.npin{flex:0 0 auto;white-space:nowrap}.npin{border:1px solid var(--accent);background:var(--grad-soft),var(--bg);color:var(--ink);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;text-align:left}
+.nlist{display:grid;gap:5px}.nlv{margin-bottom:8px}.nrow{display:flex;gap:6px;align-items:stretch}.nrow.pin .nopen{border-color:var(--accent)}
+.nopen{flex:1;min-width:0;display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;column-gap:8px;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.nopen .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}.nopen .t{font-weight:600;font-size:14px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nopen .m{font-size:12px;color:var(--muted)}
+.ncheat{flex:0 0 auto;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--muted);font-size:12px}
+.nhit{display:grid;gap:2px;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}.nhit b{font-size:14px}.nhit span{font-size:12px;color:var(--muted)}
+.nback{margin:0 0 6px;padding:4px 8px;font-size:13px}
 .deckgroup{margin-bottom:10px}.deckles{font-family:var(--f-display);font-weight:700;font-size:14px;padding:6px 6px;cursor:pointer;display:flex;gap:8px}.deckles .n{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:400}
 .decklink{display:block;width:100%;text-align:left;border:0;background:transparent;padding:6px 8px 6px 30px;font-size:13px;color:var(--muted);border-radius:8px;line-height:1.3}
 .decklink.on{background:var(--grad-soft),var(--bg);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--accent)}
@@ -3077,21 +3085,43 @@ function studyBlock(G){const v=(state.study||{})[G];if(!v||!v.items.length)retur
     h("div",{class:"studyls"},...ns.slice(0,4).map(n=>{const L=LESSONS.find(x=>x.n===n);const sl=v.items.filter(x=>x.n===n&&x.slide).map(x=>x.slide);return h("div",{},h("span",{class:"n"},"Lesson "+n),(L?L.t:"")+(sl.length?": "+sl.join(", "):""))}),ns.length>4?h("div",{class:"hint",style:"display:block"},"…and "+(ns.length-4)+" more lesson"+(ns.length>5?"s":"")+" in Notes"):null),
     h("p",{class:"hint"},"They're pinned in the Notes tab. A pin clears once you've read that part."),
     h("div",{class:"row"},h("button",{class:"primary",on:{click:()=>openStudy()}},"Open my study notes")))}
-function openStudy(){const S=noteSlides();const k=S.findIndex(x=>studyPin(x));try{if(k>=0)localStorage.setItem("cs-notes-pos",k)}catch(e){}location.hash="notes"}
+function openStudy(){const S=noteSlides();const k=S.findIndex(x=>studyPin(x));notesOpen(k>=0?k:0)}
 /* is this slide (or, for a whole-lesson pin, this lesson's cover) pinned? */
 function studyPin(x){return studyItems().find(it=>it.n===x.L.n&&(it.slide?it.slide===x.title&&!x.cover:x.cover))||null}
 function studySeen(x,last){let ch=false;Object.values(state.study||{}).forEach(v=>(v.items||[]).forEach(it=>{if(it.seen||it.n!==x.L.n)return;if((it.slide&&it.slide===x.title&&!x.cover)||(!it.slide&&last)){it.seen=true;it.due=today();it.ck=0;ch=true}}));if(ch)save()}
 function noteLessons(){return LESSONS.filter(L=>lvlOpen(L.lv))}
 function noteSlides(){const out=[];noteLessons().forEach(L=>{out.push({L,title:L.t,cover:true});const tmp=document.createElement("div");tmp.innerHTML=NOTES[L.id]||"";
   [...tmp.children].forEach(el=>{const h4=el.querySelector("h4");out.push({L,title:h4?h4.textContent:(el.classList.contains("remember")?"Remember":"Notes"),html:el.outerHTML,remember:el.classList.contains("remember")})})});return out}
-function notesView(m){const S=noteSlides();let cur=0;try{cur=Math.min(S.length-1,Math.max(0,+localStorage.getItem("cs-notes-pos")||0))}catch(e){}
+/* Notes opens on a lesson list with search; the swipeable slides are one tap away */
+let NOTES_MODE="hub",NOTES_LV=null,NOTES_Q="";
+function notesOpen(k){try{localStorage.setItem("cs-notes-pos",k)}catch(e){}NOTES_MODE="deck";if(location.hash==="#notes")route();else location.hash="notes"}
+function notesHub(m){const S=noteSlides();const ls=noteLessons();const lvs=[...new Set(ls.map(L=>L.lv))];if(!NOTES_LV||!lvs.includes(NOTES_LV))NOTES_LV=lvs.includes(curLevel())?curLevel():lvs[lvs.length-1];
+  const plain=x=>{const d=document.createElement("div");d.innerHTML=x.html||"";return d.textContent.replace(/\s+/g," ").trim()};const texts=S.map(x=>(x.title+" "+plain(x)).toLowerCase());
+  const q=h("input",{type:"search",class:"nsearch",placeholder:"Search notes, e.g. double bottom",value:NOTES_Q,"aria-label":"Search notes"});
+  const pins=studyItems();const pinRow=pins.length?h("div",{class:"npins"},h("b",{},"📌 Study first"),...pins.slice(0,3).map(it=>{const k=S.findIndex(x=>x.L.n===it.n&&(it.slide?x.title===it.slide&&!x.cover:x.cover));return k<0?null:h("button",{class:"npin",on:{click:()=>notesOpen(k)}},"L"+it.n+" · "+(it.slide||S[k].L.t))}),pins.length>3?h("span",{class:"hint"},"+"+(pins.length-3)+" more"):null):null;
+  const pills=h("div",{class:"lpills nlv"},...lvs.map(n=>h("button",{class:"lpill"+(n===NOTES_LV?" on":""),on:{click:()=>{NOTES_LV=n;sfx("tap");list()}}},h("span",{class:"lpn"},"Level "+n))));
+  const box=h("div",{class:"nlist"});
+  m.append(h("section",{class:"card nhub"},h("div",{class:"eyebrow"},"Notes"),q,pinRow,pills,box));
+  function row(L){const k=S.findIndex(x=>x.L===L);const rem=S.findIndex(x=>x.L===L&&x.remember);const n=S.filter(x=>x.L===L&&!x.cover).length;const pc=Math.round(mastery(L.id)*100);const pin=pins.some(it=>it.n===L.n);
+    return h("div",{class:"nrow"+(pin?" pin":"")},h("button",{class:"nopen",on:{click:()=>notesOpen(k)}},h("span",{class:"n"},String(L.n).padStart(2,"0")),h("span",{class:"t"},L.t),h("span",{class:"m"},(pin?"📌 ":"")+(state.done[L.id]?pc+"%":n+" slides"))),
+      rem>=0?h("button",{class:"ncheat",title:"Cheat sheet: the points to remember",on:{click:()=>notesOpen(rem)}},"Recap"):null)}
+  function list(){q.value=NOTES_Q;[...pills.children].forEach((b,j)=>b.classList.toggle("on",lvs[j]===NOTES_LV));box.innerHTML="";const v=NOTES_Q.trim().toLowerCase();pills.hidden=!!v;
+    if(v.length>=2){const words=v.split(/\s+/);const hits=[];S.forEach((x,k)=>{if(x.cover)return;if(words.every(w=>texts[k].includes(w)))hits.push(k)});
+      if(!hits.length){box.append(h("p",{class:"hint",style:"display:block"},"Nothing found. Try a shorter word."));return}
+      hits.slice(0,6).forEach(k=>{const x=S[k];const t=plain(x);const i=t.toLowerCase().indexOf(words[0]);const snip=(i>40?"…":"")+t.slice(Math.max(0,i-40),i+70)+"…";
+        box.append(h("button",{class:"nhit",on:{click:()=>notesOpen(k)}},h("b",{},"Lesson "+x.L.n+" · "+x.title),h("span",{},snip)))});
+      if(hits.length>6)box.append(h("p",{class:"hint",style:"display:block"},hits.length-6+" more: add another word to narrow it down."));return}
+    ls.filter(L=>L.lv===NOTES_LV).forEach(L=>box.append(row(L)))}
+  q.addEventListener("input",()=>{NOTES_Q=q.value;list()});list()}
+function notesView(m){if(NOTES_MODE!=="deck")return notesHub(m);const S=noteSlides();let cur=0;try{cur=Math.min(S.length-1,Math.max(0,+localStorage.getItem("cs-notes-pos")||0))}catch(e){}
   const side=h("nav",{class:"deckside card","aria-label":"Notes index"}),main=h("div",{class:"deckmain"}),deck=h("div",{class:"deck"},side,main);m.append(deck);
   const eyebrow=h("div",{class:"eyebrow"}),count=h("span",{class:"score"}),slide=h("section",{class:"card notes slide"}),bar=h("div",{class:"deckbar"});
   const prev=h("button",{"aria-label":"Previous slide",on:{click:()=>go(cur-1)}},"‹ Back"),next=h("button",{class:"primary","aria-label":"Next slide",on:{click:()=>go(cur+1)}},"Next ›");
   const idxBtn=h("button",{class:"deckidx",on:{click:()=>side.classList.add("open")}},"☰ Index");
   const dots=h("div",{class:"deckdots"});
   const pinBtn=h("button",{class:"studypill",hidden:"",on:{click:()=>{const k=nextPin();if(k>=0)go(k)}}});
-  main.append(h("div",{class:"deckhead"},eyebrow,h("span",{class:"row",style:"gap:8px;align-items:center"},pinBtn,count)),slide,dots,h("div",{class:"deckbar"},prev,idxBtn,next));
+  const allBtn=h("button",{class:"ghost nback",on:{click:()=>{NOTES_MODE="hub";route()}}},"‹ All notes");
+  main.append(allBtn,h("div",{class:"deckhead"},eyebrow,h("span",{class:"row",style:"gap:8px;align-items:center"},pinBtn,count)),slide,dots,h("div",{class:"deckbar"},prev,idxBtn,next));
   /* index: every lesson with its slides */
   side.append(h("div",{class:"deckside-head"},h("b",{},"Index"),h("button",{class:"ghost deckclose",on:{click:()=>side.classList.remove("open")}},"✕")));
   /* pinned after a test: what to reread first */
@@ -3920,7 +3950,7 @@ const top=document.getElementById("topnav");
 function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";const fl=["floor","chart","tv"].includes(cur);[["home","Today"],["map","Program"],["floor","Trading"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id||(id==="floor"&&fl)?"on":""},l)));
   paintStreak()}
 function paintStreak(){const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
-function route(){if(SESSION||TVS)return;document.body.classList.remove("mcfull");live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();document.body.classList.toggle("wide",id==="chart");
+function route(){if(SESSION||TVS)return;document.body.classList.remove("mcfull");live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();if(id!=="notes")NOTES_MODE="hub";document.body.classList.toggle("wide",id==="chart");
   if(id==="gate"){gate(app)}else if(id==="gate2"){gate2(app)}else if(id==="gate3"){gate3(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="floor"){floorView(app)}else if(id==="tv"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));tvOpen()?tvView(app):tvLocked(app)}else if(id==="chart"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));chartView(app)}
   else if(LESSONS.find(x=>x.id===id)){history.replaceState(null,"","#home");startSession("lesson",id);return}
   else homeView(app);window.scrollTo(0,0)}
