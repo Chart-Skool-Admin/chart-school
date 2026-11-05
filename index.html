@@ -251,6 +251,7 @@ body.mcfull{padding:0!important;overflow:hidden}body.mcfull .topbar,body.mcfull 
 .mcpclose{position:absolute;top:4px;right:4px;z-index:2}
 .mctb{display:flex;align-items:center;gap:6px;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--panel)}
 .mctb .mctools{flex:1;gap:2px;flex-wrap:nowrap}.mctb .mctools button{border:0;background:transparent;padding:8px 10px;border-radius:10px;color:var(--muted)}
+.mctools .ms{display:none}.mctb .mctools button{flex-direction:column;gap:1px;padding:4px 8px}.mctb .mctools .ms{display:block;font-size:10px;font-family:var(--f-ui,inherit);line-height:1.1}
 .mctb .mctools button.on{background:var(--bg);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.mctb .mctools .mi{font-size:18px}
 .mcpracbtn{padding:8px 12px;font-size:14px;white-space:nowrap}
 .mcgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.mcgrid button{padding:10px}
@@ -390,6 +391,7 @@ body{margin:0}
 .opt.picked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .confrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.confrow .cq{width:100%;margin:0;font-size:14px;font-weight:600;color:var(--ink)}.confrow button{flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:8px}.confrow .k{font-family:var(--f-mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
 .scstat{display:block;margin-top:6px;font-size:13px;opacity:.85}
+canvas.chart.scen{height:380px}html.is-phone canvas.chart.scen{height:400px}
 .studypill{border:1px solid var(--accent);background:var(--grad-soft),var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
 .decklink.pin{color:var(--ink);font-weight:600}.decklink.pin::before{content:"📌 "}.deckles.pin::after{content:" 📌"}
 .studygroup{padding-bottom:8px;border-bottom:1px solid var(--line)}
@@ -2460,8 +2462,8 @@ function ewRound(el,done,opts={}){const want=pick(["ok","ok","w2","w3","w4"]);co
 Object.assign(ROUNDS,{ma:(el,d)=>maRound(el,d),rsi:(el,d)=>rsiRound(el,d),macd:(el,d)=>macdRound(el,d),trade4:(el,d)=>trade4Round(el,d),squeeze:(el,d)=>squeezeRound(el,d),
   mtf:(el,d)=>mtfRound(el,d),big:(el,d)=>bigRound(el,d),rel:(el,d)=>relRound(el,d),ew:(el,d)=>ewRound(el,d)});
 /* ---------- "What would you do?": a real chart stops at a random candle. Buy, sell or stand aside, then watch what happened next.
-   Every trade gets the same rules: stop 1.5 ATR away, target 2x the risk, 30 candles to work. ---------- */
-const SC={ctx:70,fut:30,stopA:1.5,tgtR:2};
+   Every trade gets the same rules: stop 1.5 ATR away, target 2x the risk, 25 candles to work. ---------- */
+const SC={ctx:48,fut:25,stopA:1.5,tgtR:2};
 function atrAt(b,i,n){n=n||14;let s=0,k=0;for(let j=Math.max(1,i-n+1);j<=i;j++){s+=Math.max(b[j].h-b[j].l,Math.abs(b[j].h-b[j-1].c),Math.abs(b[j].l-b[j-1].c));k++}return k?s/k:b[i].h-b[i].l}
 function scSim(b,i0,dir,risk){const e=b[i0].c,stop=e-dir*risk,tgt=e+dir*risk*SC.tgtR;
   for(let j=i0+1;j<b.length;j++){const x=b[j];if(dir>0?x.l<=stop:x.h>=stop)return{r:-1,at:j,how:"stop",stop,tgt};if(dir>0?x.h>=tgt:x.l<=tgt)return{r:SC.tgtR,at:j,how:"target",stop,tgt}}
@@ -2480,16 +2482,18 @@ function scProcess(act,rd){if(act==="aside")return rd.trend==="up"||rd.trend==="
   return{ok:false,t:"With no clear trend, a trade here is closer to a coin flip."}}
 const fmtR=r=>(r>=0?"+":"−")+Math.abs(r).toFixed(1)+"R";
 function scenarioRound(el,done){const g=scPick();const b=g.bars,i0=SC.ctx-1;const risk=SC.stopA*atrAt(b,i0);let vis=SC.ctx,lines=[];
-  const cv=h("canvas",{class:"chart"});mountChart(cv,()=>[b,{visible:vis,box:{from:i0,to:i0,c:"--accent"},hlines:lines}]);
+  const cv=h("canvas",{class:"chart scen"});let shown=false;
+  /* before you choose, only the past is drawn, so the candles fill the chart and stay easy to read */
+  mountChart(cv,()=>shown?[b,{visible:vis,box:{from:i0,to:i0,c:"--accent"},hlines:lines}]:[b.slice(0,SC.ctx),{box:{from:i0,to:i0,c:"--accent"}}]);
   const f=h("div",{hidden:""});const btns={};const nm={buy:"Buy",sell:"Sell (short)",aside:"Stand aside"};
   const row=h("div",{class:"row"},...Object.keys(nm).map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
   const src=g.meta?`Real ${g.meta.sym} ${g.meta.iv==="D"?"daily":"4-hour"} chart`:"Practice chart";
-  el.append(h("p",{class:"task",html:src+". It stops at the boxed candle. What would you do?"}),cv,row,h("p",{class:"hint"},"Each trade: stop 1.5 ATR away, target 2× the risk, 30 candles to work."),f);
+  el.append(h("p",{class:"task",html:src+". It stops at the boxed candle. What would you do?"}),cv,row,h("p",{class:"hint"},"Each trade: stop 1.5 ATR away, target 2× the risk, 25 candles to work."),f);
   function answer(k){Object.values(btns).forEach(x=>x.disabled=true);btns[k].classList.add("pick-good");
     const L=scSim(b,i0,1,risk),S=scSim(b,i0,-1,risk);const res={buy:L.r,sell:S.r,aside:0};const mine=res[k];const best=Object.keys(res).reduce((a,c)=>res[c]>res[a]?c:a,"aside");
     const rd=scRead(b,i0);const pr=scProcess(k,rd);const e=b[i0].c;
     if(k!=="aside"){const r=k==="buy"?L:S;lines=[{p:e,c:"--muted",w:1,label:"entry"},{p:r.stop,c:"--bad",w:1.5,dash:true,label:"stop"},{p:r.tgt,c:"--good",w:1.5,dash:true,label:"target"}]}
-    const end=k==="buy"?L.at:k==="sell"?S.at:b.length-1;
+    const end=k==="buy"?L.at:k==="sell"?S.at:b.length-1;shown=true;
     /* play the future candle by candle */
     const step=()=>{vis=Math.min(end+1,vis+1);rerenderAll();if(vis<end+1)setTimeout(step,45);else finish()};setTimeout(step,120);
     function finish(){vis=b.length;rerenderAll();
@@ -3449,8 +3453,8 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   const ivRow=h("div",{class:"tvchips",role:"group","aria-label":"Timeframe"},...MC_IVS.map(([l,v])=>h("button",{"data-v":v,on:{click:()=>{cfg.iv=v;mcSave();reload()}}},l)));
   const logB=h("button",{class:"mctog",on:{click:()=>{cfg.log=!cfg.log;mcSave();sync();draw()}},title:"Log scale (Alt+L)"},"log");
   const magB=h("button",{class:"mctog",on:{click:()=>{cfg.mag=!cfg.mag;mcSave();sync()}},title:"Magnet: snap to candle highs and lows"},"🧲 magnet");
-  const TOOLS=[["cursor","↖","Move (Esc)"],["h","─","Horizontal line (Alt+H)"],["t","╱","Trend line (Alt+T)"],["z","▭","Zone (Alt+Shift+R)"],["erase","⌫","Erase: click a drawing"]];
-  const toolRow=h("div",{class:"mctools",role:"group","aria-label":"Drawing tools"},...TOOLS.map(([k,i,t])=>h("button",{"data-v":k,title:t,"aria-label":t,on:{click:()=>setTool(k)}},h("span",{class:"mi"},i),h("span",{class:"ml"},t.split(" (")[0].split(":")[0]))));
+  const TOOLS=[["cursor","↖","Move (Esc)","Move"],["h","─","Horizontal line (Alt+H)","Line"],["t","╱","Trend line (Alt+T)","Trend"],["z","▭","Zone (Alt+Shift+R)","Zone"],["erase","⌫","Erase: click a drawing","Erase"]];
+  const toolRow=h("div",{class:"mctools",role:"group","aria-label":"Drawing tools"},...TOOLS.map(([k,i,t,sh])=>h("button",{"data-v":k,title:t,"aria-label":t,on:{click:()=>setTool(k)}},h("span",{class:"mi"},i),h("span",{class:"ml"},t.split(" (")[0].split(":")[0]),h("span",{class:"ms"},sh))));
   let clearArm=null;const clearB=h("button",{class:"mctog",on:{click:()=>{if(!drawsOf().length)return;if(clearArm){clearTimeout(clearArm);clearArm=null;cfg.draw[cfg.sym]=[];sel=null;selUI();mcSave();clearB.textContent="Clear all";draw();return}
     clearB.textContent="Tap again to clear";clearArm=setTimeout(()=>{clearArm=null;clearB.textContent="Clear all"},3000)}}},"Clear all");
   const refB=h("button",{class:"mctog",title:"Refresh prices",on:{click:()=>reload(true)}},"↻");
@@ -3458,6 +3462,9 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   function delSel(){if(!sel)return;const ds=drawsOf();const i=ds.indexOf(sel);if(i>=0)ds.splice(i,1);sel=null;mcSave();selUI();draw()}
   function selUI(){selBar.innerHTML="";selBar.hidden=!sel;if(!sel)return;const nm={h:"Horizontal line",t:"Trend line",z:"Zone"}[sel.k];
     selBar.append(h("span",{class:"score"},nm+" · drag to move, dots to reshape"));
+    /* turn a line into a zone around it (half a typical candle range each side), or a zone back into a line at its middle */
+    if(sel.k==="h")selBar.append(h("button",{class:"mctog",on:{click:()=>{const r=bars.slice(-14),w=r.length?r.reduce((q,c)=>q+(c.h-c.l),0)/r.length/2:sel.p*.01;const d=sel;const p=d.p;d.k="z";d.p1=p+w;d.p2=p-w;delete d.p;mcSave();selUI();draw()}}},"▭ Make zone"));
+    if(sel.k==="z")selBar.append(h("button",{class:"mctog",on:{click:()=>{const d=sel;d.k="h";d.p=(d.p1+d.p2)/2;delete d.p1;delete d.p2;mcSave();selUI();draw()}}},"─ Make line"));
     if(sel.k==="t")selBar.append(h("button",{class:"mctog"+(sel.ext?" on":""),on:{click:()=>{sel.ext=!sel.ext;mcSave();selUI();draw()}}},"Extend right"));
     selBar.append(h("button",{class:"mctog",title:"Delete (Backspace)",on:{click:delSel}},"🗑 Delete"))}
   const msg=h("div",{class:"mcmsg",hidden:""});
