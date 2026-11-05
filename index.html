@@ -391,6 +391,7 @@ body{margin:0}
 .opt.picked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .confrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.confrow .cq{width:100%;margin:0;font-size:14px;font-weight:600;color:var(--ink)}.confrow button{flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:8px}.confrow .k{font-family:var(--f-mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
 .scstat{display:block;margin-top:6px;font-size:13px;opacity:.85}
+.scstudy{margin-top:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--accent);background:var(--panel)}.scstudy div{margin-top:3px}.scstudy .n{font-family:var(--f-mono);font-size:12px;color:var(--accent);margin-right:4px}.scstudy .hint{display:block;margin-top:4px}
 canvas.chart.scen{height:380px}html.is-phone canvas.chart.scen{height:400px}
 .studypill{border:1px solid var(--accent);background:var(--grad-soft),var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
 .decklink.pin{color:var(--ink);font-weight:600}.decklink.pin::before{content:"📌 "}.deckles.pin::after{content:" 📌"}
@@ -2480,11 +2481,29 @@ function scProcess(act,rd){if(act==="aside")return rd.trend==="up"||rd.trend==="
   const dir=act==="buy"?1:-1;if(rd.trend==="up"||rd.trend==="down"){const w=(rd.trend==="up")===(dir>0);return w?{ok:true,t:"Good process: you traded with the trend."}:{ok:false,t:"You traded against the trend. That can work, but it needs a strong reason, like a clear reversal at a big level."}}
   if(rd.trend==="side"){const edge=dir>0?rd.pos<.3:rd.pos>.7;return edge?{ok:true,t:"Good process: in a range you "+(dir>0?"bought near support":"sold near resistance")+"."}:{ok:false,t:"In a range, the middle is the worst place to trade: there's no level to lean on."}}
   return{ok:false,t:"With no clear trend, a trade here is closer to a coin flip."}}
+/* the candle pattern (if any) that finished in the last 3 candles before the box */
+function scCandle(b,i0){const kinds=["mstar","bengulf","pierce","bharami","hammer","ihammer","r3","doji"];
+  for(const mir of [false,true]){const v=mir?rwMir(b):b;const a=rwAtr(v);
+    for(let i=i0;i>=Math.max(12,i0-2);i--)for(const kind of kinds){if(mir&&kind==="doji")continue;const r=rwCdlAt(v,i,a,kind);if(!r)continue;
+      const key=mir?RW_CMIR[kind]:kind;const bull=kind==="doji"?false:(key===kind);return{key,bull,from:r[0],to:r[0]+r[1]-1,n:SET13.includes(key)?13:12}}}
+  return null}
+/* what to study after a missed scenario: lessons + notes slides, also pinned in the Notes tab */
+function scStudy(k,rd,pr,cd,ok){const out=[];const add=(n,hint)=>{const L=LESSONS.find(x=>x.n===n);if(!L||!lvlOpen(L.lv)||out.some(x=>x.n===n))return;out.push({n,L,slide:studySlide(L,hint)})};
+  const dir=k==="buy"?1:k==="sell"?-1:0;
+  if(cd){const sideOK=dir===0||(cd.key==="r3"?dir>0:cd.key==="f3"?dir<0:(cd.bull?dir>0:dir<0));if(!sideOK||!ok)add(cd.n,CDL[cd.key].n+" "+CDL[cd.key].e)}
+  if(!pr.ok){if(rd.trend==="up"||rd.trend==="down"){add(6,"trade with the trend higher highs higher lows lower highs lower lows uptrend downtrend");add(22,"trend trade with the trend pullback")}
+    else if(rd.trend==="side"){add(7,"support resistance buy near support sell near resistance");add(11,"trading range middle edges buy low sell high range")}
+    else{add(6,"no clear trend sideways stand aside");add(22,"range trend shift stand aside")}}
+  if(!ok&&!out.length)add(8,"one trade risk stop many trades process losses");
+  return out}
+function scPinSave(list){if(!list.length)return;state.study=state.study||{};const v=state.study.scen=state.study.scen||{t:Date.now(),lv:null,items:[]};v.t=Date.now();
+  list.forEach(x=>{if(v.items.some(it=>!it.seen&&it.n===x.n&&it.slide===x.slide))return;v.items.push({id:Math.random().toString(36).slice(2,9),n:x.n,slide:x.slide,seen:false,qi:-1,kind:LESSON_ROUND[x.n]||null})});
+  v.lv=Math.max(...v.items.map(it=>(LESSONS.find(L=>L.n===it.n)||{lv:1}).lv))}
 const fmtR=r=>(r>=0?"+":"−")+Math.abs(r).toFixed(1)+"R";
 function scenarioRound(el,done){const g=scPick();const b=g.bars,i0=SC.ctx-1;const risk=SC.stopA*atrAt(b,i0);let vis=SC.ctx,lines=[];
   const cv=h("canvas",{class:"chart scen"});let shown=false;
   /* before you choose, only the past is drawn, so the candles fill the chart and stay easy to read */
-  mountChart(cv,()=>shown?[b,{visible:vis,box:{from:i0,to:i0,c:"--accent"},hlines:lines}]:[b.slice(0,SC.ctx),{box:{from:i0,to:i0,c:"--accent"}}]);
+  let cdl=null;mountChart(cv,()=>shown?[b,{visible:vis,box:{from:i0,to:i0,c:"--accent"},hlines:lines,labels:cdl?[{i:cdl.from,p:cdl.bull?Math.min(...b.slice(cdl.from,cdl.to+1).map(x=>x.l)):Math.max(...b.slice(cdl.from,cdl.to+1).map(x=>x.h)),below:cdl.bull,text:CDL[cdl.key].n,c:"--mark"}]:[]}]:[b.slice(0,SC.ctx),{box:{from:i0,to:i0,c:"--accent"}}]);
   const f=h("div",{hidden:""});const btns={};const nm={buy:"Buy",sell:"Sell (short)",aside:"Stand aside"};
   const row=h("div",{class:"row"},...Object.keys(nm).map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
   const src=g.meta?`Real ${g.meta.sym} ${g.meta.iv==="D"?"daily":"4-hour"} chart`:"Practice chart";
@@ -2498,10 +2517,13 @@ function scenarioRound(el,done){const g=scPick();const b=g.bars,i0=SC.ctx-1;cons
     const step=()=>{vis=Math.min(end+1,vis+1);rerenderAll();if(vis<end+1)setTimeout(step,45);else finish()};setTimeout(step,120);
     function finish(){vis=b.length;rerenderAll();
       const ok=k===best||mine>0;const how=r=>r.how==="target"?"hit the target, "+fmtR(r.r):r.how==="stop"?"stopped out, −1R":"ran out of time at "+fmtR(r.r);
+      const cd=scCandle(b,i0);cdl=cd;rerenderAll();const study=(!ok||!pr.ok)?scStudy(k,rd,pr,cd,ok):[];scPinSave(study);
       state.scen=state.scen||{n:0,r:0,good:0};const sc=state.scen;sc.n++;sc.r=+(sc.r+mine).toFixed(2);if(pr.ok)sc.good++;save();
+      const cdTxt=cd?`<br>🕯 The last candles before the box made a <b>${CDL[cd.key].n}</b> (labelled), a ${cd.key==="r3"?"continuation-up":cd.key==="f3"?"continuation-down":cd.bull?"bullish":"bearish"} sign.`:"";
+      const stTxt=study.length?`<div class="scstudy"><b>📌 Study again</b>${study.map(x=>`<div><span class="n">Lesson ${x.n}</span> ${x.L.t}${x.slide&&x.slide!==x.L.t?": "+x.slide:""}</div>`).join("")}<span class="hint">Pinned in the Notes tab.</span></div>`:"";
       fb(f,ok?"good":"bad",`<b>${k==="aside"?"You stood aside: 0R.":"You "+(k==="buy"?"bought":"sold")+": "+how(k==="buy"?L:S)+"."}</b> `+
         (k!=="buy"?"Buying would have "+how(L)+". ":"")+(k!=="sell"?"Selling would have "+how(S)+". ":"")+
-        `<br>Before the box: ${rd.text}. ${pr.t}<br><span class="scstat">One trade proves nothing; good process wins over many. Your scenarios: ${sc.n} played, ${fmtR(sc.r)} total, ${sc.good} with good process.</span>`+(g.meta?rwTag(g):""));
+        `<br>Before the box: ${rd.text}. ${pr.t}${cdTxt}${stTxt}<br><span class="scstat">One trade proves nothing; good process wins over many. Your scenarios: ${sc.n} played, ${fmtR(sc.r)} total, ${sc.good} with good process.</span>`+(g.meta?rwTag(g):""));
       done(ok)}}}
 ROUNDS.wwyd=(el,d)=>scenarioRound(el,d);
 
