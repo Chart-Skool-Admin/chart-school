@@ -79,6 +79,7 @@ h3{font-family:var(--f-display);font-weight:500;font-size:19px;margin:0 0 8px}
 .read{margin:14px 0 0;font-size:13px;color:var(--muted)}
 .read b{color:var(--ink);font-weight:600}
 .task{font-size:15px;margin:0 0 10px;max-width:68ch}
+html,body{overscroll-behavior-x:none}
 canvas.chart{display:block;width:100%;height:320px;border-radius:8px;background:var(--panel);touch-action:manipulation}
 canvas.chart.clickable{touch-action:pan-y}
 /* pressing and sliding on a chart must not select the text around it or open the iPhone Copy / Look Up menu */
@@ -386,7 +387,8 @@ body{margin:0}
 .studybox{margin:14px 0;padding:14px 16px;border-radius:14px;border:1px solid var(--accent);background:var(--grad-soft),var(--bg)}.studybox .studyls{display:grid;gap:6px;margin:10px 0}.studybox .studyls .n{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-right:8px}
 .studyflag{margin:0 0 12px;padding:8px 12px;border-radius:10px;background:var(--grad-soft),var(--bg);border:1px solid var(--accent);font-size:14px;font-weight:600}
 .studyflag .studygo{float:right;margin:-2px 0 4px 10px;padding:6px 12px;font-size:13px}
-.confrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.confrow .hint{width:100%;margin:0}.confrow button{flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:8px}.confrow .k{font-family:var(--f-mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.opt.picked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.confrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.confrow .cq{width:100%;margin:0;font-size:14px;font-weight:600;color:var(--ink)}.confrow button{flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:8px}.confrow .k{font-family:var(--f-mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
 .scstat{display:block;margin-top:6px;font-size:13px;opacity:.85}
 .studypill{border:1px solid var(--accent);background:var(--grad-soft),var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
 .decklink.pin{color:var(--ink);font-weight:600}.decklink.pin::before{content:"📌 "}.deckles.pin::after{content:" 📌"}
@@ -1273,7 +1275,7 @@ const LESSONS=[
  S("guess",{pic:"dow",q:"BTC breaks to a new high, ETH doesn't. Dow would say…",o:["The signal isn't confirmed yet","Sell everything now","Buy more ETH"],a:0,e:"Dow wanted the main averages to confirm each other. One market alone is a weaker signal."}),
  S("explain",{q:"Why does the public usually buy late?",model:"They wait for good news and rising prices, and those only appear after informed money has already bought."})],
  cards:[{q:"Dow's rule on when a trend ends:",o:["It's in force until it clearly reverses","It ends after three waves","It ends when the news turns bad"],a:0,e:"Assume the trend continues until there's clear proof it has turned.",ex:"failure"},
-  {q:"In a healthy uptrend, volume should…",o:["Rise on rallies and shrink on dips","Be highest on dips","Not matter"],a:0,e:"Volume confirms the trend when it grows in the trend's direction."}],chart:["phase"]},
+  {pic:"upvol",q:"In a healthy uptrend, volume should…",o:["Rise on rallies and shrink on dips","Be highest on dips","Not matter"],a:0,e:"Volume confirms the trend when it grows in the trend's direction."}],chart:["phase"]},
 
 {id:"l3",n:3,t:"Reading candles",min:8,steps:[
  S("hook",{text:"Every candle is a small battle between buyers and sellers. Learn to read who won."}),
@@ -1306,7 +1308,7 @@ const LESSONS=[
  S("guess",{q:"What's the best way to practise marking swings?",o:["A few minutes every day","Hours once a week","Only while trading"],a:0,e:"Short, regular practice beats cramming, every time."}),
  S("drill",{kind:"pivot",n:1}),
  S("explain",{q:"Why mark swings the same way every time?",model:"So my reading of trend and levels is consistent. If I mark differently each time, every later decision is guesswork."})],
- cards:[{q:"A bigger (second-order) pivot high is…",o:["A pivot high with lower pivot highs on each side","Any candle with a long wick","The second highest candle"],a:0,e:"Filtering pivots this way keeps only the turns that matter."}],chart:["pivot"]},
+ cards:[{pic:"piv2",q:"A bigger (second-order) pivot high is…",o:["A pivot high with lower pivot highs on each side","Any candle with a long wick","The second highest candle"],a:0,e:"Filtering pivots this way keeps only the turns that matter."}],chart:["pivot"]},
 
 {id:"l6",n:6,t:"Read the trend",min:10,steps:[
  S("hook",{text:"Up, down or sideways? Get this right and you dodge most bad trades."}),
@@ -1356,7 +1358,7 @@ LESSONS.push(
  S("drill",{kind:"tline",n:1}),
  S("explain",{q:"Why does a broken uptrend line often act as resistance later?",model:"Same as broken support: people who bought near the line are now losing and sell when price comes back up to it, so the line flips roles.",ex:"tbreak"})],
  cards:[{q:"A trendline is drawn on…",o:["Swing lows in an uptrend, swing highs in a downtrend","Closing prices anywhere","The single most extreme wick"],a:0,e:"Use the swing points. The line should touch the turns, not one odd spike."},
-  {q:"Very steep trendlines usually…",o:["Break soon and get redrawn at a gentler angle","Are the most reliable","Never break"],a:0,e:"A steep pace can't last. When it breaks, the trend often carries on at a slower angle (the fan principle)."}],chart:["tline"]},
+  {pic:"steeper",q:"Very steep trendlines usually…",o:["Break soon and get redrawn at a gentler angle","Are the most reliable","Never break"],a:0,e:"A steep pace can't last. When it breaks, the trend often carries on at a slower angle (the fan principle)."}],chart:["tline"]},
 
 {id:"l10",n:10,lv:2,t:"Retracements and pullbacks",min:9,steps:[
  S("hook",{text:"Trends never move in a straight line. The pullback is where traders get in, if they can tell it from a reversal."}),
@@ -1367,7 +1369,7 @@ LESSONS.push(
  S("guess",{q:"Healthy pullbacks often come in how many legs?",o:["Two: down, a small bounce, down again","One straight drop","Five"],a:0,e:"The two-legged pullback is the classic shape. The second leg shakes out the last nervous buyers before the trend resumes.",ex:"twoleg"}),
  S("guess",{pic:"pullAB",q:"Pullback A drifts down on small candles. Pullback B is a sudden drop of big red candles. Which worries an uptrend more?",o:["B","A"],a:0,e:"Fast, strong counter-moves show real selling. Quiet, overlapping pullbacks are usually just profit-taking."}),
  S("explain",{q:"How do you tell a healthy pullback from the start of a reversal?",model:"A healthy pullback is shallow to normal (under ⅔), quiet, and holds above the last swing low. A reversal goes deeper, moves fast and breaks the swing low."})],
- cards:[{q:"Price gives back 90% of the last rise. Most likely…",o:["The uptrend is in doubt","It's a normal buying chance","The trend is very strong"],a:0,e:"Over ⅔ back is a deep pullback. Watch whether the last swing low breaks."},
+ cards:[{pic:"deep",q:"Price gives back 90% of the last rise. Most likely…",o:["The uptrend is in doubt","It's a normal buying chance","The trend is very strong"],a:0,e:"Over ⅔ back is a deep pullback. Watch whether the last swing low breaks."},
   {q:"The 50% pullback level comes from…",o:["Old Dow Theory observation, not Fibonacci","The Fibonacci sequence","Elliott Wave only"],a:0,e:"50% isn't a Fibonacci ratio. It's simply the most common pullback size traders have seen for over a century."}],chart:["retr"]},
 
 {id:"l11",n:11,lv:2,t:"Trading ranges",min:9,steps:[
@@ -1377,10 +1379,10 @@ LESSONS.push(
  S("learn",{title:"Breakout or fake-out?",svg:"fake",text:"A real breakout closes outside the range and keeps going. A fake-out pokes out, then closes back inside and traps the breakout buyers."}),
  S("drill",{kind:"brk",n:3}),
  S("guess",{q:"Price breaks above a range, then quickly closes back inside. Where does it often go next?",o:["Toward the other side of the range","Straight back up","Nowhere, it freezes"],a:0,e:"Trapped breakout buyers sell to get out, which pushes price back across the range. A failed breakout is a trade signal of its own.",ex:"fake"}),
- S("guess",{q:"Which is a good sign before a range breakout?",o:["Price presses the edge with higher lows and tighter swings","A sudden spike out of nowhere","A very wide, messy range"],a:0,e:"Pressure building at one edge, like rising lows into resistance, shows one side winning. Breakouts from tight, coiled ranges work better."}),
+ S("guess",{pic:"range",q:"Which is a good sign before a range breakout?",o:["Price presses the edge with higher lows and tighter swings","A sudden spike out of nowhere","A very wide, messy range"],a:0,e:"Pressure building at one edge, like rising lows into resistance, shows one side winning. Breakouts from tight, coiled ranges work better."}),
  S("explain",{q:"Why do so many range breakouts fail?",model:"A range means buyers and sellers are in balance. Lots of traders sell at the top, so price needs real new demand to break out. Without it, it falls back in."})],
  cards:[{q:"After a clean breakout, price often comes back to…",o:["Retest the old range edge from the other side","The range bottom","Where the range started"],a:0,e:"Old ceiling becomes the new floor: role reversal again.",ex:"flip"},
-  {q:"The classic target for a range breakout is…",o:["The range's height added to the breakout point","Twice the range","The last swing high"],a:0,e:"Project the range height from the breakout level. A rough guide, not a promise."}],chart:["brk"]},
+  {pic:"range",q:"The classic target for a range breakout is…",o:["The range's height added to the breakout point","Twice the range","The last swing high"],a:0,e:"Project the range height from the breakout level. A rough guide, not a promise."}],chart:["brk"]},
 
 {id:"l12",n:12,lv:2,t:"Single and two-candle reversals",min:10,steps:[
  S("hook",{text:"Japanese rice traders read candles 300 years ago. A few shapes still show the moment one side gives up."}),
@@ -1405,7 +1407,7 @@ LESSONS.push(
  S("guess",{q:"A big green candle, three small red ones inside it, then another big green. What does this signal?",o:["The uptrend continues; the pause was just a rest","A top is forming","Nothing"],a:0,e:"Rising three methods. Sellers couldn't even break the first candle's low, so buyers carry on.",ex:"cdl:r3"}),
  S("drill",{kind:"cdl13",n:1}),
  S("explain",{q:"What does the small middle candle of a star tell you?",model:"Neither side is in control any more. The trend has stalled, and the third candle shows who takes over."})],
- cards:[{q:"A gap between two candles is called a…",o:["Window","Star","Shadow"],a:0,e:"Japanese traders call gaps windows. A rising window tends to act as support later, a falling window as resistance."},
+ cards:[{pic:"gap",q:"A gap between two candles is called a…",o:["Window","Star","Shadow"],a:0,e:"Japanese traders call gaps windows. A rising window tends to act as support later, a falling window as resistance."},
   {q:"An evening star shows up…",o:["After a rally, and signals a top","After a fall, and signals a bottom","In the middle of a range"],a:0,e:"Big green, small star above, big red closing deep into the green body.",ex:"cdl:estar"}],chart:["cdl13"]},
 
 {id:"l14",n:14,lv:2,t:"Candles plus Western tools",min:9,steps:[
@@ -1418,7 +1420,7 @@ LESSONS.push(
  S("drill",{kind:"ctx",n:1}),
  S("explain",{q:"Name three things that make a candle signal worth acting on.",model:"It comes after a clear move, it's at a key level like support, resistance or a trendline, and the next candle confirms it."})],
  cards:[{q:"Candle signals tell you…",o:["Short-term shifts in control, not how far price will go","Exact price targets","The long-term trend"],a:0,e:"Candles are good for timing. For targets, use levels and patterns."},
-  {q:"A shooting star touches the top line of a down channel. That's…",o:["Confluence: a stronger sell signal","A buy signal","Meaningless"],a:0,e:"The candle and the line agree: sellers are defending that line."}],chart:["ctx"]},
+  {pic:"ex:cdl:star",q:"A shooting star touches the top line of a down channel. That's…",o:["Confluence: a stronger sell signal","A buy signal","Meaningless"],a:0,e:"The candle and the line agree: sellers are defending that line."}],chart:["ctx"]},
 
 {id:"l15",n:15,lv:2,t:"Classical reversal patterns",min:10,steps:[
  S("hook",{text:"Some chart shapes have been studied for a century. They mark the place where a trend runs out of buyers or sellers."}),
@@ -1426,12 +1428,12 @@ LESSONS.push(
  S("learn",{title:"Head and shoulders",svg:"hs",text:"Left shoulder, higher head, lower right shoulder. It only completes when price closes below the neckline. Target: the head-to-neckline height, projected down from the break."}),
  S("drill",{kind:"pat15",n:2}),
  S("guess",{q:"When is a double top confirmed?",o:["When price closes below the low between the two peaks","When the second peak forms","When volume rises"],a:0,e:"Until that middle low breaks, it's just a range. Many \"double tops\" turn into higher highs.",ex:"pat:dt"}),
- S("guess",{q:"Head at 130, neckline at 110, the neckline breaks. Minimum target?",o:["90","100","70"],a:0,e:"Height = 130 − 110 = 20. Project it down from the break: 110 − 20 = 90. A guide, not a promise.",svg:"hs"}),
+ S("guess",{pic:"hsn:130:110",q:"Head at 130, neckline at 110, the neckline breaks. Minimum target?",o:["90","100","70"],a:0,e:"Height = 130 − 110 = 20. Project it down from the break: 110 − 20 = 90. A guide, not a promise.",svg:"hs"}),
  S("guess",{q:"After the neckline breaks, price often…",o:["Comes back up to test the neckline, which now acts as resistance","Goes straight down without a pause","Makes a new head"],a:0,e:"The return move to the neckline is common. It gives a second chance to sell, with a tight stop.",ex:"pat:hs"}),
  S("drill",{kind:"pat15",n:1}),
  S("explain",{q:"Why wait for the neckline break instead of selling the right shoulder?",model:"Until the neckline breaks, the trend's lows still hold, and many patterns never complete. The break is the proof."})],
  cards:[{q:"An inverse head and shoulders is…",o:["A bottom, the mirror image of the top pattern","A top pattern","A continuation pattern"],a:0,e:"Three troughs, the middle one lowest. It completes on a close above the neckline.",ex:"pat:hsi"},
-  {q:"In a head and shoulders top, volume is often…",o:["Lighter on the head and right shoulder than on the left","Highest on the right shoulder","Unimportant"],a:0,e:"Fading volume on each new high shows buyers getting tired."}],chart:["pat15"]},
+  {pic:"ex:pat:hs",q:"In a head and shoulders top, volume is often…",o:["Lighter on the head and right shoulder than on the left","Highest on the right shoulder","Unimportant"],a:0,e:"Fading volume on each new high shows buyers getting tired."}],chart:["pat15"]},
 
 {id:"l16",n:16,lv:2,t:"Continuation patterns",min:10,steps:[
  S("hook",{text:"Most patterns aren't reversals. They're the trend catching its breath before the next leg."}),
@@ -1444,7 +1446,7 @@ LESSONS.push(
  S("drill",{kind:"pat16",n:1}),
  S("explain",{q:"What's the difference between a flag and a range?",model:"A flag is short, comes right after a sharp move and slopes against it. A range can last a long time and has no pole before it."})],
  cards:[{q:"A descending triangle (flat bottom, falling highs) usually breaks…",o:["Down","Up","Sideways"],a:0,e:"Sellers keep pressing lower each time while buyers defend one price.",ex:"pat:desc"},
-  {q:"Flags usually last…",o:["A short time: a few candles to a few weeks","Many months","Exactly 10 candles"],a:0,e:"If a \"flag\" drags on, treat it as something else."}],chart:["pat16"]},
+  {pic:"ex:pat:bflag",q:"Flags usually last…",o:["A short time: a few candles to a few weeks","Many months","Exactly 10 candles"],a:0,e:"If a \"flag\" drags on, treat it as something else."}],chart:["pat16"]},
 
 {id:"l17",n:17,lv:2,t:"Volume and open interest",min:10,steps:[
  S("hook",{text:"Price tells you what happened. Volume tells you how much conviction was behind it."}),
@@ -1457,7 +1459,7 @@ LESSONS.push(
  S("guess",{q:"A huge volume spike after a long fall, with a long lower wick, often marks…",o:["A selling climax: the panic low","The start of a crash","Nothing special"],a:0,e:"Climax volume shows the last sellers giving up, like the panic low from Lesson 1.",ex:"panic"}),
  S("drill",{kind:"vol",n:1}),
  S("explain",{q:"Why should volume grow in the direction of the trend?",model:"Rising volume with the trend shows more traders joining it. If volume fades as price pushes on, fewer people believe in the move."})],
- cards:[{q:"In crypto, a very high funding rate plus rising open interest means…",o:["Lots of leveraged longs: crowded and at risk of a flush","A safe, healthy rally","Shorts are in control"],a:0,e:"Crowded leverage can unwind fast. Long squeezes and liquidation cascades start this way."},
+ cards:[{pic:"oi:up:up",q:"In crypto, a very high funding rate plus rising open interest means…",o:["Lots of leveraged longs: crowded and at risk of a flush","A safe, healthy rally","Shorts are in control"],a:0,e:"Crowded leverage can unwind fast. Long squeezes and liquidation cascades start this way."},
   {q:"Crypto volume numbers are best used…",o:["To compare rising and falling volume on one big exchange, not as exact truth","As exact totals for the whole market","Not at all"],a:0,e:"Volume is spread over many exchanges and some of it is inflated. Look at the pattern, not the exact number."}],chart:["vol"]}
 );
 
@@ -1465,14 +1467,14 @@ LESSONS.push(
 LESSONS.push(
 {id:"l18",n:18,lv:3,t:"Moving averages",min:10,steps:[
  S("hook",{text:"A moving average turns a messy chart into one smooth line. It can't predict anything, but it shows the trend at a glance."}),
- S("guess",{q:"The last 5 closes are 10, 11, 12, 13 and 14. What is the 5-period simple moving average?",o:["12","14","10"],a:0,e:"Add them up (60) and divide by 5 = 12. Next candle, the oldest close drops out and the newest comes in, so the average \"moves\"."}),
+ S("guess",{pic:"closes",q:"The last 5 closes are 10, 11, 12, 13 and 14. What is the 5-period simple moving average?",o:["12","14","10"],a:0,e:"Add them up (60) and divide by 5 = 12. Next candle, the oldest close drops out and the newest comes in, so the average \"moves\"."}),
  S("learn",{title:"Smoothing, with a delay",svg:"ma",text:"A simple MA (SMA) averages the last N closes equally. An exponential MA (EMA) gives the newest closes more weight, so it turns sooner. Both lag: they confirm a move after it has started."}),
- S("guess",{q:"Which line turns first when price changes direction?",o:["A 20-period EMA","A 20-period SMA","A 200-period SMA"],a:0,e:"The EMA weights the newest closes most, so it reacts first. The longer the average, the slower it turns."}),
+ S("guess",{pic:"maturn",q:"Which line turns first when price changes direction?",o:["A 20-period EMA","A 20-period SMA","A 200-period SMA"],a:0,e:"The EMA weights the newest closes most, so it reacts first. The longer the average, the slower it turns."}),
  S("tool",{kind:"ma"}),
  S("guess",{q:"Price is above a rising 50-day MA and keeps dipping to it and bouncing. What is the MA doing?",o:["Acting as moving support in an uptrend","Giving a sell signal at each touch","Nothing: MAs are only for crossovers"],a:0,e:"In a healthy trend, traders buy pullbacks to a well-watched average. A clear close below it is the first warning.",ex:"ma"}),
  S("drill",{kind:"ma",n:2}),
  S("guess",{q:"The 50-day MA crosses above the 200-day MA. Traders call this…",o:["A golden cross: a slow, late sign the trend has turned up","A death cross","A guaranteed rally"],a:0,e:"Golden cross (50 above 200) and death cross (50 below 200) are famous but late. By the time they happen, a good part of the move is often done.",ex:"gcross"}),
- S("guess",{q:"In a sideways market, moving average crossovers usually…",o:["Whipsaw: buy high, sell low, again and again","Work best","Never happen"],a:0,e:"Flat, tangled averages cross back and forth, and each cross is a false signal. MAs are trend tools; ranges beat them."}),
+ S("guess",{pic:"chop",q:"In a sideways market, moving average crossovers usually…",o:["Whipsaw: buy high, sell low, again and again","Work best","Never happen"],a:0,e:"Flat, tangled averages cross back and forth, and each cross is a false signal. MAs are trend tools; ranges beat them."}),
  S("drill",{kind:"ma",n:1}),
  S("explain",{q:"Why does a moving average always lag, and when does that hurt?",model:"It's an average of past prices, so it can only turn after price has. That's fine in a long trend, but at a sharp turn it's late, and in a range it whipsaws.",ex:"ma"})],
  cards:[{q:"The most watched moving average lengths are…",o:["20 (short), 50 (medium) and 200 (long-term trend)","5, 10 and 15","Only the 9"],a:0,e:"Because so many traders watch the 20, 50 and 200, price often reacts near them."},
@@ -1490,7 +1492,7 @@ LESSONS.push(
  S("drill",{kind:"rsi",n:1}),
  S("explain",{q:"Why is an overbought RSI not enough reason to sell?",model:"It only says price rose fast, and strong trends stay overbought. I'd want a divergence plus a break in the swing structure, ideally at resistance.",ex:"rsiob"})],
  cards:[{q:"A stochastic reading of 95 means…",o:["The close is near the top of the recent high-low range","95% of traders are buying","Price will fall 95%"],a:0,e:"Stochastics measures where the close sits in the last 14 candles' high-low range."},
-  {q:"A divergence is best treated as…",o:["A warning that needs price to confirm","A signal to trade right away","Proof the trend is over"],a:0,e:"Divergences can repeat several times before a turn. Wait for the swing structure to break."}],chart:["rsi"]},
+  {pic:"div",q:"A divergence is best treated as…",o:["A warning that needs price to confirm","A signal to trade right away","Proof the trend is over"],a:0,e:"Divergences can repeat several times before a turn. Wait for the swing structure to break."}],chart:["rsi"]},
 
 {id:"l20",n:20,lv:3,t:"MACD and momentum",min:10,steps:[
  S("hook",{text:"MACD turns two moving averages into one picture of momentum. It often shows a move slowing before the price turns."}),
@@ -1500,7 +1502,7 @@ LESSONS.push(
  S("drill",{kind:"macd",n:2}),
  S("guess",{q:"Price keeps making new highs, but each histogram bar is smaller. That suggests…",o:["The rally is losing momentum: watch for a pause or a turn","The rally is speeding up","A short you must take now"],a:0,e:"The histogram usually shrinks before price turns. It's an early warning, not a reason to short on its own.",ex:"macd"}),
  S("guess",{q:"10-period momentum compares…",o:["Today's close with the close 10 candles ago","Today's high with today's low","Two different coins"],a:0,e:"Momentum = close now − close 10 candles ago. Above zero and rising: the move is speeding up. It tends to peak before price does."}),
- S("guess",{q:"In a long downtrend, the MACD line crosses above its signal line far below zero. Best read?",o:["Downside momentum is easing, but the trend is still down","A strong new uptrend has started","Nothing at all"],a:0,e:"Crosses in the trend's direction are more reliable. A cross against a big trend is often just a bounce."}),
+ S("guess",{pic:"downosc",q:"In a long downtrend, the MACD line crosses above its signal line far below zero. Best read?",o:["Downside momentum is easing, but the trend is still down","A strong new uptrend has started","Nothing at all"],a:0,e:"Crosses in the trend's direction are more reliable. A cross against a big trend is often just a bounce."}),
  S("drill",{kind:"macd",n:1}),
  S("explain",{q:"Why can the MACD histogram warn you before the MACD lines cross?",model:"The histogram is the gap between MACD and its signal line. It starts shrinking as soon as momentum slows, before the lines actually cross.",ex:"macd"})],
  cards:[{q:"MACD above zero means…",o:["The 12 EMA is above the 26 EMA: an up bias","Price is above zero","RSI is over 50"],a:0,e:"The zero line is where the two averages cross. Above it, the faster average is on top."},
@@ -1511,37 +1513,37 @@ LESSONS.push(
  S("guess",{q:"Remember the market cycle. After markup comes…",o:["Distribution: early buyers sell to late ones","Accumulation","Another markup, always"],a:0,e:"Accumulation (flat after a fall), markup (uptrend), distribution (flat after a rise), markdown (downtrend). Then it starts again.",svg:"cycle"}),
  S("drill",{kind:"phase",n:1}),
  S("learn",{title:"The four trades",svg:"four",text:"1. Trend continuation: join a trend on a pullback. 2. Trend termination: bet a trend is ending. 3. Support or resistance holds: trade back from a range edge. 4. Support or resistance breaks: trade the breakout."}),
- S("guess",{q:"BTC is in a clear uptrend and pulls back to a rising 20 EMA near old support. Buying there is which trade?",o:["Trend continuation","Trend termination","Breakout"],a:0,e:"You're betting the trend carries on after a pause. If the pullback's low breaks, the idea is wrong."}),
+ S("guess",{pic:"pullema",q:"BTC is in a clear uptrend and pulls back to a rising 20 EMA near old support. Buying there is which trade?",o:["Trend continuation","Trend termination","Breakout"],a:0,e:"You're betting the trend carries on after a pause. If the pullback's low breaks, the idea is wrong."}),
  S("drill",{kind:"trade4",n:2}),
  S("guess",{q:"Which of the four trades usually wins least often?",o:["Trend termination: trends tend to keep going","Trend continuation","They all win equally often"],a:0,e:"Picking tops and bottoms fights the trend. It can pay well, but needs strong evidence: a climax, a divergence, a lower high and a broken low."}),
  S("guess",{q:"Which two trades belong to a range?",o:["The edge holds (fade it) or the edge breaks (breakout)","Only trend continuation","Only trend termination"],a:0,e:"In a range you either bet the edges hold or that one finally gives way. Remember: most breakouts fail."}),
  S("drill",{kind:"trade4",n:1}),
  S("explain",{q:"Pick one of the four trades and say where its stop goes, and why.",model:"Trend continuation: under the pullback's low, because if that breaks the trend may not be continuing. Range edge: just outside the edge. Breakout: back inside the range."})],
  cards:[{q:"In the markup stage, which trade fits best?",o:["Trend continuation: buy pullbacks","Short every new high","Short the breakouts"],a:0,e:"In markup the trend is your friend. Buy pullbacks to support or a moving average."},
-  {q:"You bought a breakout, and price closes back inside the range. You should…",o:["Get out: the breakout trade has failed","Buy more","Wait a month"],a:0,e:"A breakout trade is wrong once price is back in the range. Failed breakouts often run to the other side."}],chart:["trade4"]},
+  {pic:"failbo",q:"You bought a breakout, and price closes back inside the range. You should…",o:["Get out: the breakout trade has failed","Buy more","Wait a month"],a:0,e:"A breakout trade is wrong once price is back in the range. Failed breakouts often run to the other side."}],chart:["trade4"]},
 
 {id:"l22",n:22,lv:3,t:"Trends, ranges and the shift between them",min:10,steps:[
  S("hook",{text:"Markets switch between calm and wild. The calm usually comes before the big move, and you can see it coming."}),
  S("guess",{q:"A market has gone quiet: the candles have been shrinking for weeks. What often comes next?",o:["A bigger move, but you can't know which way yet","More quiet forever","A crash, always"],a:0,e:"Volatility comes in cycles: quiet spells tend to be followed by bursts. A squeeze says a move is coming, not its direction.",ex:"bb"}),
  S("learn",{title:"Bollinger Bands",svg:"bb",text:"A 20-period average with bands 2 standard deviations above and below. They narrow when price is calm (a squeeze) and widen when it moves fast. Price riding the upper band is strength in a trend, not \"too high\"."}),
  S("drill",{kind:"squeeze",n:2}),
- S("guess",{q:"A range breaks out and the bands suddenly widen as price runs. The read?",o:["Volatility is expanding: a trend move has likely started","The breakout has failed","Sell: price is outside the band"],a:0,e:"Expansion after a squeeze is how new trends start. Fading it just because price is outside the band fights fresh momentum."}),
+ S("guess",{pic:"bands:squeeze",q:"A range breaks out and the bands suddenly widen as price runs. The read?",o:["Volatility is expanding: a trend move has likely started","The breakout has failed","Sell: price is outside the band"],a:0,e:"Expansion after a squeeze is how new trends start. Fading it just because price is outside the band fights fresh momentum."}),
  S("guess",{q:"How do trends usually end?",o:["Either a climax spike, or slowly rolling over into a range","Always with a perfect head and shoulders","They never end"],a:0,e:"Some trends end in a blow-off: a sudden huge move and a sharp reversal. Others lose steam and go sideways; that range then becomes a top or just a pause."}),
  S("guess",{q:"Which tools fit which market?",o:["Trends: moving averages and pullbacks. Ranges: edges and oscillators","Oscillators for trends, MAs for ranges","The same tools everywhere"],a:0,e:"Match the tool to the market. MAs whipsaw in ranges; oscillators fight strong trends."}),
  S("guess",{q:"ADX measures trend strength. ADX above 25 and rising means…",o:["A strong trend: favour trend tools","A range: trade the edges","Price is going up"],a:0,e:"ADX shows how strong a trend is, not which way. Under about 20 there's no real trend."}),
  S("drill",{kind:"trend",n:1}),
  S("drill",{kind:"squeeze",n:1}),
  S("explain",{q:"Why does a quiet, tight market often come before a big move?",model:"Buyers and sellers are in balance and orders pile up just outside the range. When one side wins, stops and breakout orders fire together, so the move comes fast.",ex:"bb"})],
- cards:[{q:"A Bollinger squeeze tells you…",o:["A bigger move is likely, not which way","Price will go up","Price will go down"],a:0,e:"Wait for the break, and use the other side of the squeeze for your stop."},
-  {q:"Price keeps closing near the upper Bollinger Band for weeks. That's…",o:["A strong uptrend, not a sell signal on its own","An automatic short","A squeeze"],a:0,e:"In strong trends price \"walks the band\". Only a break of the swing structure says the trend is over."}],chart:["squeeze"]},
+ cards:[{pic:"bands:squeeze",q:"A Bollinger squeeze tells you…",o:["A bigger move is likely, not which way","Price will go up","Price will go down"],a:0,e:"Wait for the break, and use the other side of the squeeze for your stop."},
+  {pic:"bands:walk",q:"Price keeps closing near the upper Bollinger Band for weeks. That's…",o:["A strong uptrend, not a sell signal on its own","An automatic short","A squeeze"],a:0,e:"In strong trends price \"walks the band\". Only a break of the swing structure says the trend is over."}],chart:["squeeze"]},
 
 {id:"l23",n:23,lv:3,t:"Multiple timeframe analysis",min:10,steps:[
  S("hook",{text:"The same coin can be in an uptrend and a downtrend at once. It depends on the timeframe, so good traders always check more than one."}),
- S("guess",{q:"The daily chart is in a strong uptrend. The 1-hour chart is falling. That 1-hour fall is most likely…",o:["A pullback inside the daily uptrend","A new long-term downtrend","Unrelated to the daily"],a:0,e:"The higher timeframe is the tide, the lower one the waves. A falling 1-hour chart in a daily uptrend is usually a dip to buy, once it ends."}),
+ S("guess",{pic:"tf2:Daily:fall",q:"The daily chart is in a strong uptrend. The 1-hour chart is falling. That 1-hour fall is most likely…",o:["A pullback inside the daily uptrend","A new long-term downtrend","Unrelated to the daily"],a:0,e:"The higher timeframe is the tide, the lower one the waves. A falling 1-hour chart in a daily uptrend is usually a dip to buy, once it ends."}),
  S("learn",{title:"Tide, waves and ripples",svg:"mtf",text:"Pick your trading chart, then one about 4 to 6 times higher for the trend and one 4 to 6 times lower for timing. Trade in the higher chart's direction; use the lower one to time the entry and place a tight stop."}),
  S("guess",{q:"You trade the 4-hour chart. With a factor of about 4 to 6, your trend chart is the…",o:["Daily","15-minute","Monthly"],a:0,e:"4 hours × 6 = 24 hours: the daily. For timing you'd drop to about the 1-hour."}),
  S("drill",{kind:"mtf",n:2}),
- S("guess",{q:"The daily is in an uptrend, but the 4-hour just made a lower high and a lower low. What now?",o:["Wait: buy once the 4-hour turns back up","Short it with full size","Buy right now"],a:0,e:"Let the lower timeframe finish its pullback. A higher low and a break above its last lower high is the turn."}),
+ S("guess",{pic:"tf2:Daily:lhll",q:"The daily is in an uptrend, but the 4-hour just made a lower high and a lower low. What now?",o:["Wait: buy once the 4-hour turns back up","Short it with full size","Buy right now"],a:0,e:"Let the lower timeframe finish its pullback. A higher low and a break above its last lower high is the turn."}),
  S("guess",{q:"Support on the weekly chart or support on the 15-minute chart: which matters more?",o:["The weekly","The 15-minute","They're equal"],a:0,e:"Higher-timeframe levels were built by more trading over more time, so more traders care about them."}),
  S("drill",{kind:"mtf",n:1}),
  S("explain",{q:"Why trade in the direction of the higher timeframe?",model:"Its trend carries more weight, so pullbacks against it usually end and the trend resumes. Trading with it puts the bigger flow on my side."})],
@@ -1559,7 +1561,7 @@ LESSONS.push(
  S("drill",{kind:"big",n:1}),
  S("explain",{q:"Why look at the weekly chart before trading the daily?",model:"The weekly shows the main trend and the levels that matter most. A daily setup that agrees with the weekly has the bigger flow behind it."})],
  cards:[{q:"For stocks, the 200-day MA is roughly the…",o:["40-week MA","20-week MA","200-week MA"],a:0,e:"Stocks trade about 5 days a week: 200 ÷ 5 = 40 weeks. Crypto trades all 7 days, so for coins the 200-day is closer to a 29-week average."},
-  {q:"A support level that held on the monthly chart for years…",o:["Matters far more than one from the 1-hour chart","Is weaker because it's old","Only matters to investors"],a:0,e:"Higher-timeframe levels have more trading, and more memory, behind them."},
+  {pic:"longsup",q:"A support level that held on the monthly chart for years…",o:["Matters far more than one from the 1-hour chart","Is weaker because it's old","Only matters to investors"],a:0,e:"Higher-timeframe levels have more trading, and more memory, behind them."},
   {q:"Why use log scale on a 10-year BTC chart?",o:["So a 50% move looks the same size at $1,000 and at $60,000","It makes price look higher","Log only works for stocks"],a:0,e:"On a normal scale early moves look flat and recent ones huge. Log shows the % changes that matter to your money."}],chart:["big"]},
 
 {id:"l25",n:25,lv:3,t:"Intermarket analysis and breadth",min:10,steps:[
@@ -1569,7 +1571,7 @@ LESSONS.push(
  S("guess",{q:"The ETH/BTC chart is falling, but ETH is up 10% in dollars. What's true?",o:["ETH rose less than BTC: BTC was the stronger buy","ETH fell in dollars","ETH beat BTC"],a:0,e:"A ratio chart shows relative strength. Falling ETH/BTC means BTC did better, even though both went up.",ex:"ratio"}),
  S("drill",{kind:"rel",n:2}),
  S("learn",{title:"Breadth",svg:"breadth",text:"Breadth asks how many are joining the move. If an index or BTC makes a new high while fewer stocks or coins join in, the rally is narrowing. It's a warning, like a divergence."}),
- S("guess",{q:"An index makes a new high, but the advance-decline line makes a lower high. That's…",o:["Narrowing breadth: fewer stocks are carrying the rally","Very healthy","A buy signal"],a:0,e:"Strong rallies are broad. When a few leaders carry the index alone, it's more fragile."}),
+ S("guess",{pic:"breadth",q:"An index makes a new high, but the advance-decline line makes a lower high. That's…",o:["Narrowing breadth: fewer stocks are carrying the rally","Very healthy","A buy signal"],a:0,e:"Strong rallies are broad. When a few leaders carry the index alone, it's more fragile."}),
  S("guess",{q:"In past crypto bull markets, money has often moved in which order?",o:["BTC first, then ETH, then smaller coins","Small coins first, then BTC","All at once"],a:0,e:"Often, not always. BTC dominance and ETH/BTC show whether money is moving out toward riskier coins."}),
  S("drill",{kind:"rel",n:1}),
  S("explain",{q:"Why look at ratio charts, not just each coin's own chart?",model:"A ratio shows which one is stronger. If I'm going to buy something, I want what's beating the rest, not something that's only rising because everything is."})],
@@ -1833,7 +1835,7 @@ function gate(m){if(testLock(m,1))return;
   const area=h("section",{class:"card"});m.append(intro,area);
   const names={up:"Uptrend",down:"Downtrend",side:"Sideways"},tname={trend:"Trend",swings:"Swings",levels:"Levels",theory:"Theory"};
   let miss=[],idx=0,passed=0,plan=[],liveSets=[],theory=[];
-  function start(){idx=0;passed=0;miss=[];CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};if(IS_PHONE())intro.hidden=true;theory=gateTheory(12);plan=shuffle(["trend","trend","trend","swings","swings","swings","levels","levels"].concat(Array(12).fill("theory")));liveSets=shuffle([["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"],["SOL","D"]]);nextChart()}
+  function start(){TEST_ON=true;holdHistory();idx=0;passed=0;miss=[];CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};if(IS_PHONE())intro.hidden=true;theory=gateTheory(12);plan=shuffle(["trend","trend","trend","swings","swings","swings","levels","levels"].concat(Array(12).fill("theory")));liveSets=shuffle([["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"],["SOL","D"]]);nextChart()}
   function nextChart(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
@@ -1853,7 +1855,7 @@ function gate(m){if(testLock(m,1))return;
         pivotRound(body,after,{strict:true,bars,type,meta:rw&&rw.meta,prompt:"Live prices aren't loading, so this one is from past data. Mark the swing highs and lows (3 candles each side)."})})}
     else srRound(body,after,{strict:true,prompt:"Place support and resistance (tap twice). Strict marking: both must be close to where the swing points cluster."})
   }
-  function finish(){const ok=passed>=PASS;studySave("gate",miss);state.best.g20=Math.max(state.best.g20||0,passed);if(ok){state.done.gate=true;lvlCheck()}save();renderNav();sfx(ok?"lesson":"wrong");
+  function finish(){const ok=passed>=PASS;TEST_ON=false;studySave("gate",miss);state.best.g20=Math.max(state.best.g20||0,passed);if(ok){state.done.gate=true;lvlCheck()}save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 1 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You know the theory and can read trend, swings and levels reliably. Level 1 is done.`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions and numbers change every time.`),
       calLine(),studyBlock("gate"),lvlNextRow(1,ok,start))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
@@ -1916,7 +1918,7 @@ function gate2(m){if(testLock(m,2))return;
   const area=h("section",{class:"card"});m.append(intro,area);
   const tname={tline:"Trendline",retr:"Pullback",cdl:"Candles",pat:"Pattern",ctx:"Location",vol:"Volume",theory:"Theory"};
   let miss=[],idx=0,passed=0,plan=[],theory=[];
-  function start(){idx=0;passed=0;miss=[];CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q2);plan=shuffle(["tline","retr","cdl","cdl","pat","pat","ctx","vol"].concat(Array(NTH).fill("theory")));nextQ()}
+  function start(){TEST_ON=true;holdHistory();idx=0;passed=0;miss=[];CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q2);plan=shuffle(["tline","retr","cdl","cdl","pat","pat","ctx","vol"].concat(Array(NTH).fill("theory")));nextQ()}
   function nextQ(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
@@ -1930,7 +1932,7 @@ function gate2(m){if(testLock(m,2))return;
     else if(task==="pat")patRound(body,after,SET15.concat(SET16));
     else if(task==="ctx")ctxRound(body,after,{hard:true});
     else{const v=R()<.5;cur={task:v?"vol":"brk"};(v?volRound:brkRound)(body,after)}}
-  function finish(){const ok=passed>=PASS;studySave("gate2",miss);state.best.g2=Math.max(state.best.g2||0,passed);if(ok){state.done.gate2=true;lvlEnd(2)}save();renderNav();sfx(ok?"lesson":"wrong");
+  function finish(){const ok=passed>=PASS;TEST_ON=false;studySave("gate2",miss);state.best.g2=Math.max(state.best.g2||0,passed);if(ok){state.done.gate2=true;lvlEnd(2)}save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 2 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You can read trendlines, pullbacks, ranges, candles, patterns and volume. Level 2 is done. ${lvlTimeText(2)}`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions change every time.`),
       calLine(),studyBlock("gate2"),lvlNextRow(2,ok,start))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
@@ -2658,7 +2660,7 @@ function gate3(m){if(testLock(m,3))return;
   const area=h("section",{class:"card"});m.append(intro,area);
   const tname={ma:"Moving averages",rsi:"RSI",macd:"MACD",trade4:"Four trades",squeeze:"Volatility",mtf:"Timeframes",big:"Big picture",rel:"Relative strength",ew:"Elliott Wave",theory:"Theory"};
   let miss=[],idx=0,passed=0,plan=[],theory=[];
-  function start(){idx=0;passed=0;miss=[];CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q3);plan=shuffle(["ma","rsi","macd","trade4","squeeze","mtf",pick(["big","rel"]),"ew"].concat(Array(NTH).fill("theory")));nextQ()}
+  function start(){TEST_ON=true;holdHistory();idx=0;passed=0;miss=[];CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};if(IS_PHONE())intro.hidden=true;theory=gateTheory(NTH,GATE_Q3);plan=shuffle(["ma","rsi","macd","trade4","squeeze","mtf",pick(["big","rel"]),"ew"].concat(Array(NTH).fill("theory")));nextQ()}
   function nextQ(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
@@ -2667,7 +2669,7 @@ function gate3(m){if(testLock(m,3))return;
     if(task==="theory"){const tq=theory.shift();const q=tq.f();cur={l:tq.l,txt:q.q+" "+(q.e||""),tq};const f=h("div",{hidden:""});head.firstChild.textContent=`${idx+1} of ${NCH} · Theory · Lesson ${tq.l}`;
       body.append(h("p",{class:"task"},q.q));if(!q.chart){const pf=qPic(q);if(pf)body.append(pf)}if(q.chart){const cv=h("canvas",{class:"chart qchart"});body.append(cv);mountChart(cv,q.chart)}mcq(body,q,(ok,c)=>{fb(f,ok?"good":"bad",calNote(c,ok)+(ok?"Correct. ":"Not quite. ")+q.e);after(ok)},{conf:true});body.append(f)}
     else ROUNDS[task](body,after)}
-  function finish(){const ok=passed>=PASS;studySave("gate3",miss);state.best.g3=Math.max(state.best.g3||0,passed);if(ok){state.done.gate3=true;lvlEnd(3)}save();renderNav();sfx(ok?"lesson":"wrong");
+  function finish(){const ok=passed>=PASS;TEST_ON=false;studySave("gate3",miss);state.best.g3=Math.max(state.best.g3||0,passed);if(ok){state.done.gate3=true;lvlEnd(3)}save();renderNav();sfx(ok?"lesson":"wrong");
     area.append(h("h3",{},ok?"Level 3 passed":"Not yet"),h("div",{class:ok?"fb good":"fb bad"},ok?`${passed} of ${NCH}. You can read moving averages, oscillators, MACD, volatility, several timeframes, the big picture and ratio charts, and you know which of the four trades you're taking. Level 3 is done. ${lvlTimeText(3)}`:`${passed} of ${NCH}. You need ${PASS}. Reread the notes for the lessons you missed (the Notes tab), practise the chart type you missed most, then try again. The questions change every time.`),
       calLine(),studyBlock("gate3"),lvlNextRow(3,ok,start))}
   area.append(h("button",{class:"primary",on:{click:start}},"Start the test"));
@@ -2744,6 +2746,29 @@ Object.assign(PICS,{
    return picWrap(picChart(b,{hlines:[{p:p1,c:"--muted",dash:true,label:"wave 1 top "+fmt(p1)}],labels:[{i:e[2],p:highOf(b,e[2]),text:"3 · "+fmt(p3),c:"--muted"},{i:b.length-1,p:b[b.length-1].l,below:true,text:"4 · "+fmt(p4),c:"--muted"}]},"Waves 1 to 4"))},
  bb(m){m=+m;return picWrap(picChart(pathBars(m,[[5,m*1.03],[5,m*.98],[5,m*1.02],[5,m*.99],[4,m]],m*.004,.003).bars,{hlines:[{p:m,c:"--accent",label:"20-period average "+fmt(m)}]},"Price around its 20-period average"))}
 });
+/* pictures for lesson and review questions that describe a chart */
+Object.assign(PICS,{
+ hsn(hd,nk){hd=+hd;nk=+nk;const d=hd-nk;const r=pathBars(nk-d*.4,[[5,nk+d*.6],[4,nk],[6,hd],[5,nk+d*.02],[4,nk+d*.55],[4,nk-d*.15]],d*.03,.003);
+   return picWrap(picChart(r.bars,{hlines:[{p:nk,c:"--accent",dash:true,label:"neckline "+fmt(nk)}],labels:[{i:r.ends[2],p:highOf(r.bars,r.ends[2]),text:"head "+fmt(hd),c:"--muted"}]},"Head and shoulders, neckline breaks"))},
+ rr(e,st,t){e=+e;st=+st;t=+t;const b=pathBars(e*.97,[[10,e*1.01],[5,e]],e*.003,.002).bars;return picWrap(picChart(b,{scaleAll:true,hlines:[{p:t,c:"--good",dash:true,label:"target "+fmt(t)},{p:e,c:"--muted",label:"entry "+fmt(e)},{p:st,c:"--bad",dash:true,label:"stop "+fmt(st)}]},"Long trade plan"))},
+ deep(){const r=pathBars(100,[[16,120],[14,102]],.3,.002);return picWrap(picChart(r.bars,{hlines:[{p:100,c:"--muted",dash:true},{p:120,c:"--muted",dash:true}]},"Gives back most of the rise"))},
+ range(){return picWrap(picChart(pathBars(100,[[6,108],[6,100.5],[6,108],[6,100.8],[6,107.6],[4,104]],.3,.002).bars,{zones:[{hi:108.4,lo:107.4,tint:"--down"},{hi:101,lo:100,tint:"--up"}]},"A range"))},
+ closes(){const b=[10,11,12,13,14].map(c=>({o:c-.6,c,h:c+.3,l:c-.9}));return picWrap(picChart(b,{labels:b.map((x,i)=>({i,p:x.h,text:String(x.c),c:"--muted"}))},"The last 5 closes"))},
+ maturn(){const b=pathBars(100,[[30,125],[16,112]],.4,.003).bars;const c=b.map(x=>x.c);return picWrap(picChart(b,{ovl:[{v:emaA(c,8),c:"--accent"},{v:smaA(c,21),c:"--muted",dash:true}]},"Two lines as price turns"))},
+ div(){return picWrap(picChart(pathBars(100,[[10,112],[5,106],[10,116]],.4,.003).bars,{},"Price · higher high"),picChart(pathBars(50,[[10,74],[5,55],[10,66]],.8,.003).bars,{line:true},"RSI · lower high"))},
+ downosc(){return picWrap(picChart(pathBars(100,[[10,88],[4,92],[10,78],[4,81],[6,74]],.6,.004).bars,{},"Long downtrend"),picChart(pathBars(-1,[[10,-6],[4,-4],[10,-8],[6,-6.5]],.25,.003).bars,{line:true,hlines:[{p:0,c:"--muted",dash:true,label:"0"}]},"MACD far below zero"))},
+ pullema(){const b=pathBars(100,[[10,112],[5,107],[10,120],[6,113.5]],.4,.003).bars;const c=b.map(x=>x.c);return picWrap(picChart(b,{ovl:[{v:emaA(c,20),c:"--accent"}],zones:[{hi:113.2,lo:111.8,tint:"--up"}]},"Uptrend, pullback to the 20 EMA and old support"))},
+ failbo(){const b=pathBars(100,[[6,108],[6,100.5],[6,108],[6,101],[5,109.5],[3,105]],.3,.002).bars;return picWrap(picChart(b,{zones:[{hi:108.4,lo:107.4,tint:"--down"}],box:{from:b.length-4,to:b.length-1}},"Breakout, then back inside the range"))},
+ bands(kind){const legs=kind==="walk"?[[30,140]]:[[20,102],[3,101],[12,118]];const b=pathBars(100,kind==="walk"?legs:[[6,101],[6,99.5],[6,100.6],[5,99.8]].concat([[12,118]]),kind==="walk"?.9:.35,.003).bars;const c=b.map(x=>x.c);const m=smaA(c,20);
+   const sd=c.map((_,i)=>{if(i<19)return null;let s=0;for(let j=i-19;j<=i;j++)s+=(c[j]-m[i])**2;return Math.sqrt(s/20)});
+   return picWrap(picChart(b,{ovl:[{v:m,c:"--muted",dash:true},{v:m.map((v,i)=>v==null?null:v+2*sd[i]),c:"--accent"},{v:m.map((v,i)=>v==null?null:v-2*sd[i]),c:"--accent"}]},kind==="walk"?"Closing near the upper band for weeks":"A quiet range, then a breakout"))},
+ tf2(a,bk){return picWrap(picChart(pathBars(100,[[8,110],[4,106],[8,116],[4,112],[8,122]],.5,.003).bars,{},(a||"Daily")+" · uptrend"),picChart(pathBars(122,bk==="lhll"?[[4,124],[5,118],[4,121],[5,115]]:[[6,124],[14,113]],.4,.003).bars,{},bk==="lhll"?"4-hour · lower high, lower low":"1-hour · falling"))},
+ longsup(){return picWrap(picChart(pathBars(60,[[10,100],[8,62],[10,95],[8,61],[10,110],[8,63],[6,80]],1.2,.004).bars,{zones:[{hi:64,lo:59,tint:"--up"}]},"Monthly · the same support for years"))},
+ upt(){return picWrap(picChart(pathBars(100,[[8,110],[5,105],[8,115],[5,110],[8,120],[5,115]],.4,.003).bars,{},"An uptrend"))},
+ gap(){const b=pathBars(100,[[10,106]],.3,.002).bars;const p=b[b.length-1].c;b.push({o:p+2.2,c:p+3.6,h:p+3.9,l:p+2});let q=p+3.6;for(let i=0;i<4;i++){const c=q+.5;b.push({o:q,c,h:c+.3,l:q-.3});q=c}
+   return picWrap(picChart(b,{box:{from:b.length-6,to:b.length-5}},"Empty space between two candles"))},
+ upvol(){const b=picVol(pathBars(100,[[8,110],[5,105],[8,115],[5,110],[8,120]],.5,.003).bars,()=>120);return picWrap(picChart(b,{vol:true},"Uptrend · volume underneath"))}
+});
 /* an example chart with its answer labels taken off, so it shows the situation without giving the answer away */
 function exPic(key){if(key.indexOf("cdl:")===0){const c=cdlFigure(key);return c?picWrap(c):null}
   let x;try{x=exMake(key)}catch(e){return null}const o=x.o||{};let bars=x.bars;
@@ -2765,14 +2790,18 @@ function nextBtn(label,fn){const b=h("button",{class:"primary big",id:"next",on:
 let CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};const CONF=[["sure","Sure"],["think","Think so"],["guess","Guessing"]];
 function calNote(c,ok){return c==="sure"&&!ok?"⚠️ You were sure, but wrong. These are the ones to watch. ":c==="guess"&&ok?"Right, but it was a guess, so it'll come back to check. ":""}
 function calText(r){const [n,ok]=r.sure;return n?ok+" of "+n:"–"}
-function mcq(el,q,onAnswer,opt){opt=opt||{};let conf=null;const order=shuffle(q.o.map((t,i)=>i));const box=h("div",{class:"opts"});let done=false;
-  if(opt.conf){box.hidden=true;const cr=h("div",{class:"confrow"},h("span",{class:"hint"},"How sure are you?"),...CONF.map(([k,l],j)=>h("button",{"data-key":String(j+1),on:{click:e=>{if(Date.now()-STEP_AT<300)return;conf=k;cr.remove();box.hidden=false;sfx("tap");STEP_AT=Date.now();try{fitPhone()}catch(_){}}}},h("span",{class:"k"},String(j+1)),l)));el.append(cr)}
-  order.forEach((i,k)=>box.append(h("button",{class:"opt","data-key":String(k+1),on:{click:e=>{if(done)return;if(Date.now()-STEP_AT<300)return;/* ignore a tap that carried over from the last screen */done=true;const ok=i===q.a;
-    [...box.children].forEach(b=>b.disabled=true);e.currentTarget.classList.add(ok?"pick-good":"pick-bad");box.children[order.indexOf(q.a)].classList.add("pick-good");
+function mcq(el,q,onAnswer,opt){opt=opt||{};const order=shuffle(q.o.map((t,i)=>i));const box=h("div",{class:"opts"});let done=false,picked=null,cr=null;
+  /* with opt.conf: pick an answer, then say how sure you are, then see if it's right */
+  const reveal=(i,btn,conf)=>{done=true;const ok=i===q.a;
+    [...box.children].forEach(b=>{b.disabled=true;b.classList.remove("picked")});btn.classList.add(ok?"pick-good":"pick-bad");box.children[order.indexOf(q.a)].classList.add("pick-good");
     if(IS_PHONE()){[...box.children].forEach(b=>{if(!b.classList.contains("pick-good")&&!b.classList.contains("pick-bad"))b.hidden=true});const cf=el.querySelector(".qpic");if(cf&&q.ex)cf.hidden=true}
-    /* paint the pick first, then do the heavier work (feedback, example chart, fitting) on the next frame, so the tap feels instant */
     if(conf){state.calib=state.calib||{};const a=state.calib[conf]=state.calib[conf]||[0,0];a[0]++;if(ok)a[1]++;CAL_RUN[conf][0]++;if(ok)CAL_RUN[conf][1]++}
-    requestAnimationFrame(()=>setTimeout(()=>onAnswer(ok,conf),0))}}},h("span",{class:"k"},String(k+1)),h("span",{},q.o[i]))));
+    /* paint the pick first, then do the heavier work (feedback, example chart, fitting) on the next frame, so the tap feels instant */
+    requestAnimationFrame(()=>setTimeout(()=>onAnswer(ok,conf),0))};
+  order.forEach((i,k)=>box.append(h("button",{class:"opt","data-key":String(k+1),on:{click:e=>{if(done)return;if(Date.now()-STEP_AT<300)return;/* ignore a tap that carried over from the last screen */
+    const btn=e.currentTarget;if(!opt.conf)return reveal(i,btn,null);
+    [...box.children].forEach(b=>b.classList.remove("picked"));btn.classList.add("picked");picked={i,btn};sfx("tap");
+    if(!cr){cr=h("div",{class:"confrow"},h("span",{class:"cq"},"How sure are you?"),...CONF.map(([c,l])=>h("button",{class:"cbtn",on:{click:()=>{if(done||!picked)return;cr.remove();reveal(picked.i,picked.btn,c)}}},l)));box.after(cr);try{fitPhone()}catch(_){}}}}},h("span",{class:"k"},String(k+1)),h("span",{},q.o[i]))));
   el.append(box)}
 
 /* chart practice picks the chart types you get wrong most more often. Each type keeps a score in state.kst {kind:[tries,right]} */
@@ -2817,7 +2846,7 @@ function throwbacks(lid,steps,n){const have=new Set(steps.filter(s=>s.card).map(
   return shuffle(pool).sort((a,b)=>state.cards[a.id].box-state.cards[b.id].box).slice(0,n)}
 function shuffleTail(a,from){const t=shuffle(a.slice(from));a.splice(from,t.length,...t)}
 
-function startSession(kind,lid){CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};SESSION=buildSession(kind,lid);document.body.classList.add("focus");renderStep()}
+function startSession(kind,lid){holdHistory();CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};SESSION=buildSession(kind,lid);document.body.classList.add("focus");renderStep()}
 function exitSession(){SESSION=null;document.body.classList.remove("focus");live.clear();save();location.hash="home";route()}
 
 /* ---------- phone: make every screen fit without scrolling ----------
@@ -3267,7 +3296,7 @@ const TV_LESSONS=[
 {id:"tv6",n:6,t:"Plan a trade with the position tool",min:6,steps:[
  S("hook",{text:"Size every trade from your stop (Lesson 8). TradingView can do the maths for you."}),
  S("learn",{title:"The Long Position tool",svg:"tvlong",text:"Click your entry. Drag the red box to your stop and the green box to your target. It shows the reward-to-risk ratio."}),
- S("guess",{q:"Entry 60,000, stop 58,000, target 64,000. Reward-to-risk?",o:["2 : 1","1 : 2","4 : 1"],a:0,svg:"tvlong",e:"You risk 2,000 to make 4,000. That's 2R."}),
+ S("guess",{pic:"rr:60000:58000:64000",q:"Entry 60,000, stop 58,000, target 64,000. Reward-to-risk?",o:["2 : 1","1 : 2","4 : 1"],a:0,svg:"tvlong",e:"You risk 2,000 to make 4,000. That's 2R."}),
  S("guess",{pic:"stopgo",q:"Where does the stop go?",o:["Just past the level that proves you wrong","A round 5% below entry","Wherever feels comfortable"],a:0,e:"Put it where the idea is wrong, usually just under the last swing low. Then size the trade to fit."}),
  S("do",{title:"Plan a pretend BTC trade",where:"widget",tasks:["Find Long Position in the left toolbar (in the measuring and forecasting group)","Place it: entry at the current price, stop just under the last swing low","Double-click it, set account size and 1% risk, and read the quantity","Hold Shift and click-drag to measure any move in %"]}),
  S("explain",{q:"Why plan the stop before the target?",model:"The stop decides how much I can lose and how big the trade is. The target only matters once the risk is fixed."})],
@@ -3290,7 +3319,7 @@ const TV_LESSONS=[
  cards:[{q:"Replay's biggest benefit?",o:["It removes hindsight","It shows the future","It gives free data"],a:0,e:"You make each decision before you see the outcome."}]}
 ];
 /* add TradingView questions to the shared review deck, so they come back on schedule */
-TV_LESSONS.forEach(L=>{let k=0;L.steps.forEach(s=>{if(s.t==="guess")CARDS.push({id:L.id+"-g"+(k++),lesson:L.id,type:"mcq",q:s.q,o:s.o,a:s.a,e:s.e,svg:s.svg})});
+TV_LESSONS.forEach(L=>{let k=0;L.steps.forEach(s=>{if(s.t==="guess")CARDS.push({id:L.id+"-g"+(k++),lesson:L.id,type:"mcq",q:s.q,o:s.o,a:s.a,e:s.e,svg:s.svg,ex:s.ex,pic:s.pic})});
   L.cards.forEach((c,j)=>CARDS.push({id:L.id+"-c"+j,lesson:L.id,type:"mcq",...c}))});
 function tvDone(){return (state.tv&&state.tv.done)||{}}
 Object.keys(tvDone()).forEach(id=>unlockLesson(id));
@@ -3298,7 +3327,7 @@ Object.keys(tvDone()).forEach(id=>unlockLesson(id));
 /* mini session runner for TradingView lessons (same look as the main sessions) */
 let TVS=null;
 function tvStart(id){const L=TV_LESSONS.find(x=>x.id===id)||TV_LESSONS.find(x=>!tvDone()[x.id])||TV_LESSONS[0];
-  TVS={L,i:0,right:0,asked:0,steps:[{t:"label"},...L.steps,{t:"tvdone"}]};document.body.classList.add("focus");tvStep()}
+  holdHistory();TVS={L,i:0,right:0,asked:0,steps:[{t:"label"},...L.steps,{t:"tvdone"}]};document.body.classList.add("focus");tvStep()}
 function tvExit(){TVS=null;document.body.classList.remove("focus");live.clear();if(location.hash!=="#tv")location.hash="tv";else route()}
 function tvStep(){live.clear();app.innerHTML="";const T_=TVS,L=T_.L,st=T_.steps[T_.i],total=T_.steps.length;
   const bar=h("div",{class:"sbar"},h("button",{class:"ghost",on:{click:tvExit},"aria-label":"Exit lesson"},"✕ Exit"),
@@ -3950,12 +3979,17 @@ const top=document.getElementById("topnav");
 function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";const fl=["floor","chart","tv"].includes(cur);[["home","Today"],["map","Program"],["floor","Trading"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id||(id==="floor"&&fl)?"on":""},l)));
   paintStreak()}
 function paintStreak(){const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
-function route(){if(SESSION||TVS)return;document.body.classList.remove("mcfull");live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();if(id!=="notes")NOTES_MODE="hub";document.body.classList.toggle("wide",id==="chart");
+function route(){if(SESSION||TVS)return;document.body.classList.remove("mcfull");live.clear();app.innerHTML="";const id=(location.hash||"#home").slice(1);renderNav();if(id!=="notes")NOTES_MODE="hub";if(!/^gate/.test(id))TEST_ON=false;document.body.classList.toggle("wide",id==="chart");
   if(id==="gate"){gate(app)}else if(id==="gate2"){gate2(app)}else if(id==="gate3"){gate3(app)}else if(id==="sync"){syncView(app)}else if(id==="map"){mapView(app)}else if(id==="notes"){notesView(app)}else if(id==="floor"){floorView(app)}else if(id==="tv"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));tvOpen()?tvView(app):tvLocked(app)}else if(id==="chart"){app.append(h("a",{href:"#floor",class:"crumb"},"‹ Trading floor"));chartView(app)}
   else if(LESSONS.find(x=>x.id===id)){history.replaceState(null,"","#home");startSession("lesson",id);return}
   else homeView(app);window.scrollTo(0,0)}
 document.addEventListener("keydown",e=>{if(SESSION)return;if(e.key==="Enter"&&document.activeElement&&document.activeElement.id==="start"){e.preventDefault();startSession("today")}});
 LESSONS.forEach(L=>{if(state.done[L.id])unlockLesson(L.id)});if(LESSONS.some(L=>L.lv===1&&state.done[L.id])&&!lvlT(1).s)lvlT(1).s=new Date(2026,9,28).getTime();lvlCheck();if(Object.keys(state.done).length||Object.keys(state.cards).length)save();
+/* iPhone: a swipe from the left edge is Safari's "back". During a lesson or test that would tear the screen,
+   so each session gets its own history step and a back swipe just keeps you where you are. */
+let TEST_ON=false;
+function holdHistory(){try{history.pushState({cs:1},"",location.href)}catch(e){}}
+window.addEventListener("popstate",()=>{if(TEST_ON&&/^#gate/.test(location.hash)){holdHistory();return}if(SESSION||TVS){holdHistory();window.scrollTo(0,0);requestAnimationFrame(()=>{rerenderAll();try{fitPhone()}catch(e){}})}});
 window.addEventListener("hashchange",route);route();startSync();
 
 })();
