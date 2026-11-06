@@ -106,6 +106,7 @@ button.pick-good{background:var(--good-bg);border-color:var(--good);color:var(--
 button.pick-bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
 .fb{margin-top:12px;padding:12px 14px;border-radius:8px;font-size:14px;max-width:72ch}
 .fb.good{background:var(--good-bg);color:var(--good)}
+.sig{display:inline-block;font-weight:700;font-size:13px;padding:2px 9px;border-radius:99px;margin:0 4px 4px 0;color:#fff;vertical-align:1px}.sig.bull{background:var(--up)}.sig.bear{background:var(--down)}.sig.both{background:var(--muted)}
 .fb.bad{background:var(--bad-bg);color:var(--bad)}
 .fb.info{background:var(--warn-bg);color:var(--ink)}
 .score{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1091,32 +1092,32 @@ l12:`
 <section><h4>The eight to know</h4>
 <figure class="dg">${svgC12()}<figcaption>Top row: one-candle patterns. Bottom row: two-candle patterns. The three candles before each show the trend.</figcaption></figure></section>
 <section><h4>One-candle patterns</h4>
-<ul><li><b>Hammer</b> (after a fall): small body at the top, lower shadow at least twice the body. Buyers rejected the lows.</li>
-<li><b>Hanging man</b> (after a rise): the same shape. Needs a lower close next to confirm.</li>
-<li><b>Shooting star</b> (after a rise): small body at the bottom, long upper shadow. Sellers rejected the highs.</li>
-<li><b>Inverted hammer</b> (after a fall): the shooting-star shape. Needs a higher close next to confirm.</li></ul>
+<ul><li><span class="sig bull">▲ bullish</span> <b>Hammer</b> (after a fall): small body at the top, lower shadow at least twice the body. Buyers rejected the lows.</li>
+<li><span class="sig bear">▼ bearish</span> <b>Hanging man</b> (after a rise): the same shape. Needs a lower close next to confirm.</li>
+<li><span class="sig bear">▼ bearish</span> <b>Shooting star</b> (after a rise): small body at the bottom, long upper shadow. Sellers rejected the highs.</li>
+<li><span class="sig bull">▲ bullish</span> <b>Inverted hammer</b> (after a fall): the shooting-star shape. Needs a higher close next to confirm.</li></ul>
 <p>Same shape, different name: the trend before it decides.</p></section>
 <section><h4>Two-candle patterns</h4>
-<ul><li><b>Bullish engulfing</b>: after a fall, a green body that fully covers the last red body.</li>
-<li><b>Bearish engulfing</b>: after a rise, a red body that fully covers the last green body.</li>
-<li><b>Dark cloud cover</b>: after a rise, a red candle opens above the last high and closes below the middle of the green body.</li>
-<li><b>Piercing pattern</b>: after a fall, a green candle opens below the last low and closes above the middle of the red body.</li></ul>
+<ul><li><span class="sig bull">▲ bullish</span> <b>Bullish engulfing</b>: after a fall, a green body that fully covers the last red body.</li>
+<li><span class="sig bear">▼ bearish</span> <b>Bearish engulfing</b>: after a rise, a red body that fully covers the last green body.</li>
+<li><span class="sig bear">▼ bearish</span> <b>Dark cloud cover</b>: after a rise, a red candle opens above the last high and closes below the middle of the green body.</li>
+<li><span class="sig bull">▲ bullish</span> <b>Piercing pattern</b>: after a fall, a green candle opens below the last low and closes above the middle of the red body.</li></ul>
 <p>Engulfing is stronger than dark cloud or piercing, because the second body covers all of the first.</p></section>
 <div class="remember"><b>Remember</b>A candle pattern is a hint about who's in control right now. It doesn't tell you how far price will go.</div>`,
 
 l13:`
 <section><h4>Stars</h4>
 <p>A star is a small body set apart from a big candle before it. It shows the trend stalling.</p>
-<ul><li><b>Morning star</b> (bottom): big red, small star below, big green closing deep into the red body.</li>
-<li><b>Evening star</b> (top): big green, small star above, big red closing deep into the green body.</li></ul>
+<ul><li><span class="sig bull">▲ bullish</span> <b>Morning star</b> (bottom): big red, small star below, big green closing deep into the red body.</li>
+<li><span class="sig bear">▼ bearish</span> <b>Evening star</b> (top): big green, small star above, big red closing deep into the green body.</li></ul>
 <p>Stronger when there are gaps around the star and the third candle closes deep into the first one.</p></section>
 <section><h4>Harami and doji</h4>
-<ul><li><b>Harami</b>: a small body inside the previous big body. The move has lost steam. Weaker than engulfing: it says "slowing", not "reversed".</li>
+<ul><li><b>Harami</b>: a small body inside the previous big body. After a fall it's a <span class="sig bull">▲ bullish</span> harami, after a rise a <span class="sig bear">▼ bearish</span> one. The move has lost steam. Weaker than engulfing: it says "slowing", not "reversed".</li>
 <li><b>Doji</b>: open and close almost equal. After a long trend it's a warning that the winning side has stalled. In a range it means little.</li></ul>
 <figure class="dg">${svgC13()}<figcaption>Stars, harami and doji show a trend pausing. Rising three methods shows it continuing.</figcaption></figure></section>
 <section><h4>Continuation candles</h4>
-<ul><li><b>Rising three methods</b>: a big green candle, three small candles drifting down inside its range, then a new big green high. The uptrend continues.</li>
-<li><b>Falling three methods</b>: the mirror image in a downtrend.</li></ul></section>
+<ul><li><span class="sig bull">▲ bullish</span> <b>Rising three methods</b>: a big green candle, three small candles drifting down inside its range, then a new big green high. The uptrend continues.</li>
+<li><span class="sig bear">▼ bearish</span> <b>Falling three methods</b>: the mirror image in a downtrend.</li></ul></section>
 <section><h4>Windows (gaps)</h4>
 <p>Japanese traders call a gap between candles a <b>window</b>. A rising window tends to act as support when price comes back to it. A falling window tends to act as resistance.</p></section>
 <div class="remember"><b>Remember</b>Ask two questions every time: was there a clear trend before it, and what did the next candle do?</div>`,
@@ -1144,14 +1145,14 @@ l15:`
 <p>These shapes show a trend running out of fuel. None of them is complete until price breaks a key line. Until then, the trend is still in force.</p></section>
 <section><h4>Head and shoulders</h4>
 <figure class="dg">${svgHS()}<figcaption>The neckline joins the two dips. The pattern completes on a close below it.</figcaption></figure>
-<ul><li>Left shoulder, a higher head, then a lower right shoulder: the first lower high.</li>
+<ul><li><span class="sig bear">▼ bearish</span> Left shoulder, a higher head, then a lower right shoulder: the first lower high.</li>
 <li>Volume is often lighter on the head and right shoulder.</li>
 <li><b>Target:</b> head-to-neckline height, projected down from the break. Head 130, neckline 110: target 90.</li>
 <li>Price often makes a <b>return move</b> to the neckline, which now acts as resistance.</li>
-<li>The <b>inverse</b> version marks a bottom and breaks up through its neckline.</li></ul></section>
+<li><span class="sig bull">▲ bullish</span> The <b>inverse</b> version marks a bottom and breaks up through its neckline.</li></ul></section>
 <section><h4>Double tops and bottoms</h4>
-<ul><li><b>Double top</b>: two peaks at about the same price. Confirmed only when price closes below the low between them.</li>
-<li><b>Double bottom</b>: the mirror image. Confirmed on a close above the high between the two lows.</li>
+<ul><li><span class="sig bear">▼ bearish</span> <b>Double top</b>: two peaks at about the same price. Confirmed only when price closes below the low between them.</li>
+<li><span class="sig bull">▲ bullish</span> <b>Double bottom</b>: the mirror image. Confirmed on a close above the high between the two lows.</li>
 <li>Target: the pattern's height, projected from the break. Lows at 80, middle high 95: target about 110.</li></ul></section>
 <section><h4>When patterns fail</h4>
 <p>If price breaks the wrong way, for example above both peaks of a "double top", the pattern has failed. Failed patterns are often strong signals in the other direction. Respect the break, not the textbook.</p></section>
@@ -1162,8 +1163,8 @@ l16:`
 <p>Most patterns are pauses, not reversals. The trend catches its breath, then usually carries on in the same direction.</p>
 <figure class="dg">${svgCont()}<figcaption>Triangles coil; flags drift against a sharp move.</figcaption></figure></section>
 <section><h4>Triangles</h4>
-<ul><li><b>Ascending</b>: flat top, rising lows. Usually breaks up.</li>
-<li><b>Descending</b>: flat bottom, falling highs. Usually breaks down.</li>
+<ul><li><span class="sig bull">▲ bullish</span> <b>Ascending</b>: flat top, rising lows. Usually breaks up.</li>
+<li><span class="sig bear">▼ bearish</span> <b>Descending</b>: flat bottom, falling highs. Usually breaks down.</li>
 <li><b>Symmetrical</b>: lower highs and higher lows. Neutral; usually breaks in the direction of the trend before it.</li>
 <li>Breakouts work best roughly half to three quarters of the way into the triangle. At the tip, the pattern often fizzles.</li></ul></section>
 <section><h4>Flags and pennants</h4>
@@ -2133,6 +2134,15 @@ const CDL={
  doji:{n:"Doji after a rally",e:"<b>Doji after a rally</b>: open and close almost equal. Buyers who were winning are now in balance with sellers. A warning."},
  r3:{n:"Rising three methods",e:"<b>Rising three methods</b>: a big green candle, three small pullback candles that stay inside it, then a new big green high. The uptrend continues."},
  f3:{n:"Falling three methods",e:"<b>Falling three methods</b>: a big red candle, three small bounce candles inside it, then a new big red low. The downtrend continues."}};
+/* which way each pattern points, shown as a coloured badge when the answer is revealed (easier to remember) */
+const CDL_SIG={hammer:"bull",ihammer:"bull",bengulf:"bull",pierce:"bull",mstar:"bull",bharami:"bull",r3:"bull",hangman:"bear",star:"bear",sengulf:"bear",dark:"bear",estar:"bear",sharami:"bear",doji:"bear",f3:"bear"};
+const SIG_CONT={r3:1,f3:1,bflag:1,sflag:1};
+const PAT_SIG={hs:"bear",hsi:"bull",dt:"bear",db:"bull",asc:"bull",desc:"bear",bflag:"bull",sflag:"bear",sym:"both",rect:"both"};
+function sigOf(k){return CDL_SIG[k]||PAT_SIG[k]||null}
+function sigWord(k){const s=sigOf(k);if(!s)return"";return s==="both"?"Either way: trade the breakout":(s==="bull"?"Bullish":"Bearish")+(SIG_CONT[k]?" · trend continues":k==="doji"?" · warning":" · reversal")}
+function sigBadge(k){const s=sigOf(k);if(!s)return"";return'<span class="sig '+s+'">'+(s==="bull"?"▲ ":s==="bear"?"▼ ":"◆ ")+sigWord(k)+"</span> "}
+function sigLabelText(k,name){const s=sigOf(k);return name+(s==="bull"?" ▲ bullish":s==="bear"?" ▼ bearish":"")}
+const sigColor=k=>sigOf(k)==="bull"?"--up":sigOf(k)==="bear"?"--down":"--mark";
 const TWIN={hammer:"hangman",hangman:"hammer",star:"ihammer",ihammer:"star",bengulf:"sengulf",sengulf:"bengulf",dark:"pierce",pierce:"dark",mstar:"estar",estar:"mstar",bharami:"sharami",sharami:"bharami",doji:"sharami",r3:"f3",f3:"r3"};
 const SET12=["hammer","hangman","star","ihammer","bengulf","sengulf","dark","pierce"],SET13=["mstar","estar","bharami","sharami","doji","r3","f3"];
 /* shapes for the patterns that come after a rise; the after-a-fall ones are their mirror images */
@@ -2155,12 +2165,12 @@ function genCdl(kind){const up=cdlUp(kind);const n=rint(14,18);
 function optsFor(right,pool,names){const o=[right];if(TWIN[right]&&names[TWIN[right]])o.push(TWIN[right]);shuffle(pool).forEach(k=>{if(o.length<4&&!o.includes(k))o.push(k)});return shuffle(o)}
 /* name the boxed candle pattern */
 function cdlRound(el,done,set,opts={}){const kind=pickFresh("cdl",set);const rw=rwCdl(kind);const g=rw||genCdl(kind);const cv=h("canvas",{class:"chart","aria-label":"Chart with a candle pattern boxed"});const f=h("div",{hidden:""});
-  mountChart(cv,()=>[g.bars,{box:{from:g.at,to:g.at+g.n-1}}]);
+  let shownSig=false;mountChart(cv,()=>{const seg=g.bars.slice(g.at,g.at+g.n),up=sigOf(kind)!=="bull";return[g.bars,{box:{from:g.at,to:g.at+g.n-1},labels:shownSig?[{i:g.at,p:up?Math.max(...seg.map(x=>x.h)):Math.min(...seg.map(x=>x.l)),below:!up,text:sigLabelText(kind,CDL[kind].n),c:sigColor(kind)}]:[]}]});
   const pool=opts.pool||set.concat(SET12,SET13);const choices=optsFor(kind,pool,CDL);const btns={};
   const row=h("div",{class:"opts"},...choices.map((k,j)=>btns[k]=optB(j,CDL[k].n,()=>answer(k))));
   el.append(h("p",{class:"task"},opts.prompt||"Name the boxed candle pattern. Check which way price was going before it."),cv,row,f);
-  function answer(k){Object.values(btns).forEach(b=>b.disabled=true);const ok=k===kind;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[kind].classList.add("pick-good");
-    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+CDL[kind].e+(!ok&&TWIN[kind]===k?" Same shape, different trend before it: context decides the name.":"")+rwTag(rw));done(ok,kind)}}
+  function answer(k){Object.values(btns).forEach(b=>b.disabled=true);const ok=k===kind;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[kind].classList.add("pick-good");shownSig=true;rerenderAll();
+    fb(f,ok?"good":"bad",sigBadge(kind)+(ok?"Correct. ":"Not quite. ")+CDL[kind].e+(!ok&&TWIN[kind]===k?" Same shape, different trend before it: context decides the name.":"")+rwTag(rw));done(ok,kind)}}
 
 /* ---------- classical chart patterns ---------- */
 const PATS={
@@ -2191,7 +2201,7 @@ function patRound(el,done,set,opts={}){const kind=pickFresh("pat",set);const rw=
   const row=h("div",{class:"opts"},...shuffle(ch).map((k,j)=>btns[k]=optB(j,patName(k),()=>answer(k))));
   el.append(h("p",{class:"task"},opts.prompt||"Which pattern is this? Look at the whole shape, then where it broke out."),cv,row,f);
   function answer(k){Object.values(btns).forEach(b=>b.disabled=true);const ok=k===kind;btns[k].classList.add(ok?"pick-good":"pick-bad");if(!ok)btns[kind].classList.add("pick-good");shown=true;rerenderAll();
-    fb(f,ok?"good":"bad",(ok?"Correct. ":"Not quite. ")+patExp(kind)+" The key lines are now drawn on the chart."+rwTag(rw));done(ok,kind)}}
+    fb(f,ok?"good":"bad",sigBadge(kind)+(ok?"Correct. ":"Not quite. ")+patExp(kind)+" The key lines are now drawn on the chart."+rwTag(rw));done(ok,kind)}}
 
 /* ---------- trendlines ---------- */
 function hullLine(bars,T,pv){const val=i=>T==="L"?bars[i].l:bars[i].h;const H=[];const cr=(o,a,b)=>(a-o)*(val(b)-val(o))-(val(a)-val(o))*(b-o);
@@ -2290,8 +2300,8 @@ Object.assign(EX,{
  range(){return EX.sr()},
  fake(){const g=genBrk(false);return{bars:g.bars,o:{zones:[{hi:110.6,lo:109.4,tint:"--down"},{hi:100.6,lo:99.4,tint:"--up"}],labels:[{i:g.at,p:112.6,text:"Pokes out, closes back in",c:"--mark"}]},
    look:"Price spikes above the ceiling but <b>closes back inside</b>. Breakout buyers are trapped, and as they sell, price heads to the <b>other side</b> of the range."}},
- cdl(kind){const g=genCdl(kind);return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},labels:[{i:g.at,p:cdlUp(kind)?Math.max(...g.bars.slice(g.at).map(x=>x.h)):Math.min(...g.bars.slice(g.at).map(x=>x.l)),below:!cdlUp(kind),text:CDL[kind].n,c:"--mark"}]},look:CDL[kind].e}},
- pat(kind){const g=genPat(kind);return{bars:g.bars,o:{tlines:g.tl},look:patExp(kind)}},
+ cdl(kind){const g=genCdl(kind);return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},labels:[{i:g.at,p:cdlUp(kind)?Math.max(...g.bars.slice(g.at).map(x=>x.h)):Math.min(...g.bars.slice(g.at).map(x=>x.l)),below:!cdlUp(kind),text:sigLabelText(kind,CDL[kind].n),c:sigColor(kind)}]},look:sigBadge(kind)+CDL[kind].e}},
+ pat(kind){const g=genPat(kind);return{bars:g.bars,o:{tlines:g.tl},look:sigBadge(kind)+patExp(kind)}},
  ctx(){const g=genCtx("sup");return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},zones:[{hi:101.6,lo:99.9,tint:"--up"},{hi:112.2,lo:110.6,tint:"--down"}],labels:[{i:g.at,p:99.5,below:true,text:CDL[g.kind].n+" at support",c:"--up"}]},
    look:"A bullish candle signal <b>right at a support zone</b> that held before. Two clues agree, and the stop goes just under the pattern's low."}},
  volbrk(){const g=genBrk("short","strong");return{bars:g.bars,o:{vol:true,hlines:[{p:g.top,c:"--muted",dash:true,w:1.5,label:"range top"}],labels:[{i:g.at+1,p:g.bars[g.at+1].h,text:"Breakout on big volume",c:"--up"}]},
@@ -2532,7 +2542,7 @@ const fmtR=r=>(r>=0?"+":"−")+Math.abs(r).toFixed(1)+"R";
 function scenarioRound(el,done){const g=scPick();const b=g.bars,i0=SC.ctx-1;const risk=SC.stopA*atrAt(b,i0);let vis=SC.ctx,lines=[];
   const cv=h("canvas",{class:"chart scen"});let shown=false;
   /* before you choose, only the past is drawn, so the candles fill the chart and stay easy to read */
-  let cdl=null;mountChart(cv,()=>shown?[b,{visible:vis,box:{from:i0,to:i0,c:"--accent"},hlines:lines,labels:cdl?[{i:cdl.from,p:cdl.bull?Math.min(...b.slice(cdl.from,cdl.to+1).map(x=>x.l)):Math.max(...b.slice(cdl.from,cdl.to+1).map(x=>x.h)),below:cdl.bull,text:CDL[cdl.key].n,c:"--mark"}]:[]}]:[b.slice(0,SC.ctx),{box:{from:i0,to:i0,c:"--accent"}}]);
+  let cdl=null;mountChart(cv,()=>shown?[b,{visible:vis,box:{from:i0,to:i0,c:"--accent"},hlines:lines,labels:cdl?[{i:cdl.from,p:cdl.bull?Math.min(...b.slice(cdl.from,cdl.to+1).map(x=>x.l)):Math.max(...b.slice(cdl.from,cdl.to+1).map(x=>x.h)),below:cdl.bull,text:sigLabelText(cdl.key,CDL[cdl.key].n),c:sigColor(cdl.key)}]:[]}]:[b.slice(0,SC.ctx),{box:{from:i0,to:i0,c:"--accent"}}]);
   const f=h("div",{hidden:""});const btns={};const nm={buy:"Buy",sell:"Sell (short)",aside:"Stand aside"};
   const row=h("div",{class:"row"},...Object.keys(nm).map(k=>btns[k]=h("button",{on:{click:()=>answer(k)}},nm[k])));
   const src=g.meta?`Real ${g.meta.sym} ${g.meta.iv==="D"?"daily":"4-hour"} chart`:"Practice chart";
@@ -2554,7 +2564,7 @@ function scenarioRound(el,done){const g=scPick();const b=g.bars,i0=SC.ctx-1;cons
       const ok=k===best||mine>0;const how=r=>r.how==="target"?"hit the target, "+fmtR(r.r):r.how==="stop"?"stopped out, −1R":"ran out of time at "+fmtR(r.r);
       const cd=scCandle(b,i0);cdl=cd;rerenderAll();const study=(!ok||!pr.ok)?scStudy(k,rd,pr,cd,ok):[];scPinSave(study);
       state.scen=state.scen||{n:0,r:0,good:0};const sc=state.scen;sc.n++;sc.r=+(sc.r+mine).toFixed(2);if(pr.ok)sc.good++;save();
-      const cdTxt=cd?`<br>🕯 The last candles before the box made a <b>${CDL[cd.key].n}</b> (labelled), a ${cd.key==="r3"?"continuation-up":cd.key==="f3"?"continuation-down":cd.bull?"bullish":"bearish"} sign.`:"";
+      const cdTxt=cd?`<br>🕯 The last candles before the box made a <b>${CDL[cd.key].n}</b> (labelled) ${sigBadge(cd.key)}`:"";
       const stTxt=study.length?`<div class="scstudy"><b>📌 Study again</b>${study.map(x=>`<div><span class="n">Lesson ${x.n}</span> ${x.L.t}${x.slide&&x.slide!==x.L.t?": "+x.slide:""}</div>`).join("")}<span class="hint">Pinned in the Notes tab.</span></div>`:"";
       fb(f,ok?"good":"bad",`<b>${k==="aside"?"You stood aside: 0R.":"You "+(k==="buy"?"bought":"sold")+": "+how(k==="buy"?L:S)+"."}</b> `+
         (k!=="buy"?"Buying would have "+how(L)+". ":"")+(k!=="sell"?"Selling would have "+how(S)+". ":"")+
@@ -2785,7 +2795,7 @@ Object.assign(PICS,{
    return picWrap(picChart(b,{tlines:[{a:{i:e[1],p:L(1)},b:{i:e[3],p:L(3)},c:"--muted",ext:true},{a:{i:e[3],p:L(3)},b:{i:e[5],p:L(5)},c:"--muted",ext:true},{a:{i:e[5],p:L(5)},b:{i:e[6],p:b[e[6]].h},c:"--accent",ext:true}]},"Each new line steeper than the last"))},
  retr(a,b){a=+a;b=+b;const r=pathBars(a,[[18,b],[8,b-(b-a)*.45]],(b-a)*.008,.003);
    return picWrap(picChart(r.bars,{hlines:[{p:a,c:"--muted",dash:true,label:fmt(a)},{p:b,c:"--muted",dash:true,label:fmt(b)}]},"ETH: the rise, then a pullback"))},
- harengulf(){const f=k=>{const c=cdlFigure("cdl:"+k);return c?h("figure",{class:"qpanel"},c,h("figcaption",{},CDL[k].n)):null};return picWrap(f("bharami"),f("bengulf"))},
+ harengulf(){const f=k=>{const c=cdlFigure("cdl:"+k);return c?h("figure",{class:"qpanel"},c,h("figcaption",{},sigLabelText(k,CDL[k].n))):null};return picWrap(f("bharami"),f("bengulf"))},
  dbot(lo,hi){lo=+lo;hi=+hi;const d=(hi-lo);const r=pathBars(lo+d*1.6,[[8,lo],[7,hi],[7,lo+d*.04],[6,hi+d*.12]],d*.03,.004);
    return picWrap(picChart(r.bars,{hlines:[{p:lo,c:"--muted",dash:true,label:fmt(lo)},{p:hi,c:"--accent",dash:true,label:fmt(hi)}]},"Two lows, then a close above the middle high"))},
  ascdown(){const r=pathBars(100,[[5,110],[5,102],[4,110],[4,104.5],[3,110],[3,106.5],[3,109.6],[5,102]],.2,.002),b=r.bars,e=r.ends;
@@ -3987,8 +3997,8 @@ function rwRange(kind,volWant){const P=rwRangeScan().filter(x=>x.kind===kind&&(!
   return{bars:b.slice(from,to+1).map(y=>({o:y.o,h:y.h,l:y.l,c:y.c,v:y.v})),at:x.j-from,top:x.top,bot:x.bot,down:x.mir,meta:{sym:x.set.sym,iv:x.set.iv,t:b[from].t}}}
 /* the lesson example charts use real candles too when they're loaded */
 {const _p=EX.pat,_c=EX.cdl,_x=EX.ctx;
- EX.pat=k=>{const rw=rwPat(k);return rw?{bars:rw.bars,o:{tlines:rw.tl},look:patExp(k)+rwTag(rw)}:_p(k)};
- EX.cdl=k=>{const g=rwCdl(k);if(!g)return _c(k);const seg=g.bars.slice(g.at,g.at+g.n);return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},labels:[{i:g.at,p:cdlUp(k)?Math.max(...seg.map(x=>x.h)):Math.min(...seg.map(x=>x.l)),below:!cdlUp(k),text:CDL[k].n,c:"--mark"}]},look:CDL[k].e+rwTag(g)}};
+ EX.pat=k=>{const rw=rwPat(k);return rw?{bars:rw.bars,o:{tlines:rw.tl},look:sigBadge(k)+patExp(k)+rwTag(rw)}:_p(k)};
+ EX.cdl=k=>{const g=rwCdl(k);if(!g)return _c(k);const seg=g.bars.slice(g.at,g.at+g.n);return{bars:g.bars,o:{box:{from:g.at,to:g.at+g.n-1},labels:[{i:g.at,p:cdlUp(k)?Math.max(...seg.map(x=>x.h)):Math.min(...seg.map(x=>x.l)),below:!cdlUp(k),text:sigLabelText(k,CDL[k].n),c:sigColor(k)}]},look:sigBadge(k)+CDL[k].e+rwTag(g)}};
  /* trends, ranges, pullbacks and breakouts from real coins too (made-up charts only when prices can't load) */
  const _tu=EX["trend:up"],_ts=EX["trend:side"],_rt=EX.retrace,_sr=EX.sr,_fk=EX.fake,_vb=EX.volbrk;
  EX["trend:up"]=()=>{const rw=rwFind("up",70,70,{piv:[6,14]});if(!rw)return _tu();const s=swingLabels(rw.bars);const e=_tu();return{bars:rw.bars,o:{marks:s.marks,labels:s.labels},look:e.look+rwTag(rw)}};
