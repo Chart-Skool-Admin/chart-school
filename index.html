@@ -533,8 +533,12 @@ function setSync(m){const changed=SY.mode!==m;SY.mode=m;const el=document.getEle
 function cloudPush(){if(!SY.ref)return;clearTimeout(SY.timer);SY.timer=setTimeout(sendNow,1500)}
 async function sendNow(){clearTimeout(SY.timer);if(!SY.ref||!SY.ready)return;if(SY.busy){SY.again=true;return}
   const body=JSON.stringify(state);if(body===SY.lastSent)return;SY.busy=true;
-  try{await SY.ref.set({s:body,t:state.t||Date.now()});SY.lastSent=body;setSync("on")}
-  catch(e){const c=e&&e.code;if(c==="unavailable"){SY.busy=false;setTimeout(sendNow,1500+Math.random()*2000);return}setSync(c==="quota_exceeded"?"full":"err")}
+  try{await SY.ref.set({s:body,t:state.t||Date.now()});SY.lastSent=body;SY.tries=0;setSync("on")}
+  catch(e){const c=e&&e.code;if(c==="unavailable"){SY.busy=false;setTimeout(sendNow,1500+Math.random()*2000);return}
+    /* phones drop requests when the app is switched away or the signal blips: retry quietly before showing a problem */
+    const m=String(e&&e.message||"");const blip=e instanceof TypeError||/HTTP (5\d\d|408|429)|signed out|network|load failed|fetch/i.test(m);
+    SY.tries=(SY.tries||0)+1;if(blip&&SY.tries<=4){SY.busy=false;setTimeout(sendNow,2000*SY.tries);return}
+    setSync(c==="quota_exceeded"?"full":navigator.onLine===false?"wait":"err")}
   SY.busy=false;if(SY.again){SY.again=false;sendNow()}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")sendNow()});
 function refreshView(){applyTheme(state.theme||"auto");if(SESSION||TVS)return;const id=(location.hash||"#home").slice(1);if(id==="chart")renderNav();else route()}
@@ -554,8 +558,9 @@ async function sbRest(method,q,body){const at=await sbToken();if(!at)throw new E
 const sbRef={set:async d=>sbRest("POST","?on_conflict=user_id",{user_id:SB.sess.uid,s:d.s,t:d.t})};
 async function sbPull(){if(!SB.sess)return;try{const rows=await sbRest("GET","?select=s,t&user_id=eq."+SB.sess.uid);const d=rows&&rows[0];
     if(d&&typeof d.s==="string"&&d.s!==SY.lastSent){let o=null;try{o=JSON.parse(d.s)}catch(e){}if(o){const ch=mergeIn(o);try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}if(ch)refreshView();if(JSON.stringify(state)===d.s)SY.lastSent=d.s}}
-    SY.ready=true;if(JSON.stringify(state)!==SY.lastSent)cloudPush();else setSync("on")}
-  catch(e){setSync(SB.sess?(navigator.onLine===false?"wait":"err"):"signin")}}
+    SB.pf=0;SY.ready=true;if(JSON.stringify(state)!==SY.lastSent)cloudPush();else setSync("on")}
+  catch(e){if(!SB.sess){setSync("signin");return}if(navigator.onLine===false){setSync("wait");return}
+    SB.pf=(SB.pf||0)+1;if(SB.pf<=3){setTimeout(sbPull,2000*SB.pf);return}setSync("err")}}
 function sbStart(){sbLoadSess();if(!SB.sess){setSync("signin");return}SY.ref=sbRef;setSync("start");sbPull();
   clearInterval(SB.pullT);SB.pullT=setInterval(()=>{if(document.visibilityState==="visible")sbPull()},60000)}
 document.addEventListener("visibilitychange",()=>{if(SBC&&document.visibilityState==="visible")sbPull()});
@@ -653,7 +658,7 @@ function drawChart(cv,bars,o={}){
   if(OH)drawOsc(x,o.osc,vis,{X,L,T:T+ph+10,pw,ph:OH-10,rc,C,slot});
   (o.tlines||[]).forEach(l=>{if(l.b.i===l.a.i)return;const sl=(l.b.p-l.a.p)/(l.b.i-l.a.i);const i2=l.ext?bars.length-1:l.b.i;const lc=rc(l.c)||C.accent;
     x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();x.strokeStyle=lc;x.lineWidth=l.w||2.2;x.setLineDash(l.dash?[6,4]:[]);x.beginPath();x.moveTo(X(l.a.i),Y(l.a.p));x.lineTo(X(i2),Y(l.a.p+sl*(i2-l.a.i)));x.stroke();x.setLineDash([]);x.restore();
-    if(l.label){x.fillStyle=lc;x.fillText(l.label,Math.min(X(l.a.i)+4,L+pw-120),Y(l.a.p)+(sl>0?12:-10))}});
+    if(l.label){const lx=Math.max(L+2,Math.min(X(l.labAt!=null?l.labAt:l.a.i)+4,L+pw-120)),lp=l.a.p+sl*((lx-X(l.a.i))/slot);x.fillStyle=lc;x.fillText(l.label,lx,Y(lp)+(l.labBelow!=null?(l.labBelow?14:-10):(sl>0?12:-10)))}});
   if(vis<bars.length){x.strokeStyle=C.muted;x.setLineDash([4,4]);x.beginPath();x.moveTo(X(vis)-slot/2,T);x.lineTo(X(vis)-slot/2,T+ph);x.stroke();x.setLineDash([]);
     x.fillStyle=C.muted;x.fillText("future hidden",Math.min(X(vis)+4,L+pw-80),T+10)}
   (o.hlines||[]).forEach(l=>{const lc=rc(l.c)||C.accent;x.strokeStyle=lc;x.lineWidth=l.w||2;x.setLineDash(l.dash?[6,4]:[]);x.beginPath();x.moveTo(L,Y(l.p));x.lineTo(L+pw,Y(l.p));x.stroke();x.setLineDash([]);
@@ -1890,7 +1895,7 @@ const GATE_Q2=[
    e:`It gave back ${fmt(lo+rng-pb)} of a ${fmt(rng)} rise = ${pct}%. Under ⅓ is shallow, ⅓ to ⅔ normal, over ⅔ deep.`}}},
  {l:10,f:()=>{const a=pick([1000,2000,3000]),b=a+pick([500,1000,2000]);const f=b-(b-a)*.618;return{pic:"retr:"+a+":"+b,q:`ETH rises from ${fmt(a)} to ${fmt(b)}. Where is the 61.8% retracement?`,...uniqOpts(fmt(f),[fmt(a+(b-a)*.618),fmt(b-(b-a)*.382),fmt(b*.618)]),
    e:`61.8% back from the top = ${fmt(b)} − 0.618 × ${fmt(b-a)} = ${fmt(f)}.`}}},
- {l:10,f:()=>({pic:"pullAB",q:"Two pullbacks both give back 45%. Pullback 1 drifts down on small overlapping candles. Pullback 2 drops in three huge red candles. Which is more likely the start of a reversal?",o:["Pullback 2","Pullback 1","They're the same: only depth matters","Neither, 45% is always safe"],a:0,e:"Speed and force matter, not just depth. Big, fast candles against the trend show real selling."})},
+ {l:10,f:()=>({pic:"pullAB",q:"Two pullbacks both give back 45%. Pullback A drifts down on small overlapping candles. Pullback B drops in three huge red candles. Which is more likely the start of a reversal?",o:["Pullback B","Pullback A","They're the same: only depth matters","Neither, 45% is always safe"],a:0,e:"Speed and force matter, not just depth. Big, fast candles against the trend show real selling."})},
  // Lesson 11
  {l:11,f:()=>{const lo=100,hi=110;const g=genBrk(false);return{chart:()=>[g.bars,{hlines:[{p:110,c:"--muted",dash:true,w:1.5},{p:100,c:"--muted",dash:true,w:1.5}]}],q:`A range runs from ${fmt(lo)} to ${fmt(hi)}. Price spikes to ${fmt(hi*1.01,1)}, then closes at ${fmt(lo+(hi-lo)*.7,1)}. Best plan?`,o:[`Treat it as a fake-out; look for a move toward ${fmt(lo)}`,"Buy: the breakout is confirmed","Wait for a much higher high before doing anything","Short only if price goes above the spike"],a:0,e:"It closed back inside the range. Trapped breakout buyers often push price to the other side."}}},
  {l:11,f:()=>{const lo=pick([90,100,120]),h=pick([10,15,20]);return{pic:"ex:range",q:`A range runs from ${lo} to ${lo+h}. Price breaks out cleanly above ${lo+h}. Classic target?`,...uniqOpts(String(lo+2*h),[String(lo+h+h/2),String(lo+3*h),String(lo+h+5)]),e:`Add the range height (${h}) to the breakout point: ${lo+h} + ${h} = ${lo+2*h}. A rough guide only.`}}},
@@ -2201,19 +2206,20 @@ function tlineRound(el,done,opts={}){const type=pick(["up","down"]);const rw=rwF
   const seg=(a,b,c,lab,dash)=>({a:{i:a,p:val(a)},b:{i:b,p:val(b)},c,ext:true,dash,label:lab});
   mountChart(cv,()=>{const o={marks:pts.map(i=>({i,t:T,c:"--accent"})),tlines:[]};
     if(pts.length===2){const [a,b]=pts.slice().sort((x,y)=>x-y);o.tlines.push(seg(a,b,checked?(ok?"--good":"--bad"):"--accent",checked?"your line":""))}
-    if(checked&&!ok&&best)o.tlines.push(seg(best[0],best[1],"--mark","a good line",true));return[bars,o]});
-  cv.addEventListener("click",ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);const g=cv._g;const i=snapI(bars,g.idx(p.x),T,snapR(g.slot),0,bars.length-1);
+    if(checked&&!ok&&best)o.tlines.push(Object.assign(seg(best[0],best[1],"--mark","a good line",true),{labAt:Math.round((best[0]+best[1])/2),labBelow:T==="L"}));return[bars,o]});
+  cv.addEventListener("click",ev=>{if(checked||!cv._g)return;const p=canvasPoint(cv,ev);const g=cv._g;const i0=g.idx(p.x),r=snapR(g.slot);const near=pv.filter(q=>Math.abs(q-i0)<=r).sort((x,y)=>Math.abs(x-i0)-Math.abs(y-i0));const i=near.length?near[0]:snapI(bars,i0,T,r,0,bars.length-1);
     if(pts.length>=2)pts=[];if(!pts.includes(i))pts.push(i);sfx("tap");chk.disabled=pts.length<2;rerenderAll()});
   const chk=h("button",{class:"primary",disabled:"",on:{click:check}},"Check my line");
-  el.append(h("p",{class:"task"},opts.prompt||("This market is in a "+(type==="up"?"uptrend":"downtrend")+". Tap two swing "+(T==="L"?"lows":"highs")+" to draw its trendline. Taps snap to the nearest "+(T==="L"?"low":"high")+". A third tap starts over.")),cv,h("div",{class:"row"},chk),f);
+  el.append(h("p",{class:"task"},opts.prompt||("This market is in "+(type==="up"?"an uptrend":"a downtrend")+". Tap two swing "+(T==="L"?"lows":"highs")+" to draw its trendline. Taps snap to the nearest "+(T==="L"?"low":"high")+". A third tap starts over.")),cv,h("div",{class:"row"},chk),f);
   function check(){checked=true;chk.disabled=true;const [a,b]=pts.slice().sort((x,y)=>x-y);const why=[];const isPiv=i=>pv.some(p=>Math.abs(p-i)<=1);
     const lo=Math.min(...bars.map(x=>x.l)),hi=Math.max(...bars.map(x=>x.h)),tol=(hi-lo)*.015;const at=i=>val(a)+(val(b)-val(a))*(i-a)/(b-a);
     if(!isPiv(a)||!isPiv(b))why.push("both points should be clear swing "+(T==="L"?"lows":"highs"));
     if(T==="L"?val(b)<=val(a):val(b)>=val(a))why.push(T==="L"?"an uptrend line slopes up":"a downtrend line slopes down");
     if(b-a<6)why.push("the two points are too close; spread them across the trend");
-    let cut=0;for(let k=a;k<bars.length;k++)if(T==="L"?bars[k].c<at(k)-tol:bars[k].c>at(k)+tol)cut++;if(cut>1)why.push("the line cuts through "+cut+" candle closes");
+    const beyond=k=>T==="L"?bars[k].c<at(k)-tol:bars[k].c>at(k)+tol;let brk=bars.length;while(brk-1>b&&beyond(brk-1))brk--;if(bars.length-brk>6)brk=bars.length;
+    let cut=0;for(let k=a;k<brk;k++)if(beyond(k))cut++;const same=best&&Math.abs(best[0]-a)<=1&&Math.abs(best[1]-b)<=1;if(cut>1&&!same)why.push("the line cuts through "+cut+" candle closes");
     const touch=pv.filter(p=>p!==a&&p!==b&&p>a&&Math.abs(val(p)-at(p))<=tol*1.5).length;ok=!why.length;rerenderAll();
-    fb(f,ok?"good":"bad",ok?"Good line. It sits "+(T==="L"?"under the rising lows":"along the falling highs")+" without slicing through candles."+(touch?" It has <b>"+touch+" more touch"+(touch>1?"es":"")+"</b>, which makes it stronger.":" A third touch would confirm it.")+rwTag(rw)
+    fb(f,ok?"good":"bad",ok?"Good line. It sits "+(T==="L"?"under the rising lows":"along the falling highs")+" without slicing through candles."+(touch?" It has <b>"+touch+" more touch"+(touch>1?"es":"")+"</b>, which makes it stronger.":" A third touch would confirm it.")+(brk<bars.length?" The last "+(bars.length-brk>1?(bars.length-brk)+" candles close":"candle closes")+" through it, which is the trendline breaking: a warning the trend may be ending.":"")+rwTag(rw)
       :"Not quite: "+why.join(", ")+". The dashed purple line shows one good answer."+rwTag(rw));done(ok)}}
 
 /* ---------- retracements ---------- */
