@@ -3522,7 +3522,7 @@ function mcFmt(p){if(!isFinite(p))return "";if(p<0)return "−"+mcFmt(-p);if(p==
 function mcDate(t,iv){const d=new Date(t);const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()];
   if(iv==="M")return M+" "+String(d.getUTCFullYear()).slice(2);if(mcIntra(iv))return d.getUTCDate()+" "+M+" "+String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0");return d.getUTCDate()+" "+M+" "+String(d.getUTCFullYear()).slice(2)}
 
-function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=null,hover=null,view={start:0,n:120,ys:1,yo:0},axisX=null,axisY=null,axTap={t:0,k:""},pan=null,ov=null,prac=null,sel=null,drag=null,ws=null,wsKey="",wsTry=0,wsHost=0,rafQ=false,lastTick=0;
+function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=null,hover=null,view={start:0,n:120,ys:1,yo:0},axisX=null,axisY=null,axTap={t:0,k:""},pan=null,ov=null,prac=null,sel=null,drag=null,tap=null,place=null,ws=null,wsKey="",wsTry=0,wsHost=0,rafQ=false,lastTick=0;
   const cv=h("canvas",{class:"mcanvas","aria-label":"Price chart. Scroll to zoom, drag to move."});const stat=h("span",{class:"score"});const pxEl=h("span",{class:"mcpx"});
   const drawsOf=()=>cfg.draw[cfg.sym]=cfg.draw[cfg.sym]||[];
   /* toolbar */
@@ -3539,18 +3539,18 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   const selBar=h("span",{class:"mcselbar",hidden:""});
   function delSel(){if(!sel)return;const ds=drawsOf();const i=ds.indexOf(sel);if(i>=0)ds.splice(i,1);sel=null;mcSave();selUI();draw()}
   function selUI(){selBar.innerHTML="";selBar.hidden=!sel;if(!sel)return;const nm={h:"Horizontal line",t:"Trend line",z:"Zone"}[sel.k];
-    selBar.append(h("span",{class:"score"},nm+" · drag to move, dots to reshape"));
+    selBar.append(h("span",{class:"score"},nm+(IS_PHONE()?" · drag it, or drag a dot":" · drag to move, dots to reshape")));
     /* turn a line into a zone around it (half a typical candle range each side), or a zone back into a line at its middle */
     if(sel.k==="h")selBar.append(h("button",{class:"mctog",on:{click:()=>{const r=bars.slice(-14),w=r.length?r.reduce((q,c)=>q+(c.h-c.l),0)/r.length/2:sel.p*.01;const d=sel;const p=d.p;d.k="z";d.p1=p+w;d.p2=p-w;delete d.p;mcSave();selUI();draw()}}},"▭ Make zone"));
     if(sel.k==="z")selBar.append(h("button",{class:"mctog",on:{click:()=>{const d=sel;d.k="h";d.p=(d.p1+d.p2)/2;delete d.p1;delete d.p2;mcSave();selUI();draw()}}},"─ Make line"));
-    if(sel.k==="t")selBar.append(h("button",{class:"mctog"+(sel.ext?" on":""),on:{click:()=>{sel.ext=!sel.ext;mcSave();selUI();draw()}}},"Extend right"));
+    if(sel.k==="t")selBar.append(h("button",{class:"mctog"+(sel.extL?" on":""),title:"Extend the line back to the left edge",on:{click:()=>{sel.extL=!sel.extL;mcSave();selUI();draw()}}},"⟵ Extend"),h("button",{class:"mctog"+(sel.ext?" on":""),title:"Extend the line to the right edge",on:{click:()=>{sel.ext=!sel.ext;mcSave();selUI();draw()}}},"Extend ⟶"));
     selBar.append(h("button",{class:"mctog",title:"Delete (Backspace)",on:{click:delSel}},"🗑 Delete"))}
   const msg=h("div",{class:"mcmsg",hidden:""});
   m.append(h("section",{class:"card mccard"},
     h("div",{class:"mcbar"},coin,pxEl,ivRow,logB,magB,refB,h("span",{style:"flex:1"}),stat),
     h("div",{class:"mcbar"},toolRow,clearB),
     h("div",{class:"mcwrap"},cv,selBar,msg),
-    h("p",{class:"read",style:"margin:8px 0 0"},(document.documentElement.classList.contains("is-phone")?"Pinch with two fingers to zoom, drag to move. Drag the price or time axis to squeeze, double-tap it to reset. Tap a drawing to select it, then drag it or its dots. Drawings save automatically for each coin.":"Scroll or use +/− to zoom, drag to move. Drag the price or time axis to squeeze, double-click it to reset. Click a drawing to select it: drag it to move, drag its dots to reshape, Backspace to delete. Drawings save automatically for each coin.")),
+    h("p",{class:"read",style:"margin:8px 0 0"},(document.documentElement.classList.contains("is-phone")?"Pinch with two fingers to zoom, drag to move. Drag the price or time axis to squeeze, double-tap it to reset. Tap a drawing to select it, then drag it or its big dots. To draw a trend line, pick Trend and slide your finger from the first point to the second. Drawings save automatically for each coin.":"Scroll or use +/− to zoom, drag to move. Drag the price or time axis to squeeze, double-click it to reset. Click a drawing to select it: drag it to move, drag its dots to reshape, Backspace to delete. Drawings save automatically for each coin.")),
     h("div",{class:"row",style:"margin-top:6px"},h("button",{on:{click:()=>zoom(1/1.15)}},"+"),h("button",{on:{click:()=>zoom(1.15)}},"−"),h("button",{on:{click:()=>{fit();draw()}}},"Reset view (Alt+R)"))));
   function sync(){[...ivRow.children].forEach(b=>b.classList.toggle("on",b.dataset.v===cfg.iv));logB.classList.toggle("on",!!cfg.log);magB.classList.toggle("on",!!cfg.mag);
     [...toolRow.children].forEach(b=>b.classList.toggle("on",b.dataset.v===tool));cv.style.cursor=tool==="cursor"?(pan?"grabbing":"grab"):tool==="erase"?"pointer":"crosshair"}
@@ -3599,10 +3599,12 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     all.forEach(d=>{const er=d===hoverHit&&tool==="erase",hi=d===sel||(d===hoverHit&&tool==="cursor");x.strokeStyle=er?C.down:C.acc;x.fillStyle=C.zone;x.lineWidth=er||hi?3:2;x.setLineDash(d.ghost?[6,4]:[]);
       if(d.k==="h"){x.beginPath();x.moveTo(0,Y(d.p));x.lineTo(pw,Y(d.p));x.stroke()}
       else if(d.k==="z"){const a=Y(Math.max(d.p1,d.p2)),b=Y(Math.min(d.p1,d.p2));x.fillRect(0,a,pw,b-a);x.lineWidth=er||hi?2:1;x.strokeRect(-2,a,pw+4,b-a)}
-      else if(d.k==="t"){const ax=tX(d.t1),ay=Y(d.p1),bx=tX(d.t2),by=Y(d.p2);const dx=bx-ax,dy=by-ay;const rx=bx>=ax,ext=d.ext&&dx?Math.max(0,((rx?pw:0)-bx)/dx):0;
-        x.beginPath();x.moveTo(ax,ay);x.lineTo(bx+dx*ext,by+dy*ext);x.stroke();if(!d.ghost&&d!==sel){x.fillStyle=C.acc;[[ax,ay],[bx,by]].forEach(([u,v])=>{x.beginPath();x.arc(u,v,2.5,0,6.283);x.fill()})}}
+      else if(d.k==="t"){const ax=tX(d.t1),ay=Y(d.p1),bx=tX(d.t2),by=Y(d.p2);const dx=bx-ax,dy=by-ay,[s0,s1]=tSpan(d,ax,bx);
+        x.beginPath();x.moveTo(ax+dx*s0,ay+dy*s0);x.lineTo(ax+dx*s1,ay+dy*s1);x.stroke();if(!d.ghost&&d!==sel){x.fillStyle=C.acc;[[ax,ay],[bx,by]].forEach(([u,v])=>{x.beginPath();x.arc(u,v,2.5,0,6.283);x.fill()})}}
       x.setLineDash([])});
-    if(sel&&drawsOf().includes(sel))handlesOf(sel).forEach(q=>{x.beginPath();x.arc(q.x,q.y,6,0,6.283);x.fillStyle=C.bg;x.fill();x.strokeStyle=C.acc;x.lineWidth=2;x.stroke()});
+    if(sel&&drawsOf().includes(sel)){const big=IS_PHONE();handlesOf(sel).forEach(q=>{const act=drag&&drag.d===sel&&drag.w===q.w&&drag.moved;
+      if(act||big){x.globalAlpha=act?.22:.12;x.fillStyle=C.acc;x.beginPath();x.arc(q.x,q.y,act?22:16,0,6.283);x.fill();x.globalAlpha=1}
+      x.beginPath();x.arc(q.x,q.y,big?8:6,0,6.283);x.fillStyle=C.bg;x.fill();x.strokeStyle=C.acc;x.lineWidth=big?2.5:2;x.stroke()})}
     if(pend&&!hover){x.fillStyle=C.acc;x.beginPath();x.arc(tX(pend.t),Y(pend.p),4,0,6.283);x.fill()}
     if(ov&&ov.hideFrom!=null){const hx=X(ov.hideFrom)-slot/2;x.fillStyle=C.bg;x.globalAlpha=.6;x.fillRect(hx,T,pw-hx,ph);x.globalAlpha=1;x.strokeStyle=C.muted;x.setLineDash([4,4]);x.beginPath();x.moveTo(hx,T);x.lineTo(hx,T+ph);x.stroke();x.setLineDash([]);
       x.fillStyle=C.muted;x.fillText("future hidden",hx+8,T+14)}
@@ -3634,12 +3636,17 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   /* drag points of a drawing: trend line ends, zone edges, the horizontal line itself */
   function handlesOf(d){if(!G)return[];const mx=G.pw/2;if(d.k==="t")return[{w:1,x:G.tX(d.t1),y:G.Y(d.p1)},{w:2,x:G.tX(d.t2),y:G.Y(d.p2)}];
     if(d.k==="z")return[{w:1,x:mx,y:G.Y(d.p1)},{w:2,x:mx,y:G.Y(d.p2)}];return[{w:0,x:mx,y:G.Y(d.p)}]}
-  function handleAt(pt){if(!sel||!drawsOf().includes(sel))return null;return handlesOf(sel).find(q=>Math.hypot(q.x-pt.x,q.y-pt.y)<10)||null}
-  function hitTest(pt){const ds=drawsOf();for(let k=ds.length-1;k>=0;k--){const d=ds[k];
-    if(d.k==="h"&&Math.abs(G.Y(d.p)-pt.y)<7)return d;
-    if(d.k==="z"){const a=G.Y(Math.max(d.p1,d.p2)),b=G.Y(Math.min(d.p1,d.p2));if(pt.y>=a-4&&pt.y<=b+4)return d}
-    if(d.k==="t"){const ax=G.tX(d.t1),ay=G.Y(d.p1),bx=G.tX(d.t2),by=G.Y(d.p2);const dx=bx-ax,dy=by-ay;const L2=dx*dx+dy*dy||1;
-      let u=((pt.x-ax)*dx+(pt.y-ay)*dy)/L2;u=Math.max(0,u);const qx=ax+u*dx,qy=ay+u*dy;if(Math.hypot(pt.x-qx,pt.y-qy)<7)return d}}return null}
+  /* how far along the line (0 = first dot, 1 = second dot) it is drawn, counting extensions to the chart edges */
+  function tSpan(d,ax,bx){const dx=bx-ax;if(!dx||!G)return[0,1];const sR=(G.pw-ax)/dx,sL=-ax/dx,R_=!!d.ext,L_=!!d.extL;
+    return dx>0?[L_?Math.min(0,sL):0,R_?Math.max(1,sR):1]:[R_?Math.min(0,sR):0,L_?Math.max(1,sL):1]}
+  /* fingers are wide: touch gets much bigger grab areas than a mouse */
+  const RAD=ev=>ev&&ev.pointerType==="touch"?{h:28,l:20}:{h:11,l:7};
+  function handleAt(pt,r){if(!sel||!drawsOf().includes(sel))return null;r=r||11;let best=null,bd=r;handlesOf(sel).forEach(q=>{const d=Math.hypot(q.x-pt.x,q.y-pt.y);if(d<bd){bd=d;best=q}});return best}
+  function distTo(d,pt){if(d.k==="h")return Math.abs(G.Y(d.p)-pt.y);
+    if(d.k==="z"){const a=G.Y(Math.max(d.p1,d.p2)),b=G.Y(Math.min(d.p1,d.p2));return pt.y>=a&&pt.y<=b?0:Math.min(Math.abs(pt.y-a),Math.abs(pt.y-b))}
+    const ax=G.tX(d.t1),ay=G.Y(d.p1),bx=G.tX(d.t2),by=G.Y(d.p2);const dx=bx-ax,dy=by-ay;const L2=dx*dx+dy*dy||1;const [s0,s1]=tSpan(d,ax,bx);
+    const u=Math.max(s0,Math.min(s1,((pt.x-ax)*dx+(pt.y-ay)*dy)/L2));return Math.hypot(pt.x-(ax+u*dx),pt.y-(ay+u*dy))}
+  function hitTest(pt,r){r=r||7;const ds=drawsOf();let best=null,bd=Infinity;for(let k=ds.length-1;k>=0;k--){const d=ds[k];const dd=distTo(d,pt)-(d===sel?4:0);if(dd<r&&dd<bd){bd=dd;best=d}}return best}
   function zoom(k,cx){if(!bars.length)return;const n2=Math.max(15,Math.min(Math.max(30,bars.length*1.2),view.n*k));const anchor=cx!=null&&G?G.I(cx):view.start+view.n-5;
     const frac=(anchor-view.start)/view.n;view.start=anchor-frac*n2;view.n=n2;clamp();draw()}
   function clamp(){view.start=Math.max(-view.n*.8,Math.min(bars.length-view.n*.2,view.start))}
@@ -3648,7 +3655,7 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
   /* two-finger pinch zooms the chart (and never the whole page) */
   const touches=new Map();let pinch=null;
   const pinchInfo=()=>{const [a,b]=[...touches.values()];return{d:Math.hypot(a.x-b.x,a.y-b.y)||1,x:(a.x+b.x)/2}};
-  cv.addEventListener("pointerdown",ev=>{if(ev.pointerType==="touch"){touches.set(ev.pointerId,pt(ev));if(touches.size===2){pinch=pinchInfo();pan=null;drag=null;pend=null;return}if(touches.size>2)return}},true);
+  cv.addEventListener("pointerdown",ev=>{if(ev.pointerType==="touch"){touches.set(ev.pointerId,pt(ev));if(touches.size===2){pinch=pinchInfo();pan=null;drag=null;pend=null;tap=null;place=null;return}if(touches.size>2)return}},true);
   cv.addEventListener("pointermove",ev=>{if(!touches.has(ev.pointerId))return;touches.set(ev.pointerId,pt(ev));if(pinch&&touches.size===2){ev.stopImmediatePropagation();const q=pinchInfo();zoom(pinch.d/q.d,q.x);view.start-=(q.x-pinch.x)/(G?G.slot:1);clamp();draw();pinch=q}},true);
   const tEnd=ev=>{touches.delete(ev.pointerId);if(touches.size<2&&pinch){pinch=null;pan=null;sync&&sync()}};cv.addEventListener("pointerup",tEnd,true);cv.addEventListener("pointercancel",tEnd,true);
   ["gesturestart","gesturechange"].forEach(t=>cv.addEventListener(t,e=>e.preventDefault()));
@@ -3660,12 +3667,18 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     if(prac&&prac.kind==="swings"&&!prac.checked&&IS_PHONE()){prac.aim=Math.max(i0v(),Math.min(i1v(),Math.round(G.I(p.x))));prac.aimUI();draw()}
     else if(prac&&prac.kind==="swings"&&!prac.checked){let i=Math.round(G.I(p.x));const b=bars[i];if(!b||i>i1v())return;const t=p.y<(G.Y(b.h)+G.Y(b.l))/2?"H":"L";const r=snapR(G.slot);
       const ex=prac.user.findIndex(m=>m.t===t&&Math.abs(m.i-i)<=r);if(ex>=0){prac.user.splice(ex,1);sfx("untap")}else{i=snapI(bars,i,t,r,i0v(),i1v());prac.user.push({i,t});sfx("tap")}prac.count.textContent=prac.user.length+" marked";draw();return}
-    if(tool==="cursor"){const hd=handleAt(p);const hitD=hd?sel:hitTest(p);
-      if(hitD){sel=hitD;selUI();drag={d:hitD,w:hd&&hd.w!==0?hd.w:null,x:p.x,y:p.y,o:JSON.parse(JSON.stringify(hitD)),moved:false};cv.setPointerCapture(ev.pointerId);draw();return}
-      if(sel){sel=null;selUI()}pan={x:p.x,y:p.y,s:view.start,yo:view.yo,id:ev.pointerId};cv.setPointerCapture(ev.pointerId);sync();draw();return}
-    if(tool==="erase"){const d=hitTest(p);if(d){const ds=drawsOf();ds.splice(ds.indexOf(d),1);hoverHit=null;if(d===sel){sel=null;selUI()}mcSave();draw()}return}
+    const tch=ev.pointerType==="touch",rad=RAD(ev);tap=null;
+    if(tool==="cursor"){const hd=handleAt(p,rad.h);let hitD=hd?sel:hitTest(p,rad.l);
+      /* touch: a line that isn't selected yet only gets selected by a clean tap; a swipe that starts on it moves the chart instead */
+      if(tch&&hitD&&!hd&&hitD!==sel){tap={d:hitD,x:p.x,y:p.y,mv:false};hitD=null}
+      if(hitD){sel=hitD;selUI();drag={d:hitD,w:hd&&hd.w!==0?hd.w:null,x:p.x,y:p.y,ox:hd?hd.x-p.x:0,oy:hd?hd.y-p.y:0,o:JSON.parse(JSON.stringify(hitD)),moved:false,dead:tch?6:2};cv.setPointerCapture(ev.pointerId);draw();return}
+      if(tch){if(!tap)tap={d:null,x:p.x,y:p.y,mv:false}}else if(sel){sel=null;selUI()}
+      pan={x:p.x,y:p.y,s:view.start,yo:view.yo,id:ev.pointerId};cv.setPointerCapture(ev.pointerId);sync();draw();return}
+    if(tool==="erase"){const d=hitTest(p,rad.l);if(d){const ds=drawsOf();ds.splice(ds.indexOf(d),1);hoverHit=null;if(d===sel){sel=null;selUI()}mcSave();draw()}return}
     const price=snapP(p),t=snapT(p);
     if(tool==="h"){add({k:"h",p:price});return}
+    /* touch: press on the first point and slide to the second, or tap twice; the point is placed where the finger lifts */
+    if(tch){if(!pend){pend={k:tool,t,p:price};place={x:p.x,y:p.y,first:true,mv:false};hover=null}else{place={x:p.x,y:p.y,first:false,mv:false};hover=p}cv.setPointerCapture(ev.pointerId);draw();return}
     if(!pend){pend={k:tool,t,p:price};hover=p;draw();return}
     if(tool==="t")add({k:"t",t1:pend.t,p1:pend.p,t2:t,p2:price});else add({k:"z",p1:pend.p,p2:price})});
   function add(d){const ds=drawsOf();ds.push(d);if(ds.length>150)ds.shift();pend=null;mcSave();setTool("cursor");sel=d;selUI();draw();const _p=h("div",{class:"pop ok"},"✓");document.body.append(_p);setTimeout(()=>_p.remove(),700)}
@@ -3673,14 +3686,22 @@ function chartView(m){const cfg=mcCfg();let bars=[],src="",tool="cursor",pend=nu
     if(axisX&&bars.length){const n2=Math.max(15,Math.min(Math.max(30,bars.length*1.2),axisX.n*Math.exp((axisX.x-p.x)*.004)));view.n=n2;view.start=axisX.end-n2;clamp();draw();return}
     if(axisY){view.ys=Math.max(.15,Math.min(8,axisY.ys*Math.exp((p.y-axisY.y)*.005)));draw();return}
     if(G&&!pan&&!drag)cv.style.cursor=p.x>G.pw?"ns-resize":p.y>G.T+G.ph?"ew-resize":cv.style.cursor==="ns-resize"||cv.style.cursor==="ew-resize"?(tool==="cursor"?"grab":"crosshair"):cv.style.cursor;
+    if(tap&&!tap.mv&&Math.hypot(p.x-tap.x,p.y-tap.y)>10)tap.mv=true;
+    if(place){if(!place.mv&&Math.hypot(p.x-place.x,p.y-place.y)>12)place.mv=true;if(place.mv||!place.first){hover=p;draw()}return}
     if(pan&&G){view.start=pan.s-(p.x-pan.x)/G.slot;clamp();if(view.ys!==1||view.yo)view.yo=pan.yo+(p.y-pan.y)/G.phP*view.ys}hover=p;
+    if(drag&&G&&!drag.moved&&Math.hypot(p.x-drag.x,p.y-drag.y)<drag.dead){draw();return}
     if(drag&&G){const d=drag.d,o=drag.o,ms=mcIvMs(cfg.iv);drag.moved=true;
-      if(drag.w){if(d.k==="t"){d["t"+drag.w]=snapT(p);d["p"+drag.w]=snapP(p)}else d["p"+drag.w]=snapP(p)}
+      /* the dot keeps its distance from the finger, so the finger never hides it; the crosshair follows the dot */
+      if(drag.w){const q={x:p.x+drag.ox,y:p.y+drag.oy};hover=q;if(d.k==="t"){d["t"+drag.w]=snapT(q);d["p"+drag.w]=snapP(q)}else d["p"+drag.w]=snapP(q)}
       else{const dy=p.y-drag.y,sh=v=>G.P(G.Y(v)+dy);if(d.k==="h")d.p=sh(o.p);else{d.p1=sh(o.p1);d.p2=sh(o.p2)}
         if(d.k==="t"){const di=Math.round((p.x-drag.x)/G.slot)*ms;d.t1=o.t1+di;d.t2=o.t2+di}}}
     else if(!pan&&G&&(tool==="erase"||tool==="cursor")){hoverHit=hitTest(p);if(tool==="cursor")cv.style.cursor=handleAt(p)?"pointer":hoverHit?"move":"grab"}
     draw()});
-  const endPan=()=>{axisX=null;axisY=null;if(drag){if(drag.moved)mcSave();drag=null}if(pan){pan=null;sync()}};cv.addEventListener("pointerup",endPan);cv.addEventListener("pointercancel",endPan);
+  const endPan=ev=>{axisX=null;axisY=null;if(drag){if(drag.moved)mcSave();drag=null}if(pan){pan=null;sync()}
+    if(tap){const t_=tap;tap=null;if(!t_.mv&&ev&&ev.type==="pointerup"){if(sel!==t_.d){sel=t_.d;selUI();if(t_.d)sfx("tap")}draw()}}
+    if(place){const pl=place;place=null;if(ev&&ev.type==="pointerup"&&pend&&G&&(pl.mv||!pl.first)){const p=pt(ev),price=snapP(p),t=snapT(p);hover=null;
+        if(pend.k==="t")add({k:"t",t1:pend.t,p1:pend.p,t2:t,p2:price});else add({k:"z",p1:pend.p,p2:price})}
+      else if(ev&&ev.type==="pointercancel"){pend=null;hover=null;draw()}else draw()}};cv.addEventListener("pointerup",endPan);cv.addEventListener("pointercancel",endPan);
   cv.addEventListener("pointerleave",()=>{if(!pan){hover=null;draw()}});
   const onKey=e=>{if(!cv.isConnected){document.removeEventListener("keydown",onKey);return}if(SESSION||TVS)return;const tg=e.target.tagName;if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT")return;
     if(e.key==="Escape"){if(sel){sel=null;selUI();draw()}setTool("cursor");return}
