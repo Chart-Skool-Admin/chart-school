@@ -6,7 +6,7 @@
 Times: daily candles sit at 00:00 UTC of their date. Intraday candles are stored in
 New York wall-clock time written as if it were UTC, so 09:30 means the US open all year.
 """
-import json, sys, time, urllib.request, datetime as dt
+import json, sys, time, datetime as dt
 from zoneinfo import ZoneInfo
 
 NY = ZoneInfo("America/New_York")
@@ -17,29 +17,25 @@ UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/60
 
 
 def fetch(t, interval, days):
-    now = int(time.time())
-    p1 = now - days * 86400
+    """yfinance handles Yahoo's cookie/crumb check (plain requests get 429 from cloud runners)."""
+    import yfinance as yf
     last = None
-    for host in ("query1", "query2"):
-        for attempt in range(4):
-            url = (f"https://{host}.finance.yahoo.com/v8/finance/chart/{t}?period1={p1}&period2={now}"
-                   f"&interval={interval}&includePrePost=false&events=div%2Csplits")
-            try:
-                with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30) as r:
-                    j = json.load(r)
-                res = j["chart"]["result"][0]
-                q = res["indicators"]["quote"][0]
-                out = []
-                for i, ts in enumerate(res.get("timestamp") or []):
-                    o, h, l, c, v = (q[k][i] for k in ("open", "high", "low", "close", "volume"))
-                    if None in (o, h, l, c) or not (h >= l > 0):
-                        continue
-                    out.append((ts, o, h, l, c, v or 0))
-                if out:
-                    return out
-            except Exception as e:  # noqa
-                last = e
-            time.sleep(2 + attempt * 3)
+    for attempt in range(5):
+        try:
+            start = (dt.datetime.utcnow() - dt.timedelta(days=days)).strftime("%Y-%m-%d")
+            df = yf.Ticker(t).history(start=start, interval=interval, prepost=False, auto_adjust=False, actions=False)
+            out = []
+            for ts, r in df.iterrows():
+                o, h, l, c, v = (float(r[k]) for k in ("Open", "High", "Low", "Close", "Volume"))
+                if any(x != x for x in (o, h, l, c)) or not (h >= l > 0):
+                    continue
+                out.append((int(ts.timestamp()), o, h, l, c, 0 if v != v else v))
+            if out:
+                return out
+            last = "empty"
+        except Exception as e:  # noqa
+            last = e
+        time.sleep(5 + attempt * 10)
     raise SystemExit(f"{t} {interval}: {last}")
 
 
