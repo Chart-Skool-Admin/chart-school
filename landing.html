@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en" data-pal="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chart School</title>
+<meta name="description" content="Learn technical analysis on real crypto price history. 42 bite-sized lessons in 5 levels, live charts, a replay simulator and spaced practice that makes it stick.">
+<meta name="theme-color" content="#0a0d14">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d14;--panel:#121723;--panel2:#171d2b;--line:#232a3a;--ink:#e9edf5;--muted:#8c96aa;
+  --accent:#8b7dff;--accent-ink:#fff;--up:#2fd38a;--down:#ff5d6c;--mark:#ffb83d;
+  --g1:#9a8cff;--g2:#7b6bff;--g3:#4f8bff;
+  --grad:linear-gradient(135deg,var(--g1) 0%,var(--g2) 45%,var(--g3) 100%);
+  --fd:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --fb:"Inter",ui-sans-serif,system-ui,sans-serif;
+  --fm:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --gut:clamp(16px,4vw,56px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--fb);overflow-x:hidden;transition:background .5s}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(1100px 600px at 10% -10%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 60%),
+             radial-gradient(900px 500px at 110% 10%,color-mix(in srgb,var(--g3) 10%,transparent),transparent 60%)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:64px 64px;mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 70%)}
+main,header,footer{position:relative;z-index:1}
+a{color:inherit}
+.mono{font-family:var(--fm)}
+.eyebrow{font:500 12px/1 var(--fm);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 var(--gut)}
+.grad-t{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* NAV */
+header{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.nav{display:flex;align-items:center;gap:16px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font:700 18px var(--fd);text-decoration:none;letter-spacing:-.02em}
+.logo i{width:30px;height:30px;border-radius:9px;background:var(--grad);display:grid;place-items:center;box-shadow:0 8px 24px -10px var(--accent)}
+.logo i svg{width:18px;height:18px}
+.nav nav{display:flex;gap:22px;margin-left:24px;font:500 14px var(--fb);color:var(--muted)}
+.nav nav a{text-decoration:none}.nav nav a:hover{color:var(--ink)}
+.dots{margin-left:auto;display:flex;gap:6px;align-items:center}
+.dot{width:16px;height:16px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;transition:transform .2s}
+.dot:hover{transform:scale(1.2)}.dot[aria-pressed=true]{border-color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:10px;border:0;cursor:pointer;text-decoration:none;
+  font:600 15px var(--fd);letter-spacing:-.01em;border-radius:14px;padding:14px 22px;transition:transform .15s,box-shadow .2s}
+.btn.pri{background:var(--grad);color:var(--accent-ink);box-shadow:0 14px 36px -14px var(--accent)}
+.btn.pri:hover{transform:translateY(-2px);box-shadow:0 18px 40px -12px var(--accent)}
+.btn.ghost{background:color-mix(in srgb,var(--panel) 70%,transparent);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:9px 14px;font-size:14px;border-radius:11px}
+
+/* HERO */
+.hero{position:relative;min-height:calc(100svh - 64px);display:grid;align-items:center;padding:48px 0 56px;overflow:hidden}
+#heroC{position:absolute;inset:0;width:100%;height:100%}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,var(--bg) 0%,color-mix(in srgb,var(--bg) 70%,transparent) 34%,transparent 52%)}
+.hero .wrap{z-index:1}
+.hero .wrap{position:relative;width:100%}
+.hero h1{font:700 clamp(52px,9.4vw,148px)/.88 var(--fd);letter-spacing:-.055em;max-width:9.5ch;margin:22px 0 26px}
+.hero h1 span{display:block}
+.hero h1 .strike{color:var(--muted);position:relative;display:inline-block}
+.hero h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.09em;background:var(--down);transform-origin:left;transform:scaleX(0);animation:strike .7s 1.6s cubic-bezier(.7,0,.2,1) forwards}
+@keyframes strike{to{transform:scaleX(1)}}
+.hero p.lede{font-size:clamp(17px,1.6vw,20px);color:color-mix(in srgb,var(--ink) 78%,var(--bg));max-width:34ch;margin-bottom:32px}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.hero .cap{position:absolute;right:var(--gut);bottom:-32px;font:400 11px var(--fm);color:var(--muted);letter-spacing:.06em}
+.stats{display:flex;gap:clamp(20px,4vw,48px);margin-top:44px;flex-wrap:wrap}
+.stats b{display:block;font:600 clamp(28px,3vw,40px)/1 var(--fd);letter-spacing:-.03em}
+.stats span{font:400 12px var(--fm);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.in{opacity:0;transform:translateY(18px);animation:in .8s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes in{to{opacity:1;transform:none}}
+
+/* TICKER */
+.tape{border-block:1px solid var(--line);background:color-mix(in srgb,var(--panel) 60%,transparent);overflow:hidden;white-space:nowrap}
+.tape .row{display:inline-flex;gap:44px;padding:14px 0;animation:tape 38s linear infinite}
+.tape .row>div{display:inline-flex;align-items:center;gap:12px;font:500 14px var(--fm)}
+.tape svg{width:90px;height:26px}
+.tape small{color:var(--muted);font-size:11px}
+@keyframes tape{to{transform:translateX(-50%)}}
+
+/* SECTIONS */
+section.s{padding:clamp(80px,12vw,150px) 0}
+.s h2{font:700 clamp(38px,5.6vw,84px)/.95 var(--fd);letter-spacing:-.045em;margin:18px 0 22px;max-width:14ch}
+.s p.sub{color:var(--muted);font-size:clamp(16px,1.4vw,19px);max-width:46ch}
+.split{display:grid;grid-template-columns:1fr 1.25fr;gap:clamp(28px,5vw,72px);align-items:center}
+.panel{background:color-mix(in srgb,var(--panel) 82%,transparent);border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 80px -40px #000}
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .9s,transform .9s cubic-bezier(.2,.7,.2,1)}
+.reveal.on{opacity:1;transform:none}
+
+/* CLIMB */
+.climb{position:relative;margin-top:56px}
+.climb svg{width:100%;height:auto;overflow:visible}
+.climb .path{fill:none;stroke:var(--accent);stroke-width:3;stroke-linejoin:round;stroke-dasharray:3000;stroke-dashoffset:3000;transition:stroke-dashoffset 2.6s cubic-bezier(.6,0,.2,1)}
+.climb.on .path{stroke-dashoffset:0}
+.climb .area{fill:url(#ga);opacity:0;transition:opacity 1.2s 1.4s}.climb.on .area{opacity:1}
+.lv{opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s}
+.climb.on .lv{opacity:1;transform:none}
+.lv text{fill:var(--ink)}
+.lv .n{font:600 11px var(--fm);letter-spacing:.08em;fill:var(--accent)}
+.lv .t{font:600 18px var(--fd);letter-spacing:-.02em}
+.lv .d{font:400 12px var(--fb);fill:var(--muted)}
+.lvcards{display:none}
+
+/* TOOLS */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:26px 0 20px}
+.tab{font:500 13px var(--fm);border:1px solid var(--line);background:transparent;color:var(--muted);padding:9px 13px;border-radius:10px;cursor:pointer;transition:.2s}
+.tab[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.toolnote{min-height:3.2em;font-size:15px;color:color-mix(in srgb,var(--ink) 80%,var(--bg))}
+.toolnote b{font-family:var(--fd)}
+.chartbox{position:relative;padding:14px}
+.chartbox canvas{display:block;width:100%;height:420px}
+.chartbox .lbl{position:absolute;left:24px;top:22px;font:500 11px var(--fm);color:var(--muted);letter-spacing:.06em}
+.pop{position:absolute;right:20px;top:18px;font:600 12px var(--fm);background:var(--grad);color:var(--accent-ink);padding:6px 10px;border-radius:999px;opacity:0;transform:scale(.6)}
+.pop.go{animation:pop 1.6s cubic-bezier(.2,1.4,.4,1) forwards}
+@keyframes pop{0%{opacity:0;transform:scale(.6)}20%{opacity:1;transform:scale(1.08)}30%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+
+/* REPLAY */
+.replay{display:grid;grid-template-columns:1.35fr 1fr;gap:clamp(28px,5vw,72px);align-items:center}
+.rp-controls{display:flex;gap:10px;flex-wrap:wrap;padding:6px 14px 16px}
+.rp-controls .btn{padding:11px 16px;font-size:14px}
+.btn.long{background:color-mix(in srgb,var(--up) 18%,transparent);color:var(--up);border:1px solid color-mix(in srgb,var(--up) 50%,transparent)}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.rp-out{margin-left:auto;font:600 14px var(--fm);align-self:center}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{font:500 12px var(--fm);padding:7px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+
+/* MEMORY */
+.mem{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:52px;align-items:start}
+.curve{padding:26px}
+.curve svg{width:100%;height:auto}
+.curve .fade{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:5 6}
+.curve .saw{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:1400;stroke-dashoffset:1400;transition:stroke-dashoffset 2.4s .3s ease}
+.curve.on .saw{stroke-dashoffset:0}
+.curve text{font:400 11px var(--fm);fill:var(--muted)}
+.legend{display:flex;gap:18px;font:400 12px var(--fm);color:var(--muted);margin-top:12px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}
+.quiz{padding:26px;display:flex;flex-direction:column;gap:12px}
+.quiz .q{font:600 19px/1.3 var(--fd);letter-spacing:-.01em}
+.quiz canvas{width:100%;height:150px;border-radius:12px;background:var(--panel2)}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;font:500 15px var(--fb);color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;transition:.2s}
+.opt kbd{font:600 12px var(--fm);width:24px;height:24px;border-radius:7px;display:grid;place-items:center;background:var(--line);flex:none}
+.opt:hover{border-color:var(--accent)}
+.opt.ok{border-color:var(--up);background:color-mix(in srgb,var(--up) 12%,var(--panel2))}.opt.ok kbd{background:var(--up);color:#06110b}
+.opt.no{border-color:var(--down);background:color-mix(in srgb,var(--down) 12%,var(--panel2));animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.why{font-size:14px;color:var(--muted);min-height:2.6em}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:24px}
+.pillar{padding:24px}
+.pillar b{font:600 20px var(--fd);letter-spacing:-.02em;display:block;margin:10px 0 6px}
+.pillar p{font-size:14px;color:var(--muted)}
+
+/* SHELF */
+.shelf{display:flex;align-items:flex-end;gap:10px;margin-top:56px;min-height:340px;padding-bottom:14px;border-bottom:3px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.spine{flex:none;width:clamp(52px,7vw,84px);border-radius:6px 6px 2px 2px;display:flex;align-items:center;justify-content:center;
+  writing-mode:vertical-rl;transform:rotate(180deg);font:600 clamp(14px,1.5vw,18px) var(--fd);letter-spacing:.02em;padding:16px 0;
+  border:1px solid color-mix(in srgb,#fff 10%,transparent);transition:transform .3s;box-shadow:inset -6px 0 0 color-mix(in srgb,#000 18%,transparent)}
+.spine small{font:400 11px var(--fm);opacity:.75;margin-top:10px;letter-spacing:.06em}
+.spine:hover{transform:rotate(180deg) translateY(14px)}
+
+/* PHONE */
+.phone-sec{display:grid;grid-template-columns:auto 1fr;gap:clamp(36px,7vw,110px);align-items:center}
+.phone{width:300px;height:610px;border-radius:46px;padding:12px;background:#05060a;border:1px solid #2a2f3b;box-shadow:0 60px 120px -50px var(--accent),inset 0 0 0 2px #10131b;position:relative}
+.screen{width:100%;height:100%;border-radius:36px;background:var(--bg);overflow:hidden;position:relative;padding:44px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:96px;height:26px;border-radius:20px;background:#000}
+.ph-top{display:flex;align-items:center;gap:8px;font:700 15px var(--fd)}
+.ph-top i{width:22px;height:22px;border-radius:7px;background:var(--grad)}
+.ph-top .fl{margin-left:auto;font:600 12px var(--fm);border:1px solid var(--line);padding:4px 8px;border-radius:999px}
+.ph-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px}
+.ph-today{display:flex;gap:12px;align-items:center}
+.ring{width:58px;height:58px;flex:none}
+.ring circle{fill:none;stroke-width:6}
+.ph-today small{font:500 9px var(--fm);color:var(--accent);letter-spacing:.1em}
+.ph-today b{display:block;font:700 18px var(--fd);letter-spacing:-.02em}
+.ph-go{margin-top:10px;width:100%;border-radius:12px;padding:10px;text-align:center;font:600 14px var(--fd);background:var(--grad);color:var(--accent-ink)}
+.ph-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ph-grid .ph-card b{font:600 13px var(--fd);display:block}
+.ph-grid .ph-card span{font-size:11px;color:var(--muted)}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{width:34px;height:34px;font-size:15px!important;border-radius:12px;display:grid;place-items:center;font-size:18px;background:var(--panel2);border:1px solid var(--line)}
+.badge.got{background:color-mix(in srgb,var(--accent) 22%,var(--panel2));border-color:var(--accent);animation:glow 2.4s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 22px -4px var(--accent)}}
+.ph-tab{margin-top:auto;display:grid;grid-template-columns:repeat(4,1fr);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:8px 4px;font:500 10px var(--fb);color:var(--muted);text-align:center}
+.ph-tab span:first-child{color:var(--accent)}
+.feat{list-style:none;display:grid;gap:22px;margin-top:34px}
+.feat li{display:grid;grid-template-columns:44px 1fr;gap:14px}
+.feat .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);font-size:20px}
+.feat b{font:600 18px var(--fd);letter-spacing:-.01em}
+.feat p{font-size:14px;color:var(--muted)}
+
+/* THEMES */
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:48px}
+.sw{border:1px solid var(--line);border-radius:18px;overflow:hidden;cursor:pointer;background:none;color:var(--ink);text-align:left;padding:0;transition:transform .25s}
+.sw:hover{transform:translateY(-4px)}
+.sw[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:3px}
+.sw .c{height:110px;position:relative}
+.sw .c i{position:absolute;right:14px;bottom:14px;width:44px;height:44px;border-radius:50%}
+.sw span{display:block;padding:10px 14px;font:500 13px var(--fm);background:var(--panel)}
+
+/* END */
+.end{text-align:center;padding:clamp(100px,14vw,180px) 0}
+.end h2{margin:20px auto 30px;max-width:13ch}
+.end .cta{justify-content:center}
+footer{border-top:1px solid var(--line);padding:28px 0 40px;font:400 12px var(--fm);color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+@media (max-width:900px){
+  .nav nav{display:none}
+  .split,.replay,.phone-sec,.mem{grid-template-columns:1fr}
+  .pillars{grid-template-columns:1fr}
+  .swatches{grid-template-columns:repeat(2,1fr)}
+  .phone{margin:0 auto}
+  .replay>div:last-child{order:-1}
+  .climb svg{display:none}
+  .lvcards{display:grid;gap:10px;margin-top:24px}
+  .lvcards>div{display:grid;grid-template-columns:44px 1fr;gap:12px;padding:16px;border-left:3px solid var(--accent)}
+  .lvcards b{font:700 22px var(--fm);color:var(--accent)}
+  .lvcards h3{font:600 18px var(--fd)}.lvcards p{font-size:13px;color:var(--muted)}
+}
+@media (max-width:600px){
+  .hero{min-height:auto;padding:36px 0 70px}
+  .hero h1{font-size:clamp(52px,16vw,80px)}
+  .chartbox canvas{height:300px}
+  .dots .dot{width:14px;height:14px}
+  .dots .dot:nth-child(n+5){display:none}
+  .nav .btn.sm{display:none}
+  .stats{gap:22px}
+  .shelf{min-height:300px}
+  .phone{width:280px;height:570px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.in,.reveal{opacity:1;transform:none}.climb .path,.curve .saw{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#top"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 4 8-9"/><path d="M15 6h5v5"/></svg></i>Chart School</a>
+    <nav><a href="#path">Course</a><a href="#tools">Live charts</a><a href="#replay">Replay</a><a href="#stick">Why it sticks</a></nav>
+    <div class="dots" id="dots" aria-label="Colour theme"></div>
+    <a class="btn pri sm" href="./">Open the app</a>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <canvas id="heroC" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="eyebrow in" style="animation-delay:.1s">Technical analysis · beginner to advanced</div>
+    <h1 class="in" style="animation-delay:.25s"><span>Read the</span><span class="grad-t">chart.</span><span>Not the <span class="strike">noise.</span></span></h1>
+    <p class="lede in" style="animation-delay:.45s">A pocket-sized trading course built on real crypto price history. Five-minute lessons, live charts and practice that comes back until it sticks.</p>
+    <div class="cta in" style="animation-delay:.6s">
+      <a class="btn pri" href="./">Start lesson 1 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn ghost" href="#replay">Try the replay</a>
+    </div>
+    <div class="stats in" style="animation-delay:.8s">
+      <div><b>42</b><span>lessons</span></div>
+      <div><b>5</b><span>levels</span></div>
+      <div><b>8</b><span>real coins</span></div>
+      <div><b>~5 min</b><span>a session</span></div>
+    </div>
+    <div class="cap">BTC · DAILY · SEP 2024 → MAR 2025 · REAL CANDLES</div>
+  </div>
+</section>
+
+<div class="tape" aria-hidden="true"><div class="row" id="tape"></div></div>
+
+<section class="s" id="path">
+  <div class="wrap">
+    <div class="eyebrow reveal">The course</div>
+    <h2 class="reveal">Every level is a <span class="grad-t">higher high.</span></h2>
+    <p class="sub reveal">42 short lessons, distilled from the classic trading books into one clear path. A level unlocks once you have tried every lesson before it, and the test at the end is meant to be hard.</p>
+    <div class="climb reveal" id="climb"></div>
+    <div class="lvcards" id="lvcards"></div>
+  </div>
+</section>
+
+<section class="s" id="tools" style="padding-top:0">
+  <div class="wrap split">
+    <div>
+      <div class="eyebrow reveal">Live charts</div>
+      <h2 class="reveal">Tools unlock as you <span class="grad-t">earn them.</span></h2>
+      <p class="sub reveal">You don't get forty indicators on day one. Each lesson adds its tool to your live chart, so you only use what you actually understand.</p>
+      <div class="tabs reveal" id="tabs"></div>
+      <p class="toolnote reveal" id="toolnote"></p>
+    </div>
+    <div class="panel chartbox reveal">
+      <canvas id="toolC"></canvas>
+      <div class="lbl">BTC · DAILY</div>
+      <div class="pop" id="pop">TOOL UNLOCKED</div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="replay" style="padding-top:0">
+  <div class="wrap replay">
+    <div class="panel reveal">
+      <div class="chartbox" style="padding-bottom:4px"><canvas id="rpC"></canvas><div class="lbl" id="rpLbl">SOL · DAILY · FUTURE HIDDEN</div></div>
+      <div class="rp-controls">
+        <button class="btn ghost" id="rpNext">Next candle ▸</button>
+        <button class="btn long" id="rpBuy">Buy here</button>
+        <button class="btn ghost" id="rpReset" title="Start over">↺</button>
+        <span class="rp-out" id="rpOut"></span>
+      </div>
+    </div>
+    <div>
+      <div class="eyebrow reveal">Replay simulator</div>
+      <h2 class="reveal">Trade the past. <span class="grad-t">Blind.</span></h2>
+      <p class="sub reveal">Real history, one candle at a time, with the future hidden. Take your trade, set your stop, and see what really happened. At the end it marks the clean setups you missed and scores everything in R.</p>
+      <p class="sub reveal" style="margin-top:14px;font-size:15px">Try it: step forward, then press <b style="color:var(--up)">Buy here</b>. Stop goes under the last 5 lows, target is 2R.</p>
+      <div class="chips reveal"><span class="chip">BTC</span><span class="chip">ETH</span><span class="chip">SOL</span><span class="chip">XRP</span><span class="chip">DOGE</span><span class="chip">ADA</span><span class="chip">LINK</span><span class="chip">AVAX</span><span class="chip">daily · 4h · 1h</span><span class="chip">trending · ranging · volatile</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="stick" style="padding-top:0">
+  <div class="wrap">
+    <div class="eyebrow reveal">Why it sticks</div>
+    <h2 class="reveal">Built to beat the <span class="grad-t">forgetting curve.</span></h2>
+    <p class="sub reveal">Reading feels like learning. Remembering under pressure is what counts. Chart School is designed around the learning science of retrieval, spacing and mixing it up.</p>
+    <div class="mem">
+      <div class="panel curve reveal" id="curve"></div>
+      <div class="panel quiz reveal" id="quiz"></div>
+    </div>
+    <div class="pillars">
+      <div class="panel pillar reveal"><span class="eyebrow">01 · Retrieval</span><b>Recall before you read</b><p>Every session opens with questions, not notes. Pulling an idea out of memory is what makes it last.</p></div>
+      <div class="panel pillar reveal"><span class="eyebrow">02 · Spacing</span><b>Mistakes come back</b><p>Questions you miss return in later sessions, and your weakest topic gets its own drill, until you get them right.</p></div>
+      <div class="panel pillar reveal"><span class="eyebrow">03 · Interleaving</span><b>Old charts, mixed in</b><p>Earlier levels keep showing up between new ones, so you learn to tell setups apart, not just recognise them.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="s" style="padding-top:0">
+  <div class="wrap">
+    <div class="eyebrow reveal">The library</div>
+    <h2 class="reveal">A shelf of classics, <span class="grad-t">boiled down.</span></h2>
+    <p class="sub reveal">Charting, candlesticks, market profile, risk, psychology and evidence. The best ideas from the books traders swear by, rewritten as bite-sized lessons with no homework reading.</p>
+    <div class="shelf reveal" id="shelf"></div>
+  </div>
+</section>
+
+<section class="s" style="padding-top:0">
+  <div class="wrap phone-sec">
+    <div class="phone reveal" id="phone"></div>
+    <div>
+      <div class="eyebrow reveal">In your pocket</div>
+      <h2 class="reveal">Five minutes a day. <span class="grad-t">Every day.</span></h2>
+      <ul class="feat">
+        <li class="reveal"><span class="ic">🔥</span><div><b>Streaks and a daily goal</b><p>Answer one question and the day counts. Twenty fills your ring.</p></div></li>
+        <li class="reveal"><span class="ic">🏆</span><div><b>Ranks and achievements</b><p>Climb from Chart Rookie to Market Analyst, with trophies for real milestones.</p></div></li>
+        <li class="reveal"><span class="ic">✈️</span><div><b>Works offline</b><p>Add it to your home screen. Lessons and real practice charts are saved on the phone.</p></div></li>
+        <li class="reveal"><span class="ic">🔄</span><div><b>Picks up where you left off</b><p>Sign in and your progress follows you from phone to laptop.</p></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="themes" style="padding-top:0">
+  <div class="wrap">
+    <div class="eyebrow reveal">Make it yours</div>
+    <h2 class="reveal">Eight desks. <span class="grad-t">Pick your light.</span></h2>
+    <p class="sub reveal">Colour pairings taken from Sanzo Wada's <i>Dictionary of Color Combinations</i>, tuned for long nights in front of a chart. Tap one: this whole page changes with it.</p>
+    <div class="swatches reveal" id="swatches"></div>
+  </div>
+</section>
+
+<section class="end">
+  <div class="wrap">
+    <div class="eyebrow reveal">Ready?</div>
+    <h2 class="s reveal" style="font:700 clamp(44px,7vw,110px)/.92 var(--fd);letter-spacing:-.05em;padding:0">Your first lesson takes <span class="grad-t">five minutes.</span></h2>
+    <div class="cta reveal"><a class="btn pri" href="./">Start lesson 1 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><span>© 2026 Chart School</span><span>For education only. Nothing here is financial advice.</span></div></footer>
+
+<script>
+const D={"hero":{"t0":1692489600000,"st":86400000,"b":[[400,63874,64771,62370,63226],[401,63234,64714,62553,64599],[402,64600,64839,62988,63269],[403,63267,65882,62645,65095],[404,65086,66700,64730,65878],[405,65883,66250,65429,65694],[406,65697,66095,65429,65679],[407,65682,65759,63029,63478],[408,63485,64139,60100,60771],[409,60767,62397,59966,60831],[410,60837,61497,59841,60895],[411,60890,62505,60457,62220],[412,62221,62403,61684,62046],[413,62039,63000,61585,62625],[414,62625,64470,62384,62447],[415,62445,63193,61825,62153],[416,62150,62524,60252,60754],[417,60755,61266,58788,60103],[418,60105,63442,60029,62442],[419,62442,63492,62339,63276],[420,63279,63500,62033,62818],[421,62820,66534,62388,66434],[422,66443,67933,64618,66739],[423,66742,68688,66556,67716],[424,67715,68063,66586,67436],[425,67429,69046,67069,68205],[426,68207,68707,68001,68325],[427,68329,69412,68078,69117],[428,69129,69523,66800,67752],[429,67758,67800,66527,67679],[430,67686,67757,65101,66415],[431,66412,68850,66000,68145],[432,68153,68788,65600,66520],[433,66525,67600,65461,67042],[434,67042,68400,66800,67934],[435,67939,70250,67500,69924],[436,69924,73689,69682,72724],[437,72716,73000,71100,72326],[438,72332,73000,69550,70201],[439,70205,71714,68729,69467],[440,69460,70000,68978,69351],[441,69351,69396,67300,68738],[442,68736,69913,66701,67807],[443,67815,71000,67404,69376],[444,69367,76500,68977,75637],[445,75652,77000,74454,75918],[446,75928,77500,75401,76563],[447,76559,77100,75600,76726],[448,76727,81500,76285,80432],[449,80445,89792,80081,88773],[450,88784,90000,85000,88045],[451,88052,93500,86200,90513],[452,90513,91900,86700,87329],[453,87329,91969,87000,91069],[454,91054,91885,90100,90644],[455,90632,91490,88737,89877],[456,89880,92634,89400,90524],[457,90534,94071,90445,92441],[458,92428,94999,91500,94384],[459,94384,99100,94100,98442],[460,98443,99800,97178,99014],[461,99014,99142,97200,97776],[462,97768,98750,95727,98013],[463,98003,98975,92501,93024],[464,93024,95060,90700,91930],[465,91930,97500,91500,95958],[466,95956,96780,94600,95665],[467,95665,98750,95050,97510],[468,97509,98000,96051,96472],[469,96483,98500,95683,97268],[470,97266,98500,94344,95860],[471,95860,96425,93000,95929],[472,95929,99317,94657,98250],[473,98747,104510,92300,96875],[474,97048,102000,96000,100670],[475,99896,101000,98765,99705],[476,99931,100670,98750,100290],[477,101190,101430,94222,97157],[478,97493,99000,94200,96958],[479,96695,102000,95600,101300],[480,101200,102620,99200,100040],[481,100040,101980,99200,101430],[482,101430,102690,100580,101390],[483,101390,105400,101190,104450],[484,104450,107870,103300,106100],[485,106100,108380,105320,106160],[486,106160,107000,99961,100140],[487,100140,102880,95555,97399],[488,97410,98500,92103,97770],[489,97752,99620,96395,97251],[490,97217,97464,94151,95097],[491,95097,96500,92401,94771],[492,94762,99450,93400,98586],[493,98594,99500,97536,99362],[494,99361,99896,95079,95679],[495,95679,97500,93258,94178],[496,94163,95637,94000,95129],[497,95129,95202,92840,93561],[498,93561,94900,91146,92626],[499,92618,96100,91899,93364],[500,93364,95000,92728,94415],[501,94415,97800,94200,96904],[502,96904,98999,96000,98139],[503,98139,98800,97505,98211],[504,98212,98845,97250,98358],[505,98358,102510,97900,102280],[506,102280,102750,95888,96934],[507,96934,97361,92450,95034],[508,95052,95451,91200,92545],[509,92545,96000,92000,94701],[510,94701,95000,93800,94571],[511,94571,95420,93666,94502],[512,94502,95900,89250,94500],[513,94501,97361,94007,96534],[514,96534,100750,96458,100520],[515,100520,100920,97300,99978],[516,99976,105950,99893,104120],[517,104120,105000,102100,104430],[518,104430,106310,100500,103740],[519,103740,109400,99000,102160],[520,102110,107340,100090,106160],[521,106160,106500,103300,103660],[522,103660,106880,101190,103930],[523,103930,107200,102750,104860],[524,104860,105500,104100,104730],[525,104730,105490,102450,102560],[526,102570,103500,97751,102070],[527,102090,103770,100200,101290],[528,101290,104840,100890,103740],[529,103730,106480,103300,104740],[530,104740,106100,101500,102410],[531,102410,102800,100300,101000],[532,101000,101640,96204,97677],[533,97672,102590,91236,101460],[534,101460,102000,96159,97818],[535,97818,99250,96170,96630],[536,96617,99200,95703,96572],[537,96572,100240,95621,96529],[538,96531,97200,95667,96472],[539,96472,97500,94727,96493],[540,96493,98400,95245,97456],[541,97456,98530,94814,95770],[542,95770,98200,94070,97873],[543,97872,98130,95207,96640],[544,96658,98880,96225,97511],[545,97511,98000,97215,97602],[546,97600,97785,96050,96120],[547,96117,97092,95218,95778],[548,95778,96750,93320,95612],[549,95612,96900,95000,96634],[550,96634,98775,96300,98337],[551,98336,99531,94750,96123],[552,96123,96991,95700,96587],[553,96572,96900,95225,96263],[554,96263,96545,91315,91523],[555,91518,92611,85850,88583],[556,88584,89750,82111,84127],[557,84116,87041,82555,84639],[558,84626,85200,78151,84315],[559,84312,86564,83753,86026]]},"replay":{"t0":1694476800000,"st":86400000,"b":[[300,133.05,142.24,127.47,140.28],[301,140.28,144.6,136.25,141.35],[302,141.36,146,138.57,141.53],[303,141.54,146,135.33,136.78],[304,136.77,140.71,133.92,138.86],[305,138.85,142.35,137.93,142.28],[306,142.28,148.6,141.48,147.27],[307,147.25,159.65,147.01,158.89],[308,158.9,162.83,152.5,159.96],[309,159.96,164,154.29,156.01],[310,156.01,162,155.1,159.91],[311,159.93,173,156.12,168.87],[312,168.85,174.86,167.29,173.43],[313,173.44,185,170.48,183.97],[314,183.99,185.42,176.7,178.59],[315,178.61,180.67,170.1,172.95],[316,172.95,182.88,170.92,177.4],[317,177.38,179.65,165.1,172.25],[318,172.25,185,171.08,183.24],[319,183.26,188.48,177.84,185.72],[320,185.71,186.75,181.09,183.46],[321,183.46,194.12,182.6,183.25],[322,183.27,184.82,175.03,179.29],[323,179.27,184.5,171.54,173.28],[324,173.27,173.5,157.24,167.35],[325,167.35,169.4,149.72,152.6],[326,152.62,153.9,139.63,142.81],[327,142.81,145.5,131.09,140.69],[328,140.69,140.92,110.05,132.56],[329,132.56,150,129.33,145.19],[330,145.19,155.15,142.13,145.87],[331,145.87,163.53,141.5,161.53],[332,161.53,163.76,150.74,155.87],[333,155.88,159.19,152.61,154.73],[334,154.71,158,141.15,142.24],[335,142.24,151,141.12,144.17],[336,144.17,150,142.89,147.15],[337,147.16,152.68,142.38,144.37],[338,144.39,147.69,137.75,143.75],[339,143.75,144.95,136.09,139.64],[340,139.64,141.92,137.61,141.58],[341,141.58,147.4,141.23,144.63],[342,144.63,146.26,140.32,143.62],[343,143.63,148.98,140.92,143.25],[344,143.23,144.49,138.78,142.93],[345,142.94,144.9,140.61,143.25],[346,143.22,154.23,142.71,151.97],[347,151.98,162.34,151.87,159.13],[348,159.13,162,155.28,160.69],[349,160.69,162,155.6,157.47],[350,157.47,159.78,144.65,147.49],[351,147.47,149,140.53,143.54],[352,143.54,147.44,138.02,139.8],[353,139.8,141.17,132.1,137.68],[354,137.69,139.35,134.46,135.39],[355,135.38,136.18,128,129.16],[356,129.15,135.14,126.93,134.81],[357,134.84,137.71,129.22,129.46],[358,129.45,135,122.5,134.06],[359,134.07,135.51,127.7,129.52],[360,129.53,133.15,120.5,124.67],[361,124.67,129.51,123.92,126.78],[362,126.78,131.8,126.33,129.38],[363,129.38,137.31,127,134.44],[364,134.44,138.23,132.45,135.99],[365,135.99,136.16,127.99,132.63],[366,132.63,136.87,132.18,136.36],[367,136.36,140,131.63,139.47],[368,139.47,140,135.5,137.19],[369,137.18,138.19,131.11,131.82],[370,131.82,132.47,128.47,130.7],[371,130.71,135.73,129.75,131.74],[372,131.72,133,126.3,131.51],[373,131.51,144.25,131.16,142.47],[374,142.45,152.64,141,147.16],[375,147.14,149.69,144.43,148.58],[376,148.58,150.03,141,145.44],[377,145.45,149.24,142.04,144.41],[378,144.43,153.97,142.91,153.43],[379,153.44,153.96,148.5,149.2],[380,149.19,158.11,146.52,156.34],[381,156.33,161.38,153.88,158.09],[382,158.11,159.53,155.04,156.76],[383,156.76,161.8,155,159.03],[384,159.03,159.79,153.69,154.38],[385,154.36,157.32,142,144.69],[386,144.69,149.06,138.54,141.56],[387,141.56,142.99,133.09,136.93],[388,136.94,144.8,135.89,142.96],[389,142.95,144.97,140.99,142.93],[390,142.94,146.7,142,145.34],[391,145.35,152.31,144.31,144.43],[392,144.44,145.67,141.09,143.16],[393,143.14,145.31,138.52,139.12],[394,139.1,140.8,135.32,138.47],[395,138.48,147,138.43,145.84],[396,145.82,147.29,144.62,147.03],[397,147.04,148.84,144.4,147.73],[398,147.72,158.34,146.71,157.94],[399,157.92,160,149.89,152.97],[400,152.95,158.5,152.55,154.81],[401,154.82,156.01,147.29,150.8],[402,150.8,156.77,149.09,154.29],[403,154.27,159,153,158.9],[404,158.89,168,157.53,166.66],[405,166.68,171.75,161,167.7],[406,167.7,171,163,168.87],[407,168.9,174,164,170.75],[408,170.74,179.5,170.12,178.62],[409,178.61,178.81,163.13,163.53],[410,163.52,173,158,171.13],[411,171.13,178,169.97,176.43],[412,176.42,179.5,172.15,178.18],[413,178.15,184,176.05,179.38],[414,179.36,181.42,172.58,174.85],[415,174.83,176.5,167.25,168.44],[416,168.43,174,163,166],[417,165.98,168.5,162,166.13],[418,166.11,166.65,157.64,162.44],[419,162.42,165,155,157.85]]},"spark":{"BTC":[76362,81090,81234,81203,86416,86123,84533,84259,84069,84265,84207,83503,83580,83633,84712,84540,84767,86414,85917,85539,83199,81766,82566,83016,83554,82001,83456,81550,82365,81691,81251,81673,81949,83045,84441,81208,80725,80484,80102,80015,80798,81258,77801,77190,77425,78289,76670,77411,80419,75969,75814,75751,74553,75232,73674,73930,71326,68248,64114,62197],"ETH":[2441.4,2618.7,2630.2,2640.5,2778.9,2756.6,2690.1,2684.8,2692,2688.1,2675.1,2685,2681.6,2685.5,2702,2667.6,2686.6,2728.7,2716.1,2696.5,2568.4,2470.5,2488.5,2507.6,2531.9,2464.1,2510,2416.2,2453.9,2421.2,2393.9,2393.8,2404.2,2453.6,2485.2,2381.8,2363.6,2340.3,2325.9,2320.1,2346.9,2357.2,2250.2,2241.4,2251.1,2273.3,2250,2273.5,2422.8,2234.2,2235.7,2236.8,2120.4,2132.3,2050.8,2058,2017,1927.7,1769.8,1718.6],"SOL":[101.23,113.19,110.6,111,119.46,118.53,115.08,116.5,122.22,121.13,121.39,118.56,119.07,118.11,118.27,118.48,119.72,121.72,121.01,120.86,115.92,110.16,109.11,110.41,110.97,106.31,106.9,104.46,105.77,104.28,103.08,103.79,105.08,106.78,107.37,103.24,101.85,101.51,101.21,100.76,101.24,102.33,95.622,96.16,95.212,94.581,91.808,92.726,95.484,89.247,90.116,89.675,86.162,86.634,83.237,83.331,81.639,78.111,70.244,67.481],"XRP":[1.2944,1.398,1.4169,1.4096,1.5564,1.5772,1.5016,1.5328,1.569,1.5216,1.5078,1.4924,1.4934,1.4907,1.493,1.4797,1.4862,1.5185,1.5107,1.498,1.4173,1.3814,1.395,1.4032,1.4067,1.352,1.3696,1.3317,1.339,1.3089,1.2925,1.3003,1.3041,1.3363,1.3714,1.3044,1.2838,1.2925,1.296,1.3057,1.3301,1.325,1.2347,1.255,1.249,1.2509,1.2479,1.2756,1.304,1.2063,1.1776,1.1629,1.11,1.0972,1.0559,1.053,1.0399,1.0097,0.9141,0.9028],"DOGE":[0.08147,0.08811,0.08783,0.08746,0.10025,0.10053,0.0926,0.09548,0.09936,0.09632,0.09582,0.0935,0.09399,0.09463,0.09415,0.09241,0.09292,0.09636,0.0957,0.09331,0.08871,0.0844,0.08535,0.08582,0.08653,0.08365,0.08458,0.08198,0.08142,0.08082,0.07908,0.07909,0.07965,0.08197,0.08221,0.07856,0.07782,0.07724,0.07683,0.07762,0.07894,0.07971,0.07515,0.07581,0.07562,0.07533,0.07414,0.07514,0.077,0.07108,0.07239,0.07148,0.06889,0.06993,0.06798,0.06746,0.06641,0.06444,0.05718,0.05571],"ADA":[0.20097,0.22636,0.22794,0.22842,0.2462,0.25343,0.23852,0.24759,0.25749,0.25223,0.25268,0.24524,0.24466,0.2477,0.24602,0.24236,0.24456,0.26208,0.27174,0.26792,0.25421,0.23431,0.24142,0.25089,0.25155,0.23734,0.23661,0.22918,0.23049,0.22585,0.21907,0.21902,0.21815,0.22399,0.22649,0.21157,0.20798,0.20609,0.20408,0.20651,0.20587,0.20595,0.19049,0.19526,0.19291,0.19307,0.18843,0.19005,0.19741,0.18048,0.18396,0.18179,0.17477,0.17729,0.17396,0.1745,0.17421,0.16834,0.14776,0.143],"LINK":[11.352,12.297,12.411,12.502,13.193,13.003,12.368,13.218,13.867,14.062,13.94,15.272,14.673,14.368,14.32,13.736,14.117,14.255,13.916,13.928,13.311,12.776,12.817,13.011,13.308,12.791,12.922,12.404,12.512,12.328,11.948,11.976,12.023,12.311,12.568,11.903,11.668,11.548,11.439,11.39,11.563,11.8,10.609,11.414,11.648,11.377,11.11,11.011,11.435,10.647,10.838,10.821,10.381,10.628,10.281,10.207,10.131,9.84,8.882,8.659],"AVAX":[7.596,8.2,9.788,11.251,11.243,11.26,10.312,10.2,10.592,10.76,10.783,10.48,11.417,10.948,10.98,10.718,11.097,11.099,11.046,11.618,11.076,10.123,10.358,10.374,10.913,10.29,10.269,10.001,10.052,9.959,9.731,9.678,9.603,9.779,9.705,9.094,8.874,8.926,8.913,8.966,8.962,8.997,8.266,8.533,8.552,8.677,8.383,8.524,8.723,8.148,8.33,8.225,7.919,8.647,8.372,8.509,8.348,8.224,7.095,6.75]}};
+const PAL={
+ night:{n:"Night",bg:"#0a0d14",panel:"#121723",panel2:"#171d2b",line:"#232a3a",accent:"#8b7dff",ink:"#fff",g:["#9a8cff","#7b6bff","#4f8bff"]},
+ persimmon:{n:"Persimmon",bg:"#050f20",panel:"#071731",panel2:"#081c3b",line:"#243e65",accent:"#e6661e",ink:"#fff",g:["#ec8b55","#e6661e","#9a5031"]},
+ gold:{n:"Gold",bg:"#0a0a15",panel:"#0f0f20",panel2:"#121226",line:"#31304b",accent:"#e8c401",ink:"#141414",g:["#fedd28","#e8c401","#a08814"]},
+ viridian:{n:"Viridian",bg:"#09080a",panel:"#0d0c0f",panel2:"#100f12",line:"#2e2c30",accent:"#249987",ink:"#fff",g:["#2dbfa8","#218d7c","#1e6359"]},
+ plum:{n:"Plum",bg:"#150718",panel:"#200a25",panel2:"#270d2c",line:"#4c2a52",accent:"#eb8006",ink:"#fff",g:["#fa9e34","#eb8006","#ac5a1a"]},
+ rose:{n:"Rose",bg:"#080813",panel:"#0d0d1e",panel2:"#0f0f24",line:"#2d2d47",accent:"#c7697a",ink:"#fff",g:["#d98b99","#b14256","#7b334a"]},
+ coral:{n:"Coral",bg:"#0a0a0c",panel:"#100f12",panel2:"#131216",line:"#323135",accent:"#c56a53",ink:"#fff",g:["#dc8c77","#c56a53","#8f4636"]},
+ black:{n:"Black",bg:"#000000",panel:"#0b0b0d",panel2:"#121215",line:"#1f1f24",accent:"#8b7dff",ink:"#fff",g:["#9a8cff","#7b6bff","#4f8bff"]}
+};
+const $=s=>document.querySelector(s);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const redraws=[];
+function setPal(k){
+  const p=PAL[k]||PAL.night,r=document.documentElement.style;
+  r.setProperty('--bg',p.bg);r.setProperty('--panel',p.panel);r.setProperty('--panel2',p.panel2);r.setProperty('--line',p.line);
+  r.setProperty('--accent',p.accent);r.setProperty('--accent-ink',p.ink);r.setProperty('--g1',p.g[0]);r.setProperty('--g2',p.g[1]);r.setProperty('--g3',p.g[2]);
+  document.querySelector('meta[name=theme-color]').content=p.bg;
+  document.querySelectorAll('[data-k]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));
+  try{localStorage.setItem('cs-landing-pal',k)}catch(e){}
+  redraws.forEach(f=>f());
+}
+// theme dots + swatches
+for(const k in PAL){const p=PAL[k];
+  const d=document.createElement('button');d.className='dot';d.dataset.k=k;d.title=p.n;d.style.background=`linear-gradient(135deg,${p.g[0]},${p.g[2]})`;d.onclick=()=>setPal(k);$('#dots').appendChild(d);
+  const s=document.createElement('button');s.className='sw';s.dataset.k=k;
+  s.innerHTML=`<div class="c" style="background:radial-gradient(160px 90px at 20% 0%,${p.accent}55,transparent),${p.bg}"><i style="background:linear-gradient(135deg,${p.g[0]},${p.g[2]})"></i></div><span>${p.n}</span>`;
+  s.onclick=()=>setPal(k);$('#swatches').appendChild(s);
+}
+
+// ---------- canvas helpers ----------
+function fit(c){const r=c.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);c.width=r.width*d;c.height=r.height*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return {x,w:r.width,h:r.height}}
+function sma(b,n){return b.map((_,i)=>i<n-1?null:b.slice(i-n+1,i+1).reduce((a,c)=>a+c[4],0)/n)}
+function rsi(b,n=14){const o=[];let g=0,l=0;for(let i=1;i<b.length;i++){const ch=b[i][4]-b[i-1][4];const G=Math.max(ch,0),L=Math.max(-ch,0);if(i<=n){g+=G/n;l+=L/n;o[i]=i===n?100-100/(1+g/(l||1e-9)):null}else{g=(g*(n-1)+G)/n;l=(l*(n-1)+L)/n;o[i]=100-100/(1+g/(l||1e-9))}}o[0]=null;return o}
+function pivots(b,k=5){const H=[],L=[];for(let i=k;i<b.length-k;i++){let h=1,l=1;for(let j=i-k;j<=i+k;j++){if(b[j][2]>b[i][2])h=0;if(b[j][3]<b[i][3])l=0}if(h)H.push(i);if(l)L.push(i)}return {H,L}}
+function drawCandles(x,b,n,X,Y,cw,alpha=1){
+  const up=css('--up'),dn=css('--down');
+  for(let i=0;i<n;i++){const c=b[i],u=c[4]>=c[1],cx=X(i);x.globalAlpha=alpha;x.strokeStyle=x.fillStyle=u?up:dn;
+    x.beginPath();x.moveTo(cx,Y(c[2]));x.lineTo(cx,Y(c[3]));x.lineWidth=1;x.stroke();
+    const t=Y(Math.max(c[1],c[4])),bt=Y(Math.min(c[1],c[4]));x.fillRect(cx-cw/2,t,cw,Math.max(1,bt-t))}
+  x.globalAlpha=1}
+const fmt=v=>v>=1000?Math.round(v).toLocaleString('en-US'):v>=10?v.toFixed(1):v.toFixed(3);
+
+// ---------- HERO ----------
+(function(){
+  const c=$('#heroC'),b=D.hero.b;let shown=RM?b.length:0,t0=performance.now(),G;
+  const P=pivots(b,8);
+  function draw(){
+    G=fit(c);const {x,w,h}=G;x.clearRect(0,0,w,h);
+    const mob=w<700,left=mob?w*.05:w*.47,right=w-(mob?10:60),top=h*(mob?.66:.12),bot=h-40;
+    let lo=Infinity,hi=-Infinity;b.forEach(c=>{lo=Math.min(lo,c[3]);hi=Math.max(hi,c[2])});
+    const X=i=>left+(i+.5)*(right-left)/b.length,Y=v=>bot-(v-lo)/(hi-lo)*(bot-top),cw=Math.max(1.5,(right-left)/b.length*.62);
+    // fade the chart under the headline
+    const acc=css('--accent');
+    x.save();x.globalAlpha=mob?.22:.9;
+    // price grid labels
+    x.font='11px "JetBrains Mono"';x.fillStyle=css('--muted');x.globalAlpha*=.6;
+    for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,y=Y(v);x.strokeStyle=css('--line');x.setLineDash([2,6]);x.beginPath();x.moveTo(left,y);x.lineTo(right,y);x.stroke();if(!mob)x.fillText(fmt(v),right+8,y+4)}
+    x.setLineDash([]);x.globalAlpha=mob?.22:.9;
+    drawCandles(x,b,shown,X,Y,cw);
+    // MA
+    const m=sma(b,20);x.strokeStyle=acc;x.lineWidth=2;x.beginPath();let st=0;
+    for(let i=0;i<shown;i++){if(m[i]==null)continue;st?x.lineTo(X(i),Y(m[i])):x.moveTo(X(i),Y(m[i]));st=1}x.stroke();
+    // annotations once done
+    const done=shown>=b.length;
+    if(done){
+      const a=Math.min(1,(performance.now()-tDone)/900);x.globalAlpha=(mob?.3:1)*a;
+      // trendline under two rising lows
+      const tl=supLine(b,0,95);if(tl){const [i1,s]=tl;const ie=Math.min(b.length-1,92);
+        x.strokeStyle=css('--mark');x.lineWidth=2;x.setLineDash([7,6]);x.beginPath();x.moveTo(X(i1),Y(b[i1][3]));x.lineTo(X(ie),Y(b[i1][3]+s*(ie-i1)));x.stroke();x.setLineDash([]);}
+      // swing highs
+      const top3=[...P.H].sort((p,q)=>b[q][2]-b[p][2]).slice(0,2);
+      x.font='600 11px "JetBrains Mono"';
+      P.H.forEach(i=>{x.fillStyle=acc;x.beginPath();x.arc(X(i),Y(b[i][2])-8,3.5,0,7);x.fill()});
+      P.L.forEach(i=>{x.fillStyle=css('--mark');x.beginPath();x.arc(X(i),Y(b[i][3])+8,3.5,0,7);x.fill()});
+      if(!mob){const ih=top3[0];const lx=X(ih),ly=Y(b[ih][2])-22;label(x,'SWING HIGH · '+fmt(b[ih][2]),lx,ly,acc);
+        const il=P.L[P.L.length-1];if(il)label(x,'LOWER LOW → TREND BREAK',X(il),Y(b[il][3])+30,css('--down'));}
+    }
+    x.restore();
+  }
+  function label(x,t,cx,cy,col){x.font='600 11px "JetBrains Mono"';const w=x.measureText(t).width+16;const lx=Math.min(cx-w/2,G.w-w-8);
+    x.fillStyle=css('--bg');x.globalAlpha*=1;x.strokeStyle=col;x.lineWidth=1;rr(x,lx,cy-12,w,22,7);x.fill();x.stroke();x.fillStyle=col;x.fillText(t,lx+8,cy+3)}
+  let tDone=0;
+  function tick(now){if(shown<b.length){shown=Math.min(b.length,Math.floor((now-t0-500)/14));if(shown<0)shown=0;if(shown>=b.length)tDone=now}
+    draw();if(shown<b.length||now-tDone<1000)requestAnimationFrame(tick)}
+  if(RM)tDone=-1e9;requestAnimationFrame(tick);
+  redraws.push(draw);addEventListener('resize',draw);
+})();
+function supLine(b,a,z){let i1=a;for(let i=a;i<Math.min(a+30,z);i++)if(b[i][3]<b[i1][3])i1=i;let s=Infinity;for(let j=i1+8;j<z&&j<b.length;j++)s=Math.min(s,(b[j][3]-b[i1][3])/(j-i1));return isFinite(s)?[i1,s]:null}
+function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
+
+// ---------- TAPE ----------
+(function(){let h='';const names={BTC:'Bitcoin',ETH:'Ether',SOL:'Solana',XRP:'XRP',DOGE:'Dogecoin',ADA:'Cardano',LINK:'Chainlink',AVAX:'Avalanche'};
+  for(const s in D.spark){const v=D.spark[s],lo=Math.min(...v),hi=Math.max(...v);const pts=v.map((c,i)=>`${(i/(v.length-1)*90).toFixed(1)},${(24-(c-lo)/(hi-lo)*22).toFixed(1)}`).join(' ');
+    const col='var(--accent)';
+    h+=`<div><b>${s}</b><small>${names[s]}</small><svg viewBox="0 0 90 26"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.6"/></svg></div>`}
+  $('#tape').innerHTML=h+h})();
+
+// ---------- CLIMB ----------
+const LVS=["Foundations","Trends & patterns","Indicators","Market profile","The trader"];
+const LV=[["1","Foundations","Candles, swings, support and resistance, risk",8],["2","Trends and patterns","Trendlines, channels, Fibonacci, classic patterns",9],["3","Indicators and structure","Moving averages, RSI, MACD, multi-timeframe",9],["4","Market profile","Volume profile, value area, delta",8],["5","The trader","Risk drill, position sizing, psychology, your plan",8]];
+(function(){
+  const W=1200,H=480;
+  // zigzag: low, high per level
+  const pts=[[20,430]];let x=20;
+  const highs=[];
+  for(let i=0;i<5;i++){const hy=380-i*68,ly=hy+58;x+=112;pts.push([x,hy]);highs.push([x,hy]);x+=104;if(i<4)pts.push([x,ly])}
+  pts.push([x+150,highs[4][1]-10]);
+  const d='M'+pts.map(p=>p.join(',')).join(' L');
+  let lv='';highs.forEach((p,i)=>{const L=LV[i];lv+=`<g class="lv" style="transition-delay:${.5+i*.35}s"><circle cx="${p[0]}" cy="${p[1]}" r="7" fill="var(--bg)" stroke="var(--accent)" stroke-width="3"/>
+    <text class="n" x="${p[0]-8}" y="${p[1]-62}">L${L[0]} · ${L[3]} LESSONS</text><text class="t" x="${p[0]-8}" y="${p[1]-40}">${LVS[i]}</text>
+    <text class="d" x="${p[0]-8}" y="${p[1]-20}">${L[2].split(', ').slice(0,2).join(', ')}</text></g>`});
+  $('#climb').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Five levels drawn as a rising price chart"><defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    <path class="area" d="${d} L${pts[pts.length-1][0]},${H} L20,${H} Z"/><path class="path" d="${d}"/>${lv}
+    <text x="${pts[pts.length-1][0]-70}" y="${pts[pts.length-1][1]+26}" style="font:600 12px var(--fm);fill:var(--mark)">YOU, LATER ↗</text></svg>`;
+  $('#lvcards').innerHTML=LV.map(L=>`<div class="panel reveal"><b>${L[0]}</b><div><h3>${L[1]}</h3><p>${L[3]} lessons · ${L[2]}</p></div></div>`).join('');
+})();
+
+// ---------- TOOLS ----------
+const TOOLS=[["Level 1","Swings, zones and a risk box","Mark <b>swing highs and lows</b>, draw <b>support and resistance zones</b> and size a trade with a <b>risk box</b>."],
+ ["Level 2","Trendlines and Fibonacci","Connect rising lows into a <b>trendline</b> and measure pullbacks with <b>Fibonacci retracements</b>."],
+ ["Level 3","Moving averages and RSI","Add the <b>20 and 50 moving averages</b> and an <b>RSI</b> panel to spot momentum fading."],
+ ["Level 4","Market profile","See where price spent the most time with a <b>profile</b> and its <b>value area</b>."],
+ ["Level 5","Position sizing","Turn a stop distance into a <b>position size</b> that risks exactly 1% of the account."]];
+(function(){
+  const b=D.hero.b.slice(20,140),c=$('#toolC');let lvl=0;
+  TOOLS.forEach((t,i)=>{const e=document.createElement('button');e.className='tab';e.textContent=t[0];e.onclick=()=>{set(i,true)};$('#tabs').appendChild(e)});
+  function set(i,p){lvl=i;[...$('#tabs').children].forEach((e,j)=>e.setAttribute('aria-pressed',j===i));$('#toolnote').innerHTML=TOOLS[i][2];draw();
+    if(p&&!RM){const e=$('#pop');e.textContent='🔓 '+TOOLS[i][1].toUpperCase();e.classList.remove('go');void e.offsetWidth;e.classList.add('go')}}
+  function draw(){
+    const {x,w,h}=fit(c);x.clearRect(0,0,w,h);
+    const rsiH=lvl>=2?70:0,pf=lvl>=3?Math.min(110,w*.2):0;
+    const L=10,R=w-60,T=40,B=h-14-rsiH-(rsiH?14:0);
+    let lo=Infinity,hi=-Infinity;b.forEach(c=>{lo=Math.min(lo,c[3]);hi=Math.max(hi,c[2])});const pad=(hi-lo)*.05;lo-=pad;hi+=pad;
+    const X=i=>L+(i+.5)*(R-L)/b.length,Y=v=>B-(v-lo)/(hi-lo)*(B-T),cw=Math.max(1.5,(R-L)/b.length*.6);
+    const acc=css('--accent'),mk=css('--mark'),mu=css('--muted'),ln=css('--line');
+    x.font='10px "JetBrains Mono"';x.fillStyle=mu;
+    for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4;x.strokeStyle=ln;x.globalAlpha=.6;x.beginPath();x.moveTo(L,Y(v));x.lineTo(R,Y(v));x.stroke();x.globalAlpha=1;x.fillText(fmt(v),R+6,Y(v)+3)}
+    // L4 profile (time-at-price)
+    if(lvl>=3){const N=36,bins=Array(N).fill(0);b.forEach(c=>{for(let k=0;k<N;k++){const p0=lo+(hi-lo)*k/N,p1=lo+(hi-lo)*(k+1)/N;if(c[2]>=p0&&c[3]<=p1)bins[k]++}});
+      const mx=Math.max(...bins),poc=bins.indexOf(mx);const tot=bins.reduce((a,v)=>a+v,0);let a=poc,z=poc,s=mx;while(s<tot*.7){const up=z+1<N?bins[z+1]:-1,dn=a-1>=0?bins[a-1]:-1;if(up>=dn){z++;s+=up}else{a--;s+=dn}}
+      for(let k=0;k<N;k++){const y0=Y(lo+(hi-lo)*(k+1)/N),y1=Y(lo+(hi-lo)*k/N),bw=bins[k]/mx*pf;x.fillStyle=k===poc?mk:acc;x.globalAlpha=k===poc?.75:(k>=a&&k<=z?.32:.13);x.fillRect(R-bw,y0+1,bw,y1-y0-2)}
+      x.globalAlpha=1;x.fillStyle=mk;x.fillText('POC',R-pf-28,Y(lo+(hi-lo)*(poc+.5)/N)+3);
+      x.strokeStyle=acc;x.setLineDash([3,4]);[a,z+1].forEach(k=>{const y=Y(lo+(hi-lo)*k/N);x.beginPath();x.moveTo(L,y);x.lineTo(R,y);x.stroke()});x.setLineDash([])}
+    const P=pivots(b,5);
+    // L1 zones
+    if(lvl>=0){const zl=P.L.slice(-2).map(i=>b[i][3]);const zc=[...P.H].sort((p,q)=>b[q][2]-b[p][2])[0];
+      const zh=b[zc][2];x.fillStyle=css('--down');x.globalAlpha=.12;x.fillRect(L,Y(zh),R-L,Y(zh*0.975)-Y(zh));x.globalAlpha=1;x.fillStyle=css('--down');x.fillText('RESISTANCE',L+6,Y(zh)-5);
+      if(zl.length){const z=Math.min(...zl);x.fillStyle=css('--up');x.globalAlpha=.12;x.fillRect(L,Y(z*1.025),R-L,Y(z)-Y(z*1.025));x.globalAlpha=1;x.fillStyle=css('--up');x.fillText('SUPPORT',L+6,Y(z)+12)}}
+    // L2 trendline + fib
+    if(lvl>=1){const tl=supLine(b,0,75);if(tl){const [i1,s]=tl,ie=b.length-1;
+        x.strokeStyle=mk;x.lineWidth=2;x.beginPath();x.moveTo(X(i1),Y(b[i1][3]));x.lineTo(X(ie),Y(b[i1][3]+s*(ie-i1)));x.stroke();x.lineWidth=1}
+      const iH=[...P.H].sort((p,q)=>b[q][2]-b[p][2])[0],iL=0;const fh=b[iH][2],fl=Math.min(...b.slice(0,iH).map(c=>c[3]));
+      [0,.382,.5,.618,1].forEach(f=>{const v=fh-(fh-fl)*f,y=Y(v);x.strokeStyle=acc;x.globalAlpha=f===.618?.9:.35;x.setLineDash([2,4]);x.beginPath();x.moveTo(X(iH),y);x.lineTo(R,y);x.stroke();x.setLineDash([]);x.globalAlpha=1;x.fillStyle=acc;x.fillText((f*100).toFixed(1)+'%',X(iH)+4,y-3)})}
+    drawCandles(x,b,b.length,X,Y,cw);
+    // swings
+    P.H.forEach(i=>{x.fillStyle=acc;x.beginPath();x.arc(X(i),Y(b[i][2])-7,3,0,7);x.fill()});
+    P.L.forEach(i=>{x.fillStyle=mk;x.beginPath();x.arc(X(i),Y(b[i][3])+7,3,0,7);x.fill()});
+    // L3 MAs + RSI
+    if(lvl>=2){[[20,acc],[50,mk]].forEach(([n,col])=>{const m=sma(D.hero.b,n).slice(20,140);x.strokeStyle=col;x.lineWidth=1.8;x.beginPath();let s=0;m.forEach((v,i)=>{if(v==null)return;s?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v));s=1});x.stroke()});x.lineWidth=1;
+      const r=rsi(D.hero.b).slice(20,140),rT=B+14,rB=h-10,RY=v=>rB-v/100*(rB-rT);
+      x.fillStyle=css('--panel2');x.fillRect(L,rT,R-L,rB-rT);x.fillStyle=acc;x.globalAlpha=.08;x.fillRect(L,RY(70),R-L,RY(30)-RY(70));x.globalAlpha=1;
+      x.strokeStyle=ln;[30,70].forEach(v=>{x.beginPath();x.moveTo(L,RY(v));x.lineTo(R,RY(v));x.stroke()});
+      x.strokeStyle=css('--g3')||acc;x.strokeStyle=acc;x.lineWidth=1.6;x.beginPath();r.forEach((v,i)=>{i?x.lineTo(X(i),RY(v)):x.moveTo(X(i),RY(v))});x.stroke();x.lineWidth=1;x.fillStyle=mu;x.fillText('RSI 14',L+6,rT+12)}
+    // risk box (L1) / sizing (L5)
+    {const i0=P.L[P.L.length-1]??b.length-20;const e=b[Math.min(i0+2,b.length-1)][4],sp=b[i0][3]*0.99,tg=e+2*(e-sp);const xa=X(Math.min(i0+2,b.length-1)),xb=Math.min(R-pf-4,xa+(R-L)*.18);
+      x.fillStyle=css('--up');x.globalAlpha=.16;x.fillRect(xa,Y(tg),xb-xa,Y(e)-Y(tg));x.fillStyle=css('--down');x.fillRect(xa,Y(e),xb-xa,Y(sp)-Y(e));x.globalAlpha=1;
+      x.fillStyle=css('--ink');x.font='600 10px "JetBrains Mono"';x.fillText('+2R',xa+4,Y(tg)+12);x.fillText('−1R',xa+4,Y(sp)-4);
+      if(lvl>=4){const acct=10000,risk=acct*.01,size=risk/(e-sp);const lines=['ACCOUNT  $10,000','RISK 1%  $'+risk.toFixed(0),'ENTRY    '+fmt(e),'STOP     '+fmt(sp),'SIZE     '+size.toFixed(4)+' BTC'];
+        const bw=190,bh=lines.length*17+18,bx=L+12,by=T+8;x.fillStyle=css('--bg');x.strokeStyle=acc;rr(x,bx,by,bw,bh,10);x.fill();x.stroke();x.fillStyle=css('--ink');x.font='500 11px "JetBrains Mono"';lines.forEach((t,k)=>{x.fillStyle=k===4?acc:css('--ink');x.fillText(t,bx+12,by+22+k*17)})}}
+  }
+  set(0,false);redraws.push(draw);addEventListener('resize',draw);
+})();
+
+// ---------- REPLAY ----------
+(function(){
+  const all=D.replay.b,c=$('#rpC'),START=50;let n=START,pos=null,res=[];
+  function draw(){
+    const {x,w,h}=fit(c);x.clearRect(0,0,w,h);
+    const vis=all.slice(0,n),view=vis.slice(-60),off=vis.length-view.length,slots=70;
+    const L=10,R=w-56,T=34,B=h-14;let lo=Infinity,hi=-Infinity;view.forEach(c=>{lo=Math.min(lo,c[3]);hi=Math.max(hi,c[2])});
+    if(pos){lo=Math.min(lo,pos.s);hi=Math.max(hi,pos.t)}const p=(hi-lo)*.06;lo-=p;hi+=p;
+    const X=i=>L+(i-off+.5)*(R-L)/slots,Y=v=>B-(v-lo)/(hi-lo)*(B-T),cw=(R-L)/slots*.62;
+    x.font='10px "JetBrains Mono"';for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4;x.strokeStyle=css('--line');x.globalAlpha=.6;x.beginPath();x.moveTo(L,Y(v));x.lineTo(R,Y(v));x.stroke();x.globalAlpha=1;x.fillStyle=css('--muted');x.fillText(fmt(v),R+6,Y(v)+3)}
+    // hidden future
+    const fx=X(n-.5);x.fillStyle=css('--panel2');x.fillRect(fx,T-10,R-fx,B-T+10);x.fillStyle=css('--muted');x.save();x.translate((fx+R)/2,(T+B)/2);x.textAlign='center';x.font='600 34px "Space Grotesk"';x.globalAlpha=.5;x.fillText('?',0,10);x.font='600 10px "JetBrains Mono"';x.fillText('FUTURE',0,32);x.restore();
+    if(pos){const xa=X(pos.i),xb=pos.end!=null?X(pos.end):fx;x.fillStyle=css('--up');x.globalAlpha=.15;x.fillRect(xa,Y(pos.t),xb-xa,Y(pos.e)-Y(pos.t));x.fillStyle=css('--down');x.fillRect(xa,Y(pos.e),xb-xa,Y(pos.s)-Y(pos.e));x.globalAlpha=1;
+      x.strokeStyle=css('--ink');x.setLineDash([3,3]);x.beginPath();x.moveTo(xa,Y(pos.e));x.lineTo(xb,Y(pos.e));x.stroke();x.setLineDash([])}
+    view.forEach((c,k)=>{});const X2=i=>X(i+off);
+    drawCandles(x,view,view.length,i=>X(i+off),Y,cw);
+  }
+  function step(){if(n>=all.length){end();return}n++;
+    if(pos&&pos.end==null){const c=all[n-1];if(c[3]<=pos.s){pos.end=n-1;pos.r=-1}else if(c[2]>=pos.t){pos.end=n-1;pos.r=2}
+      if(pos.end!=null){res.push(pos.r);$('#rpOut').innerHTML=`<span style="color:var(${pos.r>0?'--up':'--down'})">${pos.r>0?'+2R target hit':'−1R stopped out'}</span>`;$('#rpBuy').disabled=false}}
+    draw();if(n>=all.length)end()}
+  function end(){$('#rpNext').disabled=true;$('#rpBuy').disabled=true;const tot=res.reduce((a,v)=>a+v,0);$('#rpOut').innerHTML=`End of run · ${res.length} trade${res.length===1?'':'s'} · <span style="color:var(${tot>=0?'--up':'--down'})">${tot>=0?'+':''}${tot}R</span>`}
+  $('#rpNext').onclick=step;
+  $('#rpBuy').onclick=()=>{const i=n-1,e=all[i][4],s=Math.min(...all.slice(i-4,i+1).map(c=>c[3]))*0.995;pos={i,e,s,t:e+2*(e-s)};$('#rpBuy').disabled=true;$('#rpOut').textContent='Long at '+fmt(e)+' · stop '+fmt(s);draw()};
+  $('#rpReset').onclick=()=>{n=START;pos=null;res=[];$('#rpNext').disabled=false;$('#rpBuy').disabled=false;$('#rpOut').textContent='';draw()};
+  let hold;$('#rpNext').addEventListener('pointerdown',()=>{hold=setTimeout(function r(){step();hold=setTimeout(r,90)},400)});['pointerup','pointerleave'].forEach(e=>$('#rpNext').addEventListener(e,()=>clearTimeout(hold)));
+  draw();redraws.push(draw);addEventListener('resize',draw);
+})();
+
+// ---------- CURVE + QUIZ ----------
+(function(){
+  const W=520,H=330,L=36,B=290,T=20;const X=d=>L+Math.sqrt(d/30)*(W-L-10),Y=v=>B-v*(B-T);
+  let fade='';for(let d=0;d<=30;d+=.5)fade+=(d?'L':'M')+X(d).toFixed(1)+','+Y(Math.exp(-d/2.2)).toFixed(1);
+  const rev=[1,3,7,16];let saw='',d0=0,s=2.2,last=1;
+  for(let k=0;k<=rev.length;k++){const end=k<rev.length?rev[k]:30;for(let d=d0;d<=end;d+=.25){const v=Math.exp(-(d-d0)/s);saw+=(saw?'L':'M')+X(d).toFixed(1)+','+Y(v).toFixed(1)}if(k<rev.length){saw+='L'+X(end).toFixed(1)+','+Y(1).toFixed(1);d0=end;s*=2.3}}
+  const ticks=rev.map(d=>`<line x1="${X(d)}" x2="${X(d)}" y1="${B}" y2="${B+5}" stroke="var(--muted)"/><text x="${X(d)-6}" y="${B+20}">d${d}</text>`).join('');
+  $('#curve').innerHTML=`<div class="eyebrow">How much you still remember</div><svg viewBox="0 0 ${W} ${H+10}" style="margin-top:14px"><line x1="${L}" y1="${B}" x2="${W}" y2="${B}" stroke="var(--line)"/><text x="0" y="${T+4}">100%</text><text x="8" y="${B}">0</text>
+   <path class="fade" d="${fade}"/><path class="saw" d="${saw}"/>${ticks}${rev.map(d=>`<circle cx="${X(d)}" cy="${Y(1)}" r="4" fill="var(--accent)"/>`).join('')}</svg>
+   <div class="legend"><span><i style="background:var(--muted)"></i>Read once</span><span><i style="background:var(--accent)"></i>Quizzed on spaced days</span></div>`;
+  // quiz
+  const Q={q:'Price makes a higher high. RSI makes a lower high. What is the chart telling you?',o:['Bearish divergence: the push up is losing steam','Strong trend: buy the breakout','Nothing, RSI only matters below 30'],a:0,
+    why:'Right. A new high on weaker momentum is a warning, not a sell signal on its own. Wait for structure to break.'};
+  $('#quiz').innerHTML=`<div class="eyebrow">Try a question</div><div class="q">${Q.q}</div><canvas id="qC"></canvas>${Q.o.map((o,i)=>`<button class="opt" data-i="${i}"><kbd>${i+1}</kbd>${o}</button>`).join('')}<div class="why" id="why"></div>`;
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i===Q.a){b.classList.add('ok');$('#why').textContent=Q.why}else{b.classList.remove('no');void b.offsetWidth;b.classList.add('no');$('#why').textContent='Not quite. Look at the bottom line: is momentum confirming the new high?'}});
+  function qdraw(){const {x,w,h}=fit($('#qC'));x.clearRect(0,0,w,h);const pr=[15,40,28,62,45,55,88],rs=[20,58,38,84,50,58,62];
+    const top=h*.62,X=i=>14+i*(w-28)/6;const acc=css('--accent'),mk=css('--mark');
+    const line=(a,y0,y1,col,lab)=>{x.strokeStyle=col;x.lineWidth=2;x.beginPath();a.forEach((v,i)=>{const y=y1-(v/100)*(y1-y0);i?x.lineTo(X(i),y):x.moveTo(X(i),y)});x.stroke();x.fillStyle=css('--muted');x.font='10px "JetBrains Mono"';x.fillText(lab,8,y0+10)};
+    line(pr,8,top-6,css('--ink'),'PRICE');line(rs,top+6,h-6,acc,'RSI');
+    x.setLineDash([4,4]);x.strokeStyle=mk;x.beginPath();x.moveTo(X(3),8+(top-14)*(1-pr[3]/100)-4);x.lineTo(X(6),8+(top-14)*(1-pr[6]/100)-4);x.stroke();
+    x.beginPath();x.moveTo(X(3),top+6+(h-12-top)*(1-rs[3]/100)-4);x.lineTo(X(6),top+6+(h-12-top)*(1-rs[6]/100)-4);x.stroke();x.setLineDash([])}
+  qdraw();redraws.push(qdraw);addEventListener('resize',qdraw);
+})();
+
+// ---------- SHELF ----------
+(function(){const books=[["Murphy","Technical analysis",.95],["Nison","Candlesticks",.78],["Grimes","Market structure",.88],["Dalton","Market profile",.72],["Tharp","Position sizing",.84],["Douglas","Trading psychology",.7],["Aronson","Evidence-based TA",1],["Steenbarger","Trading coach",.8],["Brown","Make It Stick",.66]];
+  const fills=[['var(--panel2)','var(--ink)'],['var(--accent)','var(--accent-ink)'],['var(--panel)','var(--accent)'],['color-mix(in srgb,var(--accent) 30%,var(--panel))','var(--ink)']];
+  $('#shelf').innerHTML=books.map((b,i)=>{const f=fills[i%4];return `<div class="spine" style="height:${Math.round(b[2]*300)}px;background:${f[0]};color:${f[1]}">${b[0]}<small>${b[1].toUpperCase()}</small></div>`}).join('')})();
+
+// ---------- PHONE ----------
+(function(){const r=24,C=2*Math.PI*r,p=13/20;
+  $('#phone').innerHTML=`<div class="screen"><div class="notch"></div>
+   <div class="ph-top"><i></i>Chart School<span class="fl">🔥 6</span></div>
+   <div class="ph-card"><div class="ph-today"><svg class="ring" viewBox="0 0 58 58"><circle cx="29" cy="29" r="${r}" stroke="var(--line)"/><circle cx="29" cy="29" r="${r}" stroke="var(--accent)" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}" transform="rotate(-90 29 29)"/><text x="29" y="33" text-anchor="middle" style="font:700 13px var(--fd);fill:var(--ink)">13</text></svg>
+     <div><small>TODAY · ABOUT 5 MIN</small><b>Keep it sharp</b></div></div><div class="ph-go">Start ▸</div></div>
+   <div class="ph-grid"><div class="ph-card"><b>🎯 Weak spot</b><span>Fibonacci pullbacks</span></div><div class="ph-card"><b>🏁 Test</b><span>Level 3 · ready</span></div></div>
+   <div class="ph-card"><b style="font:600 13px var(--fd)">Market Analyst</b><div style="font-size:11px;color:var(--muted);margin:2px 0 10px">Rank 4 of 6 · 4 of 13 trophies</div><div class="badges"><span class="badge got">📈</span><span class="badge got">🕯️</span><span class="badge got">🔥</span><span class="badge">🧭</span></div></div>
+   <div class="ph-card" style="display:flex;align-items:center;gap:8px;font-size:12px"><span>✈️</span><span style="color:var(--muted)">Offline · progress saved on this phone</span></div>
+   <div class="ph-tab"><span>● Today</span><span>Program</span><span>Trading</span><span>Notes</span></div></div>`})();
+
+// ---------- reveal ----------
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.15});
+document.querySelectorAll('.reveal,.climb,.curve').forEach(e=>io.observe(e));
+let saved='night';try{saved=localStorage.getItem('cs-landing-pal')||'night'}catch(e){}
+setPal(PAL[saved]?saved:'night');
+document.fonts&&document.fonts.ready.then(()=>redraws.forEach(f=>f()));
+</script>
+</body>
+</html>
