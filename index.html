@@ -812,13 +812,54 @@ html.is-phone canvas.rpcv{height:44vh!important}html.is-phone .rp .rptask{displa
 .rpphone .rptop{margin:0;padding:0 10px 4px;border-bottom:1px solid var(--line)}.rpphone .rpst{margin:0;font-size:11.5px;gap:5px;flex-wrap:nowrap}.rpphone .rpst span{padding:1px 7px;white-space:nowrap}
 .rpphone .rpbot{max-height:40vh;overflow:auto;padding:6px 10px;border-top:1px solid var(--line)}.rpphone .rphint{font-size:12.5px;min-height:0;margin:0 0 6px;line-height:1.3}
 .rpphone .rpbtns{gap:6px}.rpphone .rpbtns button{min-height:40px;padding:6px 8px;flex:1 1 30%}.rpphone .rpbot .fb{font-size:13px;margin-top:6px}
+/* ==================== 2026-11-18 polish: market track, line icons, real hero chart ==================== */
+.ico{width:1.15em;height:1.15em;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.brand{white-space:nowrap}
+.mkt{display:inline-flex;align-items:center;padding:3px;gap:2px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);flex:0 0 auto}
+.mkt button{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;box-shadow:none;color:var(--muted);font:600 13px/1 var(--f-body);padding:7px 12px;border-radius:999px;min-height:0;cursor:pointer}
+@media (min-width:1000px){.topbar{column-gap:8px}.mkt button{padding:7px 9px}}
+.mkt button.on{background:var(--panel);color:var(--ink);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent),0 2px 10px -4px var(--accent)}
+.mkt button.on .ico{color:var(--accent)}
+@media (hover:hover){.mkt button:not(.on):hover{color:var(--ink)}}
+html.is-phone .mkt{padding:2px}html.is-phone .mkt button{padding:5px 7px;gap:0}html.is-phone .mkt button span{display:none}html.is-phone .mkt button .ico{width:17px;height:17px}
+.mktswap{position:fixed;inset:0;z-index:999;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);opacity:0;transition:opacity .25s}
+.mktswap.on{opacity:1}.mktswap>div{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.mktswap b{font:700 22px var(--f-display)}.mktswap span{color:var(--muted);font-size:14px}
+.ico.big{width:44px;height:44px;color:var(--accent);stroke-width:1.5}
+.mkpick{position:fixed;inset:0;z-index:998;display:grid;place-items:center;padding:16px;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px);opacity:0;transition:opacity .25s;overflow:auto}
+.mkpick.on{opacity:1}
+.mkbox{width:min(640px,100%);text-align:left}.mkbox .brand{font:600 15px var(--f-display);color:var(--accent);margin-bottom:14px}
+.mkbox h2{font:700 clamp(28px,6vw,44px)/1.05 var(--f-display);letter-spacing:-.02em;margin:0 0 10px;text-wrap:balance}
+.mkbox .lead{color:var(--muted);margin:0 0 20px;max-width:46ch}
+.mkrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mkcard{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--ink);box-shadow:var(--shadow);cursor:pointer;font:inherit}
+.mkcard b{font:700 22px var(--f-display)}.mkcard .mksub{font-size:13.5px;color:var(--muted);line-height:1.4}
+.mki{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}.mki .ico{width:24px;height:24px}
+.mkspark{display:block;width:100%;height:40px;margin-top:8px}.mkspark svg{width:100%;height:100%;overflow:visible}.mkspark path{fill:none;stroke:var(--accent);stroke-width:2;vector-effect:non-scaling-stroke}
+@media (hover:hover){.mkcard:hover{border-color:var(--accent);transform:translateY(-2px)}}.mkcard{transition:border-color .2s,transform .2s}
+.mkcard:focus-visible,.mkt button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mkfoot{color:var(--muted);font-size:13px;margin:16px 0 0}
+@media (max-width:520px){.mkrow{grid-template-columns:1fr}.mkcard{padding:14px}.mkspark{height:28px;margin-top:2px}}
+/* doors and tiles: icon tiles instead of emoji */
+.door .di{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-size:0;margin-bottom:6px}
+.door .di .ico{width:22px;height:22px}.door.locked .di{background:var(--panel2);color:var(--muted)}
+html.is-phone .door{display:grid;grid-template-columns:28px 1fr;column-gap:8px;align-items:center}html.is-phone .door>*:not(.di){grid-column:2}html.is-phone .door .di{grid-row:1;width:28px;height:28px;border-radius:9px;margin:0}html.is-phone .door .di .ico{width:16px;height:16px}
+.tile b .ico{color:var(--accent);margin-right:4px}.tile[disabled] b .ico,.tile[aria-disabled] b .ico{color:var(--muted)}
+/* hero: real candles behind the Today card */
+.topbar:has(.lookbtn) .themes{display:none}
+.today.real::after{background:var(--herochart) right bottom/100% 100% no-repeat;opacity:.5;height:150px;width:min(58%,520px);mask-image:linear-gradient(90deg,transparent,#000 35%);-webkit-mask-image:linear-gradient(90deg,transparent,#000 35%)}
+.today.real::before{content:var(--herocap);position:absolute;right:14px;bottom:6px;z-index:0;font:500 10.5px var(--f-mono);color:var(--muted);opacity:.75;pointer-events:none}
+html.is-phone .today.real::after{height:70px;width:45%;opacity:.25}html.is-phone .today.real::before{display:none}
+@media (prefers-reduced-motion:reduce){.mkcard,.mktswap,.mkpick{transition:none}}
+/* last resort on short phones: tiles lose their sub-line, lesson nodes tighten */
+#app.hfit4 .quick .tile>span{display:none}#app.hfit4 .quick .tile{padding-top:8px;padding-bottom:8px}#app.hfit4 .lnode{padding-top:2px;padding-bottom:2px}
 </style>
 <header class="topbar"><span class="brand">Chart School</span><nav id="topnav" aria-label="Sections"></nav><span class="chip" id="streak"></span><button class="lookbtn" id="lookbtn" aria-label="Appearance: colours and dark mode" title="Colours and dark mode"></button><a class="chip sync" id="sync" href="#sync" hidden></a>
   <div class="themes" role="group" aria-label="Appearance"><button id="th-light" data-t="light">Light</button><button id="th-dark" data-t="dark">Dark</button><button id="th-auto" data-t="auto">Auto</button></div></header>
 <div class="movebar" id="movebar" hidden><span><b>Chart School now syncs between your phone and Mac.</b> Move your progress to the online version in 1 minute.</span><a class="tvbtn" href="#sync">Move my progress</a></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="csGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a8cff"/><stop offset="1" stop-color="#4f9bff"/></linearGradient></defs></svg><main class="shell" id="app"></main>
-<script src="rw-data.js"></script>
-<script src="rw-more.js" async></script>
+<script>/* market track: Crypto or Stocks, chosen per device. Only that market's real candles are loaded. */
+window.CS_TRACK=(()=>{try{return localStorage.getItem("cs-track")||""}catch(e){return""}})();
+document.write(window.CS_TRACK==="stocks"?'<script src="stocks-data.js"><\/script>':'<script src="rw-data.js"><\/script><script src="rw-more.js" async><\/script>');</script>
 <script>
 (function(){
 /* never print "null" when an optional piece (sub-line, diagram, example chart) is missing */
@@ -828,7 +869,13 @@ function load(){let a=null,b=null;if(window.__CS_NATIVE&&window.__CS_STATE&&type
   /* use whichever copy was saved most recently (the app's file copy can be older after a reload) */
   const score=x=>x?(x.t||0)*1e3+Object.keys(x.cards||{}).length+Object.keys(x.done||{}).length:-1;return(score(b)>score(a)?b:a)||{}}
 function save(){setStamp();state.t=Date.now();try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.store)window.webkit.messageHandlers.store.postMessage(JSON.stringify(state))}catch(e){}try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}cloudPush()}
-const state=load();state.done=state.done||{};state.best=state.best||{};state.cards=state.cards||{};state.streak=state.streak||{n:0,last:null};state.pos=state.pos||{};state.v=2;
+const state=load();
+/* market track (per device): crypto or stocks. Existing learners stay on crypto. */
+const TRACK=window.CS_TRACK==="stocks"?"stocks":"crypto",STK=TRACK==="stocks";
+const STOCKS=["SPY","QQQ","AAPL","NVDA","TSLA","MSFT","AMZN","META"];
+const STOCK_NAME={SPY:"S&P 500 ETF",QQQ:"Nasdaq 100 ETF",AAPL:"Apple",NVDA:"Nvidia",TSLA:"Tesla",MSFT:"Microsoft",AMZN:"Amazon",META:"Meta"};
+const symLbl=s=>STOCKS.includes(s)?s:s+"/USD";
+state.done=state.done||{};state.best=state.best||{};state.cards=state.cards||{};state.streak=state.streak||{n:0,last:null};state.pos=state.pos||{};state.v=2;
 const SETK=["pal","theme","sound","chart"];const setVal=(s,k)=>k==="chart"?(s.tv&&s.tv.chart):s[k];const SETSNAP={};function setSnap(){SETK.forEach(k=>SETSNAP[k]=JSON.stringify(setVal(state,k)))}setSnap();
 function setStamp(){SETK.forEach(k=>{const v=JSON.stringify(setVal(state,k));if(v!==SETSNAP[k]){SETSNAP[k]=v;state.setT=state.setT||{};state.setT[k]=Date.now()}})}
 
@@ -2205,7 +2252,7 @@ function gate(m){if(testLock(m,1))return;
   const area=h("section",{class:"card"});m.append(intro,area);
   const names={up:"Uptrend",down:"Downtrend",side:"Sideways"},tname={trend:"Trend",swings:"Swings",levels:"Levels",theory:"Theory"};
   let miss=[],idx=0,passed=0,plan=[],liveSets=[],theory=[];
-  function start(){TEST_ON=true;holdHistory();idx=0;passed=0;miss=[];CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};intro.hidden=true;theory=gateTheory(12);plan=shuffle(["trend","trend","trend","swings","swings","swings","levels","levels"].concat(Array(12).fill("theory")));liveSets=shuffle([["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"],["SOL","D"]]);nextChart()}
+  function start(){TEST_ON=true;holdHistory();idx=0;passed=0;miss=[];CAL_RUN={sure:[0,0],think:[0,0],guess:[0,0]};intro.hidden=true;theory=gateTheory(12);plan=shuffle(["trend","trend","trend","swings","swings","swings","levels","levels"].concat(Array(12).fill("theory")));liveSets=shuffle(STK?[["SPY","D"],["AAPL","D"],["SPY","240"],["NVDA","240"],["QQQ","D"]]:[["BTC","D"],["ETH","D"],["BTC","240"],["ETH","240"],["SOL","D"]]);nextChart()}
   function nextChart(){live.clear();area.innerHTML="";if(idx>=NCH)return finish();
     const task=plan[idx];const head=h("div",{class:"done-row"},h("h3",{},`${idx+1} of ${NCH} · ${tname[task]}`),h("span",{class:"score"},`${passed} passed so far`));
     const body=h("div");area.append(head,body);
@@ -2217,7 +2264,7 @@ function gate(m){if(testLock(m,1))return;
       const cv=h("canvas",{class:"chart"});mountChart(cv,()=>[bars,{}]);const btns={};const f=h("div",{hidden:""});
       body.append(h("p",{class:"task"},"What is the trend? Look at the swing highs and lows, not the last few candles."),cv,h("div",{class:"row"},...["up","down","side"].map(t=>btns[t]=h("button",{on:{click:()=>{Object.values(btns).forEach(b=>b.disabled=true);const ok=t===type;btns[t].className=ok?"pick-good":"pick-bad";btns[type].className="pick-good";
         fb(f,ok?"good":"bad",(ok?"Correct.":"It was <b>"+names[type].toLowerCase()+"</b>.")+rwTag(rw));after(ok)}}},names[t]))),f)}
-    else if(task==="swings"){const src=liveSets.shift()||["BTC","D"];const ivName=(MC_IVS.find(v=>v[1]===src[1])||[""])[0];
+    else if(task==="swings"){const src=liveSets.shift()||[MC_COINS[0],"D"];const ivName=(MC_IVS.find(v=>v[1]===src[1])||[""])[0];
       body.append(h("p",{class:"score"},"Loading the live "+src[0]+" chart…"));
       mcLoad(src[0],src[1]).then(r=>{if(plan[idx]!=="swings"||!body.isConnected)return;const bars=r.bars.slice(-60);if(bars.length<40)throw new Error("short");body.innerHTML="";
         pivotRound(body,after,{strict:true,bars,type:"any",prompt:"Live chart: "+src[0]+"/USD · "+ivName+" · the latest 60 candles. Mark the swing highs and lows (3 candles each side). The newest 3 candles can't be swings yet."})})
@@ -3286,9 +3333,9 @@ function fitPhone(){if(!IS_PHONE()||FIT_Q||!(document.body.classList.contains("f
   shrink(120);if(over()>0&&step){step.classList.add("tight");shrink(95);shrink(75)}})}
 new MutationObserver(fitPhone).observe(document.getElementById("app"),{childList:true,subtree:true,attributes:true,attributeFilter:["hidden"]});
 /* phone Today: if it doesn't fit (Safari's bars take room), drop the least needed bits one at a time */
-function homeFit(){if(!IS_PHONE()||document.body.classList.contains("focus")||(location.hash||"#home")!=="#home")return;app.classList.remove("hfit1","hfit2","hfit3");
+function homeFit(){if(!IS_PHONE()||document.body.classList.contains("focus")||(location.hash||"#home")!=="#home")return;app.classList.remove("hfit1","hfit2","hfit3","hfit4");
   const navH=(document.getElementById("topnav")||{}).offsetHeight||0;const over=()=>{const last=app.lastElementChild;if(!last)return 0;return last.getBoundingClientRect().bottom+window.scrollY-(window.innerHeight-navH-14)};
-  for(const c of ["hfit1","hfit2","hfit3"]){if(over()<=0)break;app.classList.add(c)}}
+  for(const c of ["hfit1","hfit2","hfit3","hfit4"]){if(over()<=0)break;app.classList.add(c)}}
 window.addEventListener("resize",()=>setTimeout(homeFit,50));
 window.addEventListener("resize",fitPhone);
 /* computer screens: put a question's chart beside its answers, then shrink charts if the screen is still too short */
@@ -3473,26 +3520,26 @@ function homeView(m){const next=nextLesson();const due=dueCards().length;const l
   const GOAL=20,dq=(state.dayQ&&state.dayQ.d===today())?state.dayQ.n:0,gp=Math.min(1,dq/GOAL),C=2*Math.PI*30;
   const ring=h("div",{class:"goalring"+(dq>=GOAL?" met":""),title:dq>=GOAL?dq+" questions answered today. Daily goal of "+GOAL+" reached":"Questions answered today. Goal: "+GOAL,html:'<svg viewBox="0 0 74 74"><circle class="gbg" cx="37" cy="37" r="30"/><circle class="gfg" cx="37" cy="37" r="30" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+C.toFixed(1)+'"/></svg><div class="gtx"><b>'+dq+'</b><span>'+(dq>=GOAL?"goal ✓":"/ "+GOAL)+'</span></div>'});
   setTimeout(()=>{const c=ring.querySelector(".gfg");if(c)c.style.strokeDashoffset=(C*(1-gp)).toFixed(1)},120);
-  m.append(h("section",{class:"card today"},h("div",{class:"herogrid"},ring,h("div",{style:"min-width:0"},h("div",{class:"eyebrow"},"Today · about "+mins+" min"+(next?" · step "+next.n+" of "+PROGRAM.reduce((t,P)=>t+P.ls.length,0):"")),h("h2",{class:"hero"},next?next.t:"Keep it sharp"),h("div",{class:"plantext"},plan.join("  ·  ")))),
+  m.append(h("section",{class:"card today real"},h("div",{class:"herogrid"},ring,h("div",{style:"min-width:0"},h("div",{class:"eyebrow"},"Today · about "+mins+" min"+(next?" · step "+next.n+" of "+PROGRAM.reduce((t,P)=>t+P.ls.length,0):"")),h("h2",{class:"hero"},next?next.t:"Keep it sharp"),h("div",{class:"plantext"},plan.join("  ·  ")))),
     h("div",{class:"herorow"},h("div",{class:"plan chips"},...plan.map(p=>h("span",{},p))),
       h("div",{class:"row"},h("span",{class:"hint"},"Enter ↵"),h("button",{class:"primary big",id:"start",on:{click:()=>startSession("today")}},"Start ▶")))));
   m.append(h("div",{class:"quick"},
-    h("button",Object.assign({class:"tile",on:{click:()=>startSession("review")}},due?{}:{disabled:""}),h("b",{},"🔁 Review"),h("span",{},due?due+" due":"None due")),
-    (()=>{const w=weakSpot();return w?h("button",{class:"tile weak",on:{click:()=>startSession("weak")}},h("b",{},"🎯 Weak spot"),h("span",{},w.name+" · "+w.pct+"%"),h("span",{class:"wbar"},h("i",{style:"width:"+w.pct+"%"}))):h("button",{class:"tile",on:{click:()=>startSession("mixed")}},h("b",{},"📈 Mix"),h("span",{},"6 charts"))})(),
-    h(lsDone?"a":"div",lsDone?{class:"tile",href:"#"+G}:{class:"tile","aria-disabled":"true",style:"opacity:.55"},h("b",{},(lsDone?"🏁":"🔒")+" Test"),h("span",{},state.done[G]?"Passed ✓":lsDone?"Ready":"After "+lvlLessons(lv).length+" lessons"))));
+    h("button",Object.assign({class:"tile",on:{click:()=>startSession("review")}},due?{}:{disabled:""}),h("b",{},ico("review"),"Review"),h("span",{},due?due+" due":"None due")),
+    (()=>{const w=weakSpot();return w?h("button",{class:"tile weak",on:{click:()=>startSession("weak")}},h("b",{},ico("target"),"Weak spot"),h("span",{},w.name+" · "+w.pct+"%"),h("span",{class:"wbar"},h("i",{style:"width:"+w.pct+"%"}))):h("button",{class:"tile",on:{click:()=>startSession("mixed")}},h("b",{},ico("mix"),"Mix"),h("span",{},"6 charts"))})(),
+    h(lsDone?"a":"div",lsDone?{class:"tile",href:"#"+G}:{class:"tile","aria-disabled":"true",style:"opacity:.55"},h("b",{},ico(lsDone?"flag":"lock"),"Test"),h("span",{},state.done[G]?"Passed ✓":lsDone?"Ready":"After "+lvlLessons(lv).length+" lessons"))));
   m.append(trophyShelf(),levelPath(next));requestAnimationFrame(homeFit);setTimeout(homeFit,400);setTimeout(()=>{if(!SESSION&&!TVS&&(location.hash||"#home")==="#home")achCheck()},450);
   const sb=document.getElementById("start");if(sb)sb.focus({preventScroll:true})}
 /* ---------- Trading floor: the live chart and the TradingView school, kept apart from the lessons ---------- */
 function tvOpen(){return !!state.done.gate||Object.keys(tvDone()).length>0}
 function floorView(m){const done=tvDone();const nTv=TV_LESSONS.filter(L=>done[L.id]).length;const tvo=tvOpen();const pr=(state.tv&&state.tv.practice)||null;
-  m.append(h("section",{class:"card today"},h("div",{class:"eyebrow"},"Trading floor"),h("h2",{class:"hero"},"Real charts, real markets"),
-    h("p",{class:"lead"},"Practise on live prices here. The lessons stay on Today.")));
+  m.append(h("section",{class:"card today real"},h("div",{class:"eyebrow"},"Trading floor"),h("h2",{class:"hero"},"Real charts, real markets"),
+    h("p",{class:"lead"},STK?"Practise on real stock prices here. The lessons stay on Today.":"Practise on live prices here. The lessons stay on Today.")));
   m.append(h("div",{class:"doors"},
-    h("a",{class:"door",href:"#chart"},h("span",{class:"di"},"📈"),h("b",{},"Live chart"),h("span",{},pr&&pr.n?pr.ok+" of "+pr.n+" right in practice":"Mark swings, draw levels")),
-    h("button",{class:"door",on:{click:()=>startSession("scen")}},h("span",{class:"di"},"🎯"),h("b",{},"What would you do?"),h("span",{},state.scen&&state.scen.n?state.scen.n+" played · "+fmtR(state.scen.r):"Real charts: buy, sell or wait")),
-    h("a",{class:"door"+(rpOpen()?"":" locked"),href:"#replay"},h("span",{class:"di"},rpOpen()?"⏯":"🔒"),h("b",{},"Replay simulator"),h("span",{},rpOpen()?(()=>{const r=state.rp&&state.rp.runs||[];return r.length?r.length+" runs · best "+(state.rp.best!=null?fmtR(state.rp.best):"–"):"Trade a real chart candle by candle"})():"Opens at today's goal: "+rpDayN()+"/"+RP_GOAL)),
-    (()=>{const d5=lvlOpen(5),n=(state.pa&&state.pa.tr||[]).length;return h(d5?"a":"div",d5?{class:"door",href:"#desk"}:{class:"door locked","aria-disabled":"true"},h("span",{class:"di"},d5?"🗂":"🔒"),h("b",{},"My desk"),h("span",{},d5?(n?n+" of 50 practice trades":"Your plan and practice account"):"Opens with Level 5"))})(),
-    h(tvo?"a":"div",tvo?{class:"door",href:"#tv"}:{class:"door locked","aria-disabled":"true"},h("span",{class:"di"},tvo?"🎓":"🔒"),h("b",{},"TradingView school"),
+    h("a",{class:"door",href:"#chart"},h("span",{class:"di"},ico("chart")),h("b",{},"Live chart"),h("span",{},pr&&pr.n?pr.ok+" of "+pr.n+" right in practice":"Mark swings, draw levels")),
+    h("button",{class:"door",on:{click:()=>startSession("scen")}},h("span",{class:"di"},ico("target")),h("b",{},"What would you do?"),h("span",{},state.scen&&state.scen.n?state.scen.n+" played · "+fmtR(state.scen.r):"Real charts: buy, sell or wait")),
+    h("a",{class:"door"+(rpOpen()?"":" locked"),href:"#replay"},h("span",{class:"di"},ico(rpOpen()?"replay":"lock")),h("b",{},"Replay simulator"),h("span",{},rpOpen()?(()=>{const r=state.rp&&state.rp.runs||[];return r.length?r.length+" runs · best "+(state.rp.best!=null?fmtR(state.rp.best):"–"):"Trade a real chart candle by candle"})():"Opens at today's goal: "+rpDayN()+"/"+RP_GOAL)),
+    (()=>{const d5=lvlOpen(5),n=(state.pa&&state.pa.tr||[]).length;return h(d5?"a":"div",d5?{class:"door",href:"#desk"}:{class:"door locked","aria-disabled":"true"},h("span",{class:"di"},ico(d5?"desk":"lock")),h("b",{},"My desk"),h("span",{},d5?(n?n+" of 50 practice trades":"Your plan and practice account"):"Opens with Level 5"))})(),
+    h(tvo?"a":"div",tvo?{class:"door",href:"#tv"}:{class:"door locked","aria-disabled":"true"},h("span",{class:"di"},ico(tvo?"cap":"lock")),h("b",{},"TradingView school"),
       h("span",{},tvo?nTv+" of "+TV_LESSONS.length+" lessons":"Opens when you pass Level 1"),tvo?h("span",{class:"lpbar"},h("i",{style:"width:"+Math.round(100*nTv/TV_LESSONS.length)+"%"})):null)))}
 function tvLocked(m){m.append(h("section",{class:"card"},h("div",{class:"eyebrow"},"TradingView school"),h("h2",{},"🔒 Not yet"),h("p",{class:"task"},"This opens when you pass the Level 1 test, once you can read trend and levels."),h("div",{class:"row"},h("a",{href:"#floor"},"‹ Trading floor"))))}
 /* ---------- Achievements: stars, trophies and a rank title. Earned ones live in state.ach {id: time} ---------- */
@@ -3880,12 +3927,12 @@ document.addEventListener("keydown",e=>{if(SESSION||TVS)return;if(e.key==="Enter
    (Binance, then Coinbase), zoom/pan, log scale, and drawings that are saved
    in the app's progress (state.tv.chart, written only through save()).
    ===================================================================== */
-const MC_COINS=["BTC","ETH","SOL","XRP","BNB","DOGE","ADA","LINK","AVAX","DOT","NEAR","INJ"];
-const MC_IVS=[["5m","5",3e5],["15m","15",9e5],["30m","30",18e5],["1H","60",36e5],["4H","240",4*36e5],["12H","720",12*36e5],["1D","D",864e5],["3D","3D",3*864e5],["1W","W",7*864e5],["1M","M",30*864e5]];
+const MC_COINS=STK?STOCKS:["BTC","ETH","SOL","XRP","BNB","DOGE","ADA","LINK","AVAX","DOT","NEAR","INJ"];
+const MC_IVS=[["5m","5",3e5],["15m","15",9e5],["30m","30",18e5],["1H","60",36e5],["4H","240",4*36e5],["12H","720",12*36e5],["1D","D",864e5],["3D","3D",3*864e5],["1W","W",7*864e5],["1M","M",30*864e5]].filter(x=>!STK||["30","60","240","D","W","M"].includes(x[1]));
 const mcIvMs=iv=>(MC_IVS.find(x=>x[1]===iv)||[0,0,864e5])[2];
 const mcIntra=iv=>/^\d+$/.test(iv);
 const mcCache={};
-function mcCfg(){state.tv=state.tv||{};const c=state.tv.chart=state.tv.chart||{};c.sym=c.sym||"BTC";c.iv=c.iv||"D";c.draw=c.draw||{};if(c.mag==null)c.mag=true;c.ind=c.ind||{};if(!(c.risk>0))c.risk=100;return c}
+function mcCfg(){state.tv=state.tv||{};const c=state.tv.chart=state.tv.chart||{};if(!c.sym||!MC_COINS.includes(c.sym))c.sym=MC_COINS[0];if(!MC_IVS.some(x=>x[1]===c.iv))c.iv="D";c.draw=c.draw||{};if(c.mag==null)c.mag=true;c.ind=c.ind||{};if(!(c.risk>0))c.risk=100;return c}
 let mcSaveT=null;function mcSave(){clearTimeout(mcSaveT);mcSaveT=setTimeout(save,400)}
 async function mcFetchJson(url){const ac=new AbortController();const t=setTimeout(()=>ac.abort(),8000);try{const r=await fetch(url,{signal:ac.signal});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}finally{clearTimeout(t)}}
 function mcGroup(bars,ms,keyFn){const out=[];for(const b of bars){const k=keyFn?keyFn(b.t):Math.floor(b.t/ms)*ms;const last=out[out.length-1];
@@ -3912,7 +3959,17 @@ async function mcGecko(sym,iv){const mcp=await window.claude.use("mcp");if(!mcp)
   for(let i=1;i<px.length;i++){const o=+px[i-1],c=+px[i];bars.push({t:Math.round(t0+step*i),o,c,h:Math.max(o,c),l:Math.min(o,c),v:0})}
   return bars}
 let mcRevxDead=false;
-async function mcLoad(sym,iv){const key=sym+"|"+iv;
+/* stocks: baked history (stocks-data.js) topped up with the latest candles, which a GitHub job
+   reads from Yahoo Finance every 30 minutes in US market hours and publishes to the stock-data branch */
+const STK_LIVE="https://raw.githubusercontent.com/Chart-Skool-Admin/chart-school/stock-data/stocks-live.json";let stkLive=null,stkLiveT=0;
+async function stkLiveGet(){if(stkLive&&Date.now()-stkLiveT<5*6e4)return stkLive;try{const j=await mcFetchJson(STK_LIVE+"?t="+Math.floor(Date.now()/3e5));if(j&&j.sets){stkLive=j;stkLiveT=Date.now()}}catch(e){}return stkLive}
+function stkSet(src,sym,iv){const s=src&&src.sets&&src.sets.find(x=>x.s===sym&&x.iv===iv);return s?s.b.map(k=>({t:s.t0+k[0]*s.st,o:k[1],h:k[2],l:k[3],c:k[4],v:k[5]})):[]}
+async function mcStock(sym,iv){const base=iv==="W"||iv==="M"?"D":iv;const live=await stkLiveGet();const m=new Map();
+  stkSet(window.RW_STOCKS,sym,base).forEach(b=>m.set(b.t,b));stkSet(live,sym,base).forEach(b=>m.set(b.t,b));
+  let bars=[...m.values()].sort((a,b)=>a.t-b.t);if(!bars.length)throw new Error("no data");
+  if(iv==="W")bars=mcGroup(bars,0,mcMonday);if(iv==="M")bars=mcGroup(bars,0,t=>{const d=new Date(t);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),1)});
+  return mcCache[sym+"|"+iv]={bars,src:live?"Yahoo Finance, delayed":"saved history"}}
+async function mcLoad(sym,iv){const key=sym+"|"+iv;if(STOCKS.includes(sym))return mcStock(sym,iv);
   if(mcOnline()){if(!mcRevxDead){try{const bars=await mcRevx(sym,iv);mcWhy="";return mcCache[key]={bars,src:"Revolut X"}}catch(e){mcWhy=(e&&[e.code,e.message].filter(Boolean).join(": ").slice(0,160))||String(e);if(/UnsupportedProtocol|server_not_connected|not_granted/.test(mcWhy))mcRevxDead=true}}
     try{const bars=await mcGecko(sym,iv);mcWhy="";return mcCache[key]={bars,src:"CoinGecko (approx. candles)"}}catch(e){mcWhy=(e&&[e.code,e.message].filter(Boolean).join(": ").slice(0,160))||String(e)}}const bi={M:"1M",W:"1w","3D":"3d",D:"1d","720":"12h","240":"4h","60":"1h","30":"30m","15":"15m","5":"5m"}[iv];let lastErr;
   for(const host of ["https://api.binance.com","https://data-api.binance.vision"]){try{const j=await mcFetchJson(host+"/api/v3/klines?symbol="+sym+"USDT&interval="+bi+"&limit=1000");
@@ -3948,7 +4005,7 @@ function chartView(m,RPX){const cfg=RPX?rpChartCfg(RPX):mcCfg();const k0_=m.chil
   const cv=h("canvas",{class:"mcanvas","aria-label":"Price chart. Scroll to zoom, drag to move."});const stat=h("span",{class:"score"});const pxEl=h("span",{class:"mcpx"});
   const drawsOf=()=>cfg.draw[cfg.sym]=cfg.draw[cfg.sym]||[];
   /* toolbar */
-  const coin=h("select",{class:"mcsel","aria-label":"Coin"},...MC_COINS.map(c=>{const o=h("option",{value:c},c+"/USD");if(c===cfg.sym)o.selected=true;return o}));
+  const coin=h("select",{class:"mcsel","aria-label":STK?"Stock":"Coin"},...MC_COINS.map(c=>{const o=h("option",{value:c},symLbl(c));if(c===cfg.sym)o.selected=true;return o}));
   coin.addEventListener("change",()=>{cfg.sym=coin.value;mcSave();reload()});
   const ivRow=h("div",{class:"tvchips",role:"group","aria-label":"Timeframe"},...MC_IVS.map(([l,v])=>h("button",{"data-v":v,on:{click:()=>{cfg.iv=v;mcSave();reload()}}},l)));
   const logB=h("button",{class:"mctog",on:{click:()=>{cfg.log=!cfg.log;mcSave();sync();draw()}},title:"Log scale (Alt+L)"},"log");
@@ -4089,7 +4146,7 @@ function chartView(m,RPX){const cfg=RPX?rpChartCfg(RPX):mcCfg();const k0_=m.chil
     let rb=bars[Math.min(i1,Math.max(0,Math.round(hover?I(hover.x):bars.length-1)))];
     if(hover&&hover.x<pw&&hover.y>T&&hover.y<T+ph){x.strokeStyle=C.muted;x.setLineDash([4,4]);x.beginPath();x.moveTo(0,hover.y);x.lineTo(pw,hover.y);x.moveTo(hover.x,T);x.lineTo(hover.x,T+ph);x.stroke();x.setLineDash([]);
       if(hover.y<T+phP)tag(P(hover.y),C.ink,mcFmt(P(hover.y)),C.bg);const ix=Math.round(I(hover.x));if(bars[ix]&&!blind){const s=mcDate(bars[ix].t,cfg.iv);x.fillStyle=C.ink;const tw=x.measureText(s).width+12;x.fillRect(hover.x-tw/2,T+ph+3,tw,18);x.fillStyle=C.bg;x.textAlign="center";x.fillText(s,hover.x,T+ph+12);x.textAlign="start"}}
-    if(rb){const ch=(rb.c-rb.o)/rb.o*100;x.font="12px "+tok("--f-mono");x.fillStyle=C.muted;const parts=[[(RPX&&!RPX.reveal?"Hidden coin":cfg.sym+"/USD")+" · "+(MC_IVS.find(v=>v[1]===cfg.iv)||[""])[0]+"  ",C.ink],["O "+mcFmt(rb.o)+"  H "+mcFmt(rb.h)+"  L "+mcFmt(rb.l)+"  C "+mcFmt(rb.c)+"  ",C.muted],[(ch>=0?"+":"")+ch.toFixed(2)+"%",ch>=0?C.up:C.down]];
+    if(rb){const ch=(rb.c-rb.o)/rb.o*100;x.font="12px "+tok("--f-mono");x.fillStyle=C.muted;const parts=[[(RPX&&!RPX.reveal?(STK?"Hidden stock":"Hidden coin"):symLbl(cfg.sym))+" · "+(MC_IVS.find(v=>v[1]===cfg.iv)||[""])[0]+"  ",C.ink],["O "+mcFmt(rb.o)+"  H "+mcFmt(rb.h)+"  L "+mcFmt(rb.l)+"  C "+mcFmt(rb.c)+"  ",C.muted],[(ch>=0?"+":"")+ch.toFixed(2)+"%",ch>=0?C.up:C.down]];
       let px=8;parts.forEach(([s,c])=>{x.fillStyle=c;x.fillText(s,px,14);px+=x.measureText(s).width})}
     if(legend.length){x.font="11px "+tok("--f-mono");let px=8;const ly=T+phP-12;legend.forEach(([s,c])=>{x.fillStyle=c;x.fillRect(px,ly,12,2);x.fillText(s,px+16,ly+1);px+=x.measureText(s).width+30})}
     /* RSI / MACD panels under the price chart */
@@ -4209,7 +4266,7 @@ function chartView(m,RPX){const cfg=RPX?rpChartCfg(RPX):mcCfg();const k0_=m.chil
     if(cfg.iv!=="M"&&cfg.iv!=="W"&&Date.now()>=L.t+ms){const t=Math.floor(Date.now()/ms)*ms;applyBar({t,o:L.c,h:Math.max(L.c,p),l:Math.min(L.c,p),c:p,v:0});return}
     L.c=p;if(p>L.h)L.h=p;if(p<L.l)L.l=p;redrawSoon()}
   function wsClose(){if(ws){ws.onclose=ws.onerror=ws.onmessage=null;try{ws.close()}catch(e){}ws=null}}
-  function wsOpen(){if(RPX)return;if(!cv.isConnected||typeof WebSocket==="undefined")return;const key=cfg.sym+"|"+cfg.iv;if(ws&&wsKey===key)return;wsClose();wsKey=key;
+  function wsOpen(){if(RPX||STK)return;if(!cv.isConnected||typeof WebSocket==="undefined")return;const key=cfg.sym+"|"+cfg.iv;if(ws&&wsKey===key)return;wsClose();wsKey=key;
     const hosts=["wss://stream.binance.com:9443/ws/","wss://data-stream.binance.vision/ws/",null];const host=hosts[wsHost%3];let sock;
     try{if(host){sock=new WebSocket(host+cfg.sym.toLowerCase()+"usdt@kline_"+BI[cfg.iv]);
         sock.onmessage=e=>{if(wsKey!==key)return;try{const k=JSON.parse(e.data).k;if(k)applyBar({t:+k.t,o:+k.o,h:+k.h,l:+k.l,c:+k.c,v:+k.v,tb:+k.V})}catch(_){}}}
@@ -4323,7 +4380,7 @@ function chartView(m,RPX){const cfg=RPX?rpChartCfg(RPX):mcCfg();const k0_=m.chil
    generated charts when offline. Answers are graded from the real data.
    ===================================================================== */
 const RW={sets:rwBaked("D")};
-(async()=>{/* online: only prefetch once Revolut X is already allowed, so opening the page never pops a permission prompt */
+(async()=>{if(STK)return;/* online: only prefetch once Revolut X is already allowed, so opening the page never pops a permission prompt */
   if(mcOnline()){let ok=false;try{const pm=await window.claude.use("permissions");ok=pm&&(await pm.state("mcp"))==="granted"}catch(e){}if(!ok)return}
   /* real candles for practice: BTC, ETH and SOL, daily and 4-hour. A copy is kept on the device so practice stays real offline */
   const KEY="cs-rw",want=[["BTC","D"],["ETH","D"],["SOL","D"],["BTC","240"],["ETH","240"],["SOL","240"]];let saved=null;
@@ -4357,12 +4414,12 @@ function rwFind(want,len,clsLen,opt={}){if(!RW.sets.length)return null;
     return{bars:b,type,meta:{sym:set.sym,iv:set.iv,t:raw[0].t}}}
   return null}
 function rwTag(rw){if(!rw||!rw.meta)return"";const d=new Date(rw.meta.t);const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()];
-  return ` <span class="realtag">Real ${rw.meta.sym} · ${rw.meta.iv==="D"?"daily":rw.meta.iv==="W"?"weekly":"4-hour"} · ${M} ${d.getUTCFullYear()}</span>`}
+  return ` <span class="realtag">Real ${rw.meta.sym} · ${({D:"daily",W:"weekly","240":"4-hour","60":"1-hour","30":"30-minute"})[rw.meta.iv]||"4-hour"} · ${M} ${d.getUTCFullYear()}</span>`}
 /* ---------- Level 3: real price action for the indicator drills ----------
    Extra live data (BTC and ETH weekly), then finders that pick a real window
    which shows the thing being asked about. Every drill falls back to a made-up chart offline. */
 RW.wk=rwBaked("W");
-(async()=>{if(mcOnline()){let ok=false;try{const pm=await window.claude.use("permissions");ok=pm&&(await pm.state("mcp"))==="granted"}catch(e){}if(!ok)return}
+(async()=>{if(STK)return;if(mcOnline()){let ok=false;try{const pm=await window.claude.use("permissions");ok=pm&&(await pm.state("mcp"))==="granted"}catch(e){}if(!ok)return}
   /* weekly BTC and ETH for the big-picture drill, kept on the device like the daily and 4-hour sets */
   const KEY="cs-rw-wk";let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}
   if(saved&&saved.sets)saved.sets.forEach(x=>RW.wk.push({sym:x.sym,iv:"W",bars:x.b.map(k=>({t:k[0],o:k[1],h:k[2],l:k[3],c:k[4]}))}));
@@ -4529,10 +4586,10 @@ function rwRange(kind,volWant){const P=rwRangeScan().filter(x=>x.kind===kind&&(!
    when it arrives, is added beside it (never mixed into the same set, so
    volume always comes from one exchange).
    ===================================================================== */
-function rwBaked(kind){const B=window.RW_BAKED;if(!B||!B.sets)return[];
+function rwBaked(kind){const B=STK?window.RW_STOCKS:window.RW_BAKED;if(!B||!B.sets)return[];
   const un=s=>s.b.map(k=>({t:s.t0+k[0]*s.st,o:k[1],h:k[2],l:k[3],c:k[4],v:k[5]}));
   if(kind==="W")return B.sets.filter(s=>s.iv==="D").map(s=>({sym:s.s,iv:"W",baked:true,bars:rwWeekly(un(s))}));
-  return B.sets.filter(s=>kind==="30"?s.iv==="30":s.iv!=="30").map(s=>({sym:s.s,iv:s.iv,baked:true,bars:un(s)}))}
+  return B.sets.filter(s=>kind==="30"?s.iv==="30":s.iv!=="30"&&s.iv!=="60").map(s=>({sym:s.s,iv:s.iv,baked:true,bars:un(s)}))}
 function rwWeekly(b){const out=[];let cur=null;b.forEach(x=>{const wd=(new Date(x.t).getUTCDay()+6)%7;const k=x.t-wd*864e5;
   if(!cur||cur.t!==k){cur={t:k,o:x.o,h:x.h,l:x.l,c:x.c,v:x.v};out.push(cur)}else{cur.h=Math.max(cur.h,x.h);cur.l=Math.min(cur.l,x.l);cur.c=x.c;cur.v+=x.v}});return out}
 /* keep the baked sets, swap in the latest live ones */
@@ -4738,7 +4795,7 @@ function bxpRound(el,done){const want=pickFresh("bxp",["rw","fw","bt","rb"]);con
    ===================================================================== */
 const RP_CTX=60,RP_LEN=60,RP_SHOW=70,RP_FEE=.001;
 /* more real candles (alt coins, 1-hour) arrive from rw-more.js after the app starts */
-function rwMoreIn(){const M=window.RW_MORE;if(!M||!M.sets||RW.moreIn)return;RW.moreIn=true;const un=s=>s.b.map(k=>({t:s.t0+k[0]*s.st,o:k[1],h:k[2],l:k[3],c:k[4],v:k[5]}));
+function rwMoreIn(){const M=STK?(window.RW_STOCKS&&{sets:window.RW_STOCKS.sets.filter(s=>s.iv==="60")}):window.RW_MORE;if(!M||!M.sets||RW.moreIn)return;RW.moreIn=true;const un=s=>s.b.map(k=>({t:s.t0+k[0]*s.st,o:k[1],h:k[2],l:k[3],c:k[4],v:k[5]}));
   RW.h1=RW.h1||[];M.sets.forEach(s=>{const x={sym:s.s,iv:s.iv,baked:true,bars:un(s)};if(s.iv==="60")RW.h1.push(x);else RW.sets.push(x)})}
 window.__rwMoreLoaded=rwMoreIn;rwMoreIn();
 const RP_TF={any:"Any timeframe",D:"Daily","240":"4-hour","60":"1-hour"},RP_MK={any:"Any market",trend:"Trending",range:"Ranging",vol:"Volatile"};
@@ -4941,6 +4998,212 @@ function syncView(m){if(SBC&&!window.__CS_NATIVE)return sbView(m);const card=h("
     const nL=LESSONS.filter(x=>state.done[x.id]).length;fb(f,"good",`Done. You have <b>${nL}</b> finished lesson${nL===1?"":"s"} and <b>${Object.keys(state.cards).length}</b> memory cards here now.`);ta.value=""}}},"Import");
   card2.append(h("h3",{},"Bring progress from the Mac app"),h("p",{class:"task"},"Only needed once. In the old Chart School app press Move my progress, then paste the code here."),ta,h("div",{class:"row"},imp),f)}
 const top=document.getElementById("topnav");
+/* ---------- Stocks track: the same lessons, told with stocks ----------
+   The course is written with crypto examples. On the Stocks track every piece of text on screen
+   passes through these swaps: whole sentences first (where the idea itself differs, like gaps,
+   earnings or margin), then the plain words (coin → stock, BTC → SPY ...). Grading never reads
+   the text, so answers stay correct. */
+const STK_PHRASES=[
+ ["Spot crypto trades non-stop. What does that mean for windows (gaps)?","Stocks close every night and weekend. What does that mean for windows (gaps)?"],
+ ["They're rare, mostly on futures and thin coins","They're common: the open often jumps away from the last close"],
+ ["They can't be used at all in crypto","They can't be used at all on stocks"],
+ ["With no overnight close, each candle opens where the last one closed. You'll see real gaps mainly on CME Bitcoin futures after a weekend, and on illiquid coins.","The market is shut overnight, so news piles up and the next open can start far from the last close. Daily stock charts show real gaps every week, most of all around earnings."],
+ ["Bitcoin futures on the CME close for the weekend while spot keeps trading. On Monday the futures chart often shows…","A stock reports earnings after the close. Next morning the chart often shows…"],
+ ["CME gap:</b> Bitcoin futures close at weekends; price often returns to the gap, not always.","Earnings gap:</b> a jump on news after the close; price often returns to the gap, not always."],
+ ["Bitcoin futures close at weekends; price often returns to the gap, not always.","a jump on news after the close; price often returns to the gap, not always."],
+ ["CME gap:","Earnings gap:"],
+ ["Trading crypto for real","Trading stocks for real"],
+ ["Crypto never closes, moves 5% on a quiet day and lets you borrow 100×. Each of those can finish you.","Stocks gap overnight, jump 10% on earnings and let you borrow on margin. Each of those can finish you."],
+ ["Bitcoin is in a clear downtrend. What do most other coins tend to do?","The S&P 500 is in a clear downtrend. What do most single stocks tend to do?"],
+ ["Bitcoin sets the direction for the whole market. Long trades in other coins work best when Bitcoin's own trend is up.","The index sets the direction for the whole market. Long trades in single stocks work best when the S&P 500's own trend is up."],
+ ["At 10× a move of about 10% against you wipes out your stake and the exchange closes the trade: liquidation.","At 4× (day-trading margin) a move of about 25% against you wipes out your stake and the broker closes the trade: a margin call."],
+ ["How much of your trading money should sit on one exchange?","A stock you hold reports earnings tomorrow. What should you do?"],
+ ["Only what the open trades need","Size it so a gap past your stop is a loss you can take"],
+ ["All of it, ready to move fast","Nothing: the stop protects you"],
+ ["Half, with half on a second one","Double up before the news"],
+ ["Exchanges get hacked, freeze withdrawals and go bust. Whatever is on one can vanish with it. That risk has nothing to do with your chart.","A stop can't protect you from a gap. If the stock opens 10% past it, you're filled at the open. Only your size limits that loss."],
+ ["Trade coins with deep volume on major exchanges, a clear trend, and no big token unlock ahead. Thin coins mean wide spreads, slippage and stops that fill far from where you set them.","Trade stocks with deep daily volume, a clear trend, and no earnings report right ahead. Thin stocks mean wide spreads, slippage and stops that fill far from where you set them."],
+ ["Funding on a perpetual future is…","Holding a stock on margin costs…"],
+ ["A fee paid between longs and shorts every few hours","Interest on the borrowed money, every day you hold"],
+ ["Interest the exchange pays you","Interest the broker pays you"],
+ ["When longs crowd in they pay shorts, and the other way round. Held for weeks it adds up.","Margin is a loan. Interest runs every day, so a slow trade on borrowed money bleeds even when price goes nowhere."],
+ ["The leverage your exchange offers","The margin your broker offers"],
+ ["Bitcoin breaks down into a clear downtrend. Your long setup in a small coin looks perfect. Best read?","The S&P 500 breaks down into a clear downtrend. Your long setup in a small stock looks perfect. Best read?"],
+ ["Low odds: small coins usually follow Bitcoin down","Low odds: small stocks usually follow the index down"],
+ ["High odds: money rotates out of Bitcoin","High odds: money rotates out of the index"],
+ ["Bitcoin sets the tide. Fighting it with a long in a thin coin stacks the odds against you.","The index sets the tide. Fighting it with a long in a thin stock stacks the odds against you."],
+ ["crypto risks","stock risks"],
+ ["In crypto, very high funding paid by longs is one gauge of a crowded trade.","In stocks, record margin debt and very high call-option buying are gauges of a crowded trade."],
+ ["In crypto, a very high funding rate plus rising open interest means…","In stocks, record margin debt plus heavy call buying means…"],
+ ["Crypto volume numbers are best used…","Volume numbers on a broker's chart are best used…"],
+ ["To compare up and down volume on one exchange","To compare up and down volume on one chart"],
+ ["As exact totals for the whole crypto market","As exact totals for the whole stock market"],
+ ["To compare volume across many small exchanges","To compare volume across many small brokers"],
+ ["Volume is spread over many exchanges and some of it is inflated. Look at the pattern, not the exact number.","Volume is split across many exchanges and dark pools, and some feeds show only part of it. Look at the pattern, not the exact number."],
+ ["Nothing; volume doesn't matter in crypto","Nothing; volume doesn't matter in stocks"],
+ ["Stocks trade about 5 days a week: 200 ÷ 5 = 40 weeks. Crypto trades all 7 days, so for coins the 200-day is closer to a 29-week average.","Stocks trade about 5 days a week: 200 ÷ 5 = 40 weeks. That's why the 200-day and the 40-week average line up on a stock chart."],
+ ["Crypto bull markets have had several 20 to 35% drops along the way.","Stock bull markets have had several 10 to 20% drops along the way."],
+ ["Sharp drops are normal inside crypto bull markets.","Sharp drops are normal inside bull markets."],
+ ["% drop is normal inside a crypto bull market.","% drop is normal inside a bull market."],
+ ["BTC drops 25% in three weeks, but it's still above a rising 40-week MA after a year of gains.","SPY drops 12% in three weeks, but it's still above a rising 40-week MA after a year of gains."],
+ ["BTC's past cycle tops came about 12 to 18 months after its halvings (2013, 2017, 2021). How much should you trust that?","Some say the market tops in the second year of a US president's term. How much should you trust that?"],
+ ["Someone says BTC must top exactly 18 months after the next halving. The best answer?","Someone says the market must top exactly in the second year of the next president's term. The best answer?"],
+ ["BTC's 200-week MA has often been near past bear-market lows, but in 2022 price fell well below it. The lesson?","The 200-week MA has often been near past bear-market lows for big stocks, but in 2022 many fell well below it. The lesson?"],
+ ["Why use log scale on a 10-year BTC chart?","Why use log scale on a 10-year NVDA chart?"],
+ ["BTC went from $200 to $100,000. Which price scale shows old and new moves fairly?","NVDA went from $1 to $180 (split-adjusted). Which price scale shows old and new moves fairly?"],
+ ["Log scale shows % moves fairly. Use it for anything that has grown a lot, like BTC.","Log scale shows % moves fairly. Use it for anything that has grown a lot, like NVDA."],
+ ["BTC is at 60,000. You only want to buy if it drops to 58,000. Which order?","AAPL is at $200. You only want to buy if it drops to $194. Which order?"],
+ ["You hold ETH and want out automatically if it falls below 2,800. Which order?","You hold MSFT and want out automatically if it falls below $480. Which order?"],
+ ["You have $10,000 and will risk 1% of it, so $100. You buy BTC at $60,000 with a stop at $57,600. If the stop is hit, you lose $2,400 for every whole BTC. How much BTC can you buy so the most you lose is $100?","You have $10,000 and will risk 1% of it, so $100. You buy AAPL at $200 with a stop at $192. If the stop is hit, you lose $8 for every share. How many shares can you buy so the most you lose is $100?"],
+ ["Step 1: your risk is 1% of $10,000 = $100. Step 2: loss per BTC = $60,000 − $57,600 = $2,400. Step 3: $100 ÷ $2,400 = 0.042 BTC (about $2,500 worth). If the stop is hit you lose 0.042 × $2,400 = $100. Size comes from the stop.","Step 1: your risk is 1% of $10,000 = $100. Step 2: loss per share = $200 − $192 = $8. Step 3: $100 ÷ $8 = 12.5, so 12 shares (about $2,400 worth). If the stop is hit you lose 12 × $8 = $96. Size comes from the stop."],
+ ["Spreading money across coins isn't real protection in a crypto crash.","Spreading money across stocks in one sector isn't real protection in a crash."],
+ ["Crypto coins crash together, so ten coins is closer to one big bet than ten small ones.","Stocks fall together in a crash, so ten tech stocks is closer to one big bet than ten small ones."],
+ ["Crypto coins move together, most of all in a crash.","Stocks move together, most of all in a crash."],
+ ["You put $1,000 into each of 10 popular coins. How protected are you from a big crypto crash?","You put $1,000 into each of 10 popular tech stocks. How protected are you from a big market crash?"],
+ ["Fully protected, as long as BTC is one of the ten","Fully protected, as long as Apple is one of the ten"],
+ ["No market moves alone. Money flows between the dollar, bonds, stocks, commodities and crypto, and those flows leave clues.","No market moves alone. Money flows between the dollar, bonds, stocks and commodities, and those flows leave clues."],
+ ["The US dollar is rising strongly. For crypto and commodities this has often been…","The US dollar is rising strongly. For commodities and big exporters this has often been…"],
+ ["Since about 2020, BTC has often moved with tech stocks.","Since about 2020, the Nasdaq has often moved opposite to real bond yields."],
+ ["A link between BTC and the Nasdaq is best treated as…","A link between tech stocks and bond yields is best treated as…"],
+ ["A fixed law: BTC always follows the Nasdaq","A fixed law: tech always falls when yields rise"],
+ ["Not real: crypto never moves with stocks","Not real: stocks never move with bonds"],
+ ["Dollar, commodities, bonds, stocks and crypto links","Dollar, commodities, bonds and stock links"],
+ ["The ETH/BTC chart is falling, but ETH is up 10% in dollars. What's true?","The QQQ/SPY chart is falling, but QQQ is up 10% in dollars. What's true?"],
+ ["ETH rose less than BTC: BTC was the stronger buy","QQQ rose less than SPY: SPY was the stronger buy"],
+ ["ETH fell in dollars, even though the chart says up","QQQ fell in dollars, even though the chart says up"],
+ ["ETH beat BTC: the ratio chart is lagging","QQQ beat SPY: the ratio chart is lagging"],
+ ["A ratio chart shows relative strength. Falling ETH/BTC means BTC did better, even though both went up.","A ratio chart shows relative strength. Falling QQQ/SPY means SPY did better, even though both went up."],
+ ["ETH rose about 12% and BTC about 30%.","QQQ rose about 12% and SPY about 30%."],
+ ["BTC was the stronger one to own.","SPY was the stronger one to own."],
+ ["If an index or BTC makes a new high while fewer stocks or coins join in, the rally is narrowing.","If an index makes a new high while fewer stocks join in, the rally is narrowing."],
+ ["In past crypto bull markets, money has often moved in which order?","In past stock bull markets, money has often moved in which order?"],
+ ["BTC first, then ETH, then smaller coins","Large caps first, then mid caps, then small caps"],
+ ["Small coins first, then ETH, then BTC","Small caps first, then mid caps, then large caps"],
+ ["Often, not always. BTC dominance and ETH/BTC show whether money is moving out toward riskier coins.","Often, not always. Small caps against the S&P 500 (IWM/SPY) show whether money is moving out toward riskier stocks."],
+ ["BTC dominance rising means…","Big tech's share of the S&P 500 rising means…"],
+ ["BTC is gaining share of the total crypto market","The biggest stocks are gaining share of the whole market"],
+ ["BTC's price is rising faster than before","Big tech's prices are rising faster than before"],
+ ["Altcoins are outperforming BTC right now","Smaller stocks are beating big tech right now"],
+ ["Dominance is BTC's share of total market cap. It can rise in a falling market if altcoins fall faster.","That share can rise in a falling market if smaller stocks fall faster."],
+ ["BTC dominance falls while the total crypto market rises. Most likely?","Big tech's share of the S&P 500 falls while the whole market rises. Most likely?"],
+ ["Altcoins are rising faster than BTC","Smaller stocks are rising faster than big tech"],
+ ["BTC is falling in dollars","Big tech is falling in dollars"],
+ ["Dominance is BTC's share. If the whole market rises and BTC's share falls, altcoins are doing better.","If the whole market rises and big tech's share falls, smaller stocks are doing better."],
+ ["BTC makes a new high, but fewer and fewer altcoins are above their own 50-day MA. What does that say?","SPY makes a new high, but fewer and fewer stocks are above their own 50-day MA. What does that say?"],
+ ["A broad, healthy rally: BTC is leading the way up","A broad, healthy rally: big tech is leading the way up"],
+ ["Altcoins are about to beat BTC, so buy them now","Small caps are about to beat big tech, so buy them now"],
+ ["% of altcoins above their 50-day MA","% of stocks above their 50-day MA"],
+ ["Top: a crypto index. Bottom: the % of coins trading above their own 50-day MA.","Top: the S&P 500. Bottom: the % of its stocks trading above their own 50-day MA."],
+ ["Total crypto market","Total stock market"],
+ ["Box size $1,000, 3-box reversal. BTC's X column tops at $64,000, then price falls to $61,500. New O column?","Box size $10, 3-box reversal. SPY's X column tops at $640, then price falls to $615. New O column?"],
+ ["(say $1,000 for BTC)","(say $10 for SPY)"],
+ ["BTC breaks to a new high, ETH doesn't. Dow would say…","SPY breaks to a new high, the Dow Transports don't. Dow would say…"],
+ ["BTC breaks to a new high, but ETH fails to make one. How would Dow read this?","The Dow Industrials make a new high, but the Transports fail to make one. How would Dow read this?"],
+ ["A new bull market is confirmed by the BTC high","A new bull market is confirmed by the Industrials high"],
+ ["ETH will catch up soon, so buy ETH now","The Transports will catch up soon, so buy them now"],
+ ["Strong bull signal: BTC leads and ETH will follow","Strong bull signal: the Industrials lead and the Transports will follow"],
+ ["Crypto version: BTC and ETH both breaking out is stronger","Today's version: the S&P 500 and the Nasdaq both breaking out is stronger"],
+ ["BTC, ETH and a small coin can show the same setup, but they don't behave the same. Size and stops have to fit the coin.","SPY, TSLA and a small stock can show the same setup, but they don't behave the same. Size and stops have to fit the stock."],
+ ["Small coins and weekends are usually thinner.","Small stocks and the minutes around the open are usually thinner."],
+ ["Small coins and weekends are thinner.","Small stocks and the minutes around the open are thinner."],
+ ["A $100 move means little on BTC and a lot on a $20 coin. ATR% makes them comparable.","A $10 move means little on a $700 stock and a lot on a $20 one. ATR% makes them comparable."],
+ ["SOL's ATR% is twice BTC's. You risk the same dollars on both. The SOL position is…","TSLA's ATR% is twice SPY's. You risk the same dollars on both. The TSLA position is…"],
+ ["About half the BTC position","About half the SPY position"],
+ ["A coin's ATR% is three times BTC's.","A stock's ATR% is three times SPY's."],
+ ["About a third of the BTC position","About a third of the SPY position"],
+ ["You're long BTC, ETH and SOL, each risking 1%.","You're long NVDA, MSFT and AMZN, each risking 1%."],
+ ["BTC and ETH, daily chart for trend, 4-hour for entries.","SPY and QQQ, daily chart for trend, 4-hour for entries."],
+ ["e.g. BTC and ETH, daily + 4-hour","e.g. SPY and QQQ, daily + 4-hour"],
+ ["You're on BTC and want ETH. Fastest way?","You're on SPY and want AAPL. Fastest way?"],
+ ["Just start typing ETH on the chart","Just start typing AAPL on the chart"],
+ ["Switch to ETH: type ETH on the chart and pick ETHUSDT","Switch to AAPL: type AAPL on the chart and pick NASDAQ:AAPL"],
+ ["What does BINANCE:BTCUSDT mean?","What does NASDAQ:AAPL mean?"],
+ ["Bitcoin priced in dollars (USDT) on Binance","Apple shares, priced in dollars on the Nasdaq exchange"],
+ ["Bitcoin priced in Binance's own coin","Apple priced in Nasdaq index points"],
+ ["An index of Bitcoin across exchanges","An index of Apple across all exchanges"],
+ ["TradingView, BTC, ETH, S&P","TradingView, SPY, QQQ, AAPL"],
+ ["BTC spikes to a new high, trades there for a few minutes, then drops straight back.","SPY spikes to a new high, trades there for a few minutes, then drops straight back."],
+ ["You build one volume profile over three months of BTC.","You build one volume profile over three months of SPY."],
+ ["🔔 BTC crossed 58,000","🔔 SPY crossed 580"],
+ ["The exchange can still revise the latest candles","The data feed can still revise the latest candles"],
+ ["A data error on the exchange","A data error in the feed"],
+ ["Liquidity, volatility and coin character","Liquidity, volatility and stock character"],
+ ["ETH: the rise, then a pullback","QQQ: the rise, then a pullback"],
+ ["How many coins?","How many shares?"],
+ ["Loss per coin","Loss per share"],
+ ["Drawings save automatically for each coin.","Drawings save automatically for each stock."],
+ ["You can also click the coin name top left.","You can also click the symbol top left."],
+ ["Try charting by hand: write down the daily close of 3 to 5 coins and sketch the swings.","Try charting by hand: write down the daily close of 3 to 5 stocks and sketch the swings."],
+ ["Hidden coin","Hidden stock"],
+ ["In 2018, ten popular coins together lost about 61% in seven months.","In 2008, most big US stocks fell 40 to 60% together within a year."],
+ ["Ten coins bought equally in January 2018 lost about 61% by July.","Ten big US stocks bought equally in late 2007 lost about half by early 2009."],
+ ["Exchange, colon, then the pair. USDT is a dollar stablecoin.","Exchange, colon, then the ticker. Here: Apple on the Nasdaq."],
+ ["8 real coins","8 real stocks"],
+ ["real coins","real stocks"],
+];
+const STK_WORDS=[[/\b([Cc])oin(?=[ -]flips?\b)/g,"$1\u0001"],[/\bthe next halving\b/g,"the next election"],[/\bhalvings\b/g,"election cycles"],[/\bhalving\b/g,"election cycle"],[/(\d) coins\b/g,"$1 shares"],[/\baltcoins\b/g,"smaller stocks"],[/\bAltcoins\b/g,"Smaller stocks"],
+ [/\bcoins\b/g,"stocks"],[/\bCoins\b/g,"Stocks"],[/\bcoin's\b/g,"stock's"],[/\bcoin\b/g,"stock"],[/\bCoin\b/g,"Stock"],
+ [/\bin crypto\b/g,"in stocks"],[/\bIn crypto\b/g,"In stocks"],[/\bcrypto\b/g,"stock"],[/\bCrypto\b/g,"Stock"],
+ [/(^|[.!?]\s+)Bitcoin\b/g,"$1The S&P 500"],[/\bBitcoin's\b/g,"the S&P 500's"],[/\bBitcoin\b/g,"the S&P 500"],
+ [/\bBTC\/USD\b/g,"SPY"],[/\bETH\/USD\b/g,"QQQ"],[/\bSOL\/USD\b/g,"NVDA"],[/\bBTC\b/g,"SPY"],[/\bETH\b/g,"QQQ"],[/\bSOL\b/g,"NVDA"],
+ [/\u0001/g,"oin"]];
+const STK_TRIG=/[Hh]alving|[Cc]oin|[Cc]rypto|BTC|ETH|SOL|Bitcoin|[Aa]ltcoin|CME|USDT|Binance|exchange|weekend|unlock/;
+function stkText(t){if(!STK_TRIG.test(t))return t;for(const [a,b] of STK_PHRASES)if(t.includes(a))t=t.split(a).join(b);for(const [r,b] of STK_WORDS)t=t.replace(r,b);return t}
+function stkWalk(root){if(!STK||!root)return;const pe=root.nodeType===1?root:root.parentElement;if(pe&&pe.closest&&pe.closest("[data-keep]"))return;if(root.nodeType===3){const v=root.nodeValue,n=stkText(v);if(n!==v)root.nodeValue=n;return}
+  if(root.nodeType!==1&&root.nodeType!==11)return;if(root.nodeType===1&&/^(SCRIPT|STYLE|TEXTAREA|INPUT)$/.test(root.tagName))return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:x=>{const p=x.parentNode;return p&&(/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName)||(p.closest&&p.closest("[data-keep]")))?2:1}});let x;const all=[];while(x=w.nextNode())all.push(x);
+  all.forEach(x=>{const v=x.nodeValue,n=stkText(v);if(n!==v)x.nodeValue=n});
+  if(root.querySelectorAll)root.querySelectorAll("[aria-label],[title],[placeholder]").forEach(e=>["aria-label","title","placeholder"].forEach(a=>{const v=e.getAttribute(a);if(v){const n=stkText(v);if(n!==v)e.setAttribute(a,n)}}))}
+if(STK){const mo=new MutationObserver(ms=>{for(const m of ms){if(m.type==="characterData")stkWalk(m.target);else m.addedNodes.forEach(stkWalk)}});
+  const go=()=>{stkWalk(document.body);mo.observe(document.body,{childList:true,subtree:true,characterData:true})};document.body?go():document.addEventListener("DOMContentLoaded",go)}
+
+/* ---------- line icons (one set for the whole app, matching the tab bar) ---------- */
+const ICONS={chart:'<path d="M6 3v18M12 6v14M18 3v16"/><rect x="4" y="7" width="4" height="8" rx="1"/><rect x="10" y="9" width="4" height="6" rx="1"/><rect x="16" y="5" width="4" height="9" rx="1"/>',
+ target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>',
+ replay:'<path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M4 3.5V8h4.5"/><path d="M10.5 9l5 3-5 3z"/>',
+ desk:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8.5 7V5.5A2 2 0 0 1 10.5 3.5h3a2 2 0 0 1 2 2V7M3 13h18"/>',
+ cap:'<path d="M2 9.5l10-5 10 5-10 5z"/><path d="M6 11.5v4.5c3.5 2.4 8.5 2.4 12 0v-4.5M22 9.5v5"/>',
+ lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+ review:'<path d="M20 12a8 8 0 0 1-14.3 4.9M4 12A8 8 0 0 1 18.3 7.1"/><path d="M18.5 3v4.4h-4.4M5.5 21v-4.4h4.4"/>',
+ mix:'<path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/>',
+ flag:'<path d="M5 21V4M5 4h12l-2.5 4L17 12H5"/>',
+ coin:'<circle cx="12" cy="12" r="8.5"/><path d="M9.5 8h4a2 2 0 0 1 0 4h-4h4.5a2 2 0 0 1 0 4h-4.5zM10.5 6.5v11M12.5 6.5v1.5M12.5 16v1.5"/>',
+ stock:'<path d="M3 20h18"/><path d="M4 16l5-5 3.5 3L20 6.5"/><path d="M15.5 6.5H20V11"/>'};
+function ico(n,cls){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 24 24");s.setAttribute("class","ico"+(cls?" "+cls:""));s.setAttribute("aria-hidden","true");s.innerHTML=ICONS[n]||"";return s}
+
+/* ---------- market track: Crypto or Stocks ----------
+   Picked once at the start (or kept on Crypto for anyone who already has progress), switched any
+   time from the top bar. The lessons, progress and reviews are shared; only the real charts change. */
+const hasProgress=()=>Object.keys(state.done||{}).length>0||Object.keys(state.cards||{}).length>0;
+(()=>{try{if(!localStorage.getItem("cs-track")&&hasProgress())localStorage.setItem("cs-track","crypto")}catch(e){}})();
+function setTrack(t){if(t===TRACK){return}try{localStorage.setItem("cs-track",t)}catch(e){}
+  const ov=h("div",{class:"mktswap","data-keep":""},h("div",{},ico(t==="stocks"?"stock":"coin","big"),h("b",{},t==="stocks"?"Switching to Stocks":"Switching to Crypto"),h("span",{},"Same lessons and progress. New charts.")));
+  document.body.append(ov);requestAnimationFrame(()=>ov.classList.add("on"));try{save()}catch(e){}setTimeout(()=>location.reload(),650)}
+function mktSwitch(){const b=(t,l)=>h("button",{class:t===TRACK?"on":"","aria-pressed":t===TRACK?"true":"false",title:t===TRACK?"You're on "+l:"Switch to "+l,on:{click:()=>setTrack(t)}},ico(t==="stocks"?"stock":"coin"),h("span",{},l));
+  return h("div",{class:"mkt",role:"group","aria-label":"Market","data-keep":""},b("crypto","Crypto"),b("stocks","Stocks"))}
+function mktPicker(){let need=false;try{need=!localStorage.getItem("cs-track")}catch(e){}if(!need)return;
+  const spark=pts=>{const lo=Math.min(...pts),hi=Math.max(...pts);return '<svg viewBox="0 0 120 40" preserveAspectRatio="none"><path d="'+pts.map((v,i)=>(i?"L":"M")+(i*120/(pts.length-1)).toFixed(1)+" "+(36-32*(v-lo)/((hi-lo)||1)).toFixed(1)).join(" ")+'"/></svg>'};
+  /* real weekly closes, last 41 weeks to mid-Nov 2026 (BTC in $1,000s from rw-data.js, SPY from stocks-data.js) */
+  const BTCW=[70,69,68,66,66,73,68,65,68,71,74,78,79,82,78,77,74,63,65,64,59,64,64,65,65,63,65,63,78,78,80,77,81,84,86,84,82,80,78,75,62];
+  const SPYW=[682,689,686,672,662,649,634,656,679,710,714,721,738,739,746,756,738,742,747,729,745,755,743,739,747,773,776,766,769,770,764,762,771,770,779,763,760,756,735,754,733];
+  const card=(t,ic,name,sub,pts)=>h("button",{class:"mkcard",on:{click:()=>{if(t==="crypto"){try{localStorage.setItem("cs-track","crypto")}catch(e){}ov.classList.remove("on");setTimeout(()=>ov.remove(),250)}else setTrack(t)}}},
+    h("span",{class:"mki"},ico(ic)),h("b",{},name),h("span",{class:"mksub"},sub),h("span",{class:"mkspark",html:spark(pts)}));
+  const ov=h("div",{class:"mkpick",role:"dialog","aria-modal":"true","aria-label":"Choose your market"},
+    h("div",{class:"mkbox"},h("div",{class:"brand"},"Chart School"),h("h2",{},"What do you want to learn to trade?"),
+      h("p",{class:"lead"},"Same 42 lessons either way. Every practice chart comes from real prices in the market you pick."),
+      h("div",{class:"mkrow"},card("crypto","coin","Crypto","Bitcoin, Ethereum, Solana and 5 more. Trades around the clock.",BTCW),card("stocks","stock","Stocks","S&P 500, Nasdaq, Apple, Nvidia and 4 more. US market hours.",SPYW)),
+      h("p",{class:"mkfoot"},"You can switch any time from the top bar.")));
+  document.body.append(ov);requestAnimationFrame(()=>ov.classList.add("on"))}
+
+/* ---------- hero chart: real candles of the market's main chart, drawn quietly behind the Today card ---------- */
+function heroChart(){const set=(RW.sets||[]).find(s=>s.iv==="D"&&s.sym===(STK?"SPY":"BTC")&&s.bars.length>100);if(!set)return;
+  const b=set.bars.slice(-72);const lo=Math.min(...b.map(x=>x.l)),hi=Math.max(...b.map(x=>x.h));const W=360,H=120,cw=W/b.length,y=v=>(H-6-(H-12)*(v-lo)/((hi-lo)||1)).toFixed(1);
+  let up="",dn="",wk="";b.forEach((x,i)=>{const cx=(i+.5)*cw,top=y(Math.max(x.o,x.c)),bot=y(Math.min(x.o,x.c));wk+=`M${cx.toFixed(1)} ${y(x.h)}V${y(x.l)}`;
+    const r=`M${(cx-cw*.32).toFixed(1)} ${top}h${(cw*.64).toFixed(1)}V${Math.max(+bot,+top+.8)}h${(-cw*.64).toFixed(1)}Z`;if(x.c>=x.o)up+=r;else dn+=r});
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${W} ${H}' preserveAspectRatio='none'><path d='${wk}' stroke='%238b7dff' stroke-width='1' opacity='.7'/><path d='${up}' fill='%2334d399'/><path d='${dn}' fill='%23f87171'/></svg>`;
+  const R=document.documentElement.style;R.setProperty("--herochart",`url("data:image/svg+xml,${svg.replace(/#/g,"%23").replace(/"/g,"'")}")`);
+  const d=new Date(b[b.length-1].t),M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];R.setProperty("--herocap",`"Real ${set.sym}, daily, to ${d.getUTCDate()} ${M[d.getUTCMonth()]}"`)}
+
 function renderNav(){const cur=(location.hash||"#home").slice(1);top.innerHTML="";const fl=["floor","chart","tv","desk","replay"].includes(cur);[["home","Today"],["map","Program"],["floor","Trading"],["notes","Notes"]].forEach(([id,l])=>top.append(h("a",{href:"#"+id,class:cur===id||(id==="floor"&&fl)?"on":""},l)));
   paintStreak()}
 function paintStreak(){const s=streakNow();const ph=document.documentElement.classList.contains("is-phone");document.getElementById("streak").textContent=s?(ph?"🔥 "+s:s+"-day streak"):(ph?"🔥 0":"Start a streak today")}
@@ -4952,13 +5215,13 @@ document.addEventListener("keydown",e=>{if(SESSION)return;if(e.key==="Enter"&&do
 /* ================= Level 4: the auction, Market Profile, volume profile and order flow =================
    Profiles are built from 30-minute candles of one session: 13:30 to 20:00 UTC (the busy US hours, 13 half hours, letters A to M).
    The first hour (A and B) is the initial balance (IB). Real BTC, ETH and SOL sessions when they load, made-up days otherwise. */
-const TPO_L="ABCDEFGHIJKLM",SES={start:13.5*36e5,n:13};
+const TPO_L="ABCDEFGHIJKLM",SES={start:(STK?9.5:13.5)*36e5,n:13};
 /* delta of one candle: aggressive buys minus aggressive sells (Binance taker-buy volume), or an estimate when that's missing */
 const dOf=b=>b.tb!=null&&b.v?2*b.tb-b.v:(b.v||1)*((b.c-b.o)/((b.h-b.l)||1));
 function cvdA(b){let s=0;return b.map(x=>s+=dOf(x))}
 function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x)));const m=x/p;let b=1;[1,1.25,1.5,2,2.5,3,4,5,6,8,10].forEach(v=>{if(Math.abs(Math.log(v/m))<Math.abs(Math.log(b/m)))b=v});return b*p}
 RW.m30=rwBaked("30");
-(async()=>{if(mcOnline()){let ok=false;try{const pm=await window.claude.use("permissions");ok=pm&&(await pm.state("mcp"))==="granted"}catch(e){}if(!ok)return}
+(async()=>{if(STK)return;if(mcOnline()){let ok=false;try{const pm=await window.claude.use("permissions");ok=pm&&(await pm.state("mcp"))==="granted"}catch(e){}if(!ok)return}
   const KEY="cs-rw-m30";let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){}
   const unpack=x=>({sym:x.sym,iv:"30",bars:x.b.map(k=>({t:k[0],o:k[1],h:k[2],l:k[3],c:k[4],v:k[5],tb:k[6]}))});
   if(saved&&saved.sets)saved.sets.forEach(x=>RW.m30.push(unpack(x)));
@@ -6193,7 +6456,8 @@ LESSONS.forEach(L=>{if(state.done[L.id])unlockLesson(L.id)});if(LESSONS.some(L=>
 let TEST_ON=false;
 function holdHistory(){try{history.pushState({cs:1},"",location.href)}catch(e){}}
 window.addEventListener("popstate",()=>{if(TEST_ON&&/^#gate/.test(location.hash)){holdHistory();return}if(SESSION||TVS){holdHistory();window.scrollTo(0,0);requestAnimationFrame(()=>{rerenderAll();try{fitPhone()}catch(e){}})}});
-window.addEventListener("hashchange",route);route();startSync();
+{const sk=document.getElementById("streak");if(sk)sk.before(mktSwitch())}heroChart();
+window.addEventListener("hashchange",route);route();startSync();mktPicker();
 
 })();
 </script>

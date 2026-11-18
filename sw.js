@@ -2,7 +2,7 @@
    The app's own files: try the network first (so updates arrive), fall back to the saved copy when offline.
    Fonts: use the saved copy, refresh it in the background.
    Everything else (live prices, sync) goes straight to the network. */
-const CACHE = "chartschool-v19-rptools";
+const CACHE = "chartschool-v20-stocks";
 /* A hanging connection never fails on its own, so give up waiting after a few seconds and use the saved copy. */
 const late = ms => new Promise(r => setTimeout(() => r(null), ms));
 const CORE = ["./", "./index.html", "./manifest.json", "./icon-180.png", "./icon-192.png", "./icon-512.png", "./rw-data.js", "./rw-more.js"];

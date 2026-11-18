@@ -1,0 +1,48 @@
+name: Stock prices
+# Keeps the Stocks track's prices fresh. Yahoo Finance can't be read from a browser,
+# so this job reads it and publishes the latest candles to the "stock-data" branch,
+# which the app loads from raw.githubusercontent.com (no key in the page).
+on:
+  schedule:
+    - cron: "*/30 13-21 * * 1-5"   # every 30 minutes while US markets are open (UTC)
+    - cron: "30 22 * * 1-5"        # once after the close
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "live (recent candles) or history (rebuild stocks-data.js on this branch)"
+        default: live
+  push:
+    branches: ["claude/**"]
+    paths: ["tools/stocks.py", ".github/workflows/stocks.yml"]
+permissions:
+  contents: write
+concurrency:
+  group: stock-prices
+  cancel-in-progress: false
+jobs:
+  prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install --quiet yfinance
+      - name: Rebuild baked history on this branch
+        if: github.event_name == 'push' || inputs.mode == 'history'
+        run: |
+          python tools/stocks.py history
+          git config user.name "chart-school-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stocks-data.js
+          git commit -m "Refresh baked stock history" || echo "no change"
+          git push
+      - name: Publish latest candles to the stock-data branch
+        if: github.event_name != 'push' && inputs.mode != 'history'
+        run: |
+          python tools/stocks.py live
+          mkdir /tmp/out && cp live/stocks-live.json /tmp/out/
+          cd /tmp/out && git init -q -b stock-data
+          git config user.name "chart-school-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -qm "Latest stock candles"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" stock-data
