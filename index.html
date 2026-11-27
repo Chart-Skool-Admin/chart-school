@@ -905,6 +905,11 @@ button.opt{border-radius:10px}
 /* restore card */
 .restore .lvpick{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .restore .lvpick button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--ink)}
+/* touch targets: 44px on phones for everything in the settings sheet, backup bar and restore card */
+html.is-phone .looksheet .mkt button,html.is-phone .lookmode button,html.is-phone .restore .lvpick button,html.is-phone .restore button.primary,html.is-phone .backup a{min-height:44px}
+html.is-phone .backup a{display:inline-flex;align-items:center}
+html.is-phone .looksheet .row a.tvbtn{min-height:44px;display:inline-flex;align-items:center}
+html.is-phone .topbar .lookbtn,html.is-phone .topbar #sync{position:relative}html.is-phone .topbar .lookbtn::after,html.is-phone .topbar #sync::after{content:"";position:absolute;inset:-7px}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 <header class="topbar"><span class="brand">Chart School</span><nav id="topnav" aria-label="Sections"></nav><span class="chip" id="streak"></span><button class="lookbtn" id="lookbtn" aria-label="Appearance: colours and dark mode" title="Colours and dark mode"></button><a class="chip sync" id="sync" href="#sync" hidden></a>
@@ -4998,7 +5003,7 @@ function installSteps(){const c=document.documentElement.classList;if(c.contains
 const PALS=[["night","Night","#9a8cff","#1a1d3a"],["persimmon","Indigo & Persimmon","#e6661e","#0c2854"],["gold","Night & Gold","#e8c401","#1a1937"],["viridian","Ink & Viridian","#218d7c","#171519"],["plum","Plum & Orange","#eb8006","#38123f"],["rose","Midnight & Rose","#b14256","#161633"],["coral","Charcoal & Coral","#c56a53","#1b1a1f"],["black","Pure black","#9a8cff","#000000"]];
 /* Appearance: light / dark / auto plus a colour theme, previewed live as you tap */
 function openLook(){const ov=h("div",{class:"lookov",role:"dialog","aria-label":"Settings"});const close=()=>{ov.remove();document.removeEventListener("keydown",esc)};const esc=e=>{if(e.key==="Escape")close()};
-  const mode=h("div",{class:"lookmode"});[["dark","🌙 Dark"],["light","☀️ Light"],["auto","Auto"]].forEach(([t,l])=>mode.append(h("button",{class:(state.theme||"auto")===t?"on":"",on:{click:e=>{state.theme=t;applyTheme(t);save();[...mode.children].forEach(x=>x.classList.toggle("on",x===e.currentTarget));sfx("tap")}}},l)));
+  const mode=h("div",{class:"lookmode"});[["dark","Dark"],["light","Light"],["auto","Auto"]].forEach(([t,l])=>mode.append(h("button",{class:(state.theme||"auto")===t?"on":"",on:{click:e=>{state.theme=t;applyTheme(t);save();[...mode.children].forEach(x=>x.classList.toggle("on",x===e.currentTarget));sfx("tap")}}},l)));
   const grid=h("div",{class:"palgrid"});PALS.forEach(([k,l,a,b])=>{const bg=b;
     grid.append(h("button",{class:"palbtn"+((state.pal||"night")===k?" on":""),on:{click:e=>{state.pal=k;applyTheme(state.theme||"auto");save();[...grid.children].forEach(x=>x.classList.toggle("on",x===e.currentTarget));sfx("tap")}}},h("span",{class:"sw",style:"background:"+bg+";--g:linear-gradient(90deg,"+a+","+b+")"}),l))});
   ov.append(h("div",{class:"looksheet"},h("h3",{},"Settings"),h("h4",{},"Market"),h("div",{class:"mktrow"},mktSwitch()),h("h4",{},"Mode"),mode,h("h4",{},"Colour"),h("p",{class:"sub"},"Charts keep green for up and red for down."),grid,h("div",{class:"row",style:"margin-top:12px"},h("a",{href:"#sync",class:"tvbtn",on:{click:()=>close()}},SBC&&!SB.sess?"Back up my progress":"Account and backup")),h("button",{class:"primary big done",on:{click:close}},"Done")));
