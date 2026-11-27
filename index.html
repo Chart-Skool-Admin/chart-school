@@ -852,6 +852,60 @@ html.is-phone .today.real::after{height:70px;width:45%;opacity:.25}html.is-phone
 @media (prefers-reduced-motion:reduce){.mkcard,.mktswap,.mkpick{transition:none}}
 /* last resort on short phones: tiles lose their sub-line, lesson nodes tighten */
 #app.hfit4 .quick .tile>span{display:none}#app.hfit4 .quick .tile{padding-top:8px;padding-bottom:8px}#app.hfit4 .lnode{padding-top:2px;padding-bottom:2px}
+/* ===== v3 "Chart desk" (2026-11-27): flat, quiet surfaces so the charts carry the colour.
+   One solid accent per theme (no gradients or glow), hairline borders, smaller radius,
+   muted labels instead of accent-coloured mono eyebrows, roomier reading width on desktop. ===== */
+:root:root:root:root{--grad:linear-gradient(var(--accent),var(--accent));--grad-soft:linear-gradient(color-mix(in srgb,var(--accent) 12%,transparent),color-mix(in srgb,var(--accent) 12%,transparent));--glow:none;--r:12px;--r-sm:8px;
+  --shadow:none;--warn:#9a5b00}
+@media (prefers-color-scheme:dark){:root:root:root:root:not([data-theme="light"]){--warn:#f0b444}}
+:root:root:root:root[data-theme="dark"]{--warn:#f0b444}
+body,:root[data-pal] body{background:var(--bg)!important;background-attachment:scroll}
+/* panels: one surface, one hairline */
+.card,.tile,.rankbar,.door,.lpath,details.mapdet{background:var(--panel);box-shadow:none;border-radius:var(--r)}
+.card.today,.card.today.real{background:var(--panel)}
+/* labels: quiet, readable, not shouting in accent */
+.eyebrow{font-family:var(--f-body);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:none;color:var(--muted)}
+.step .eyebrow{color:var(--accent)}
+/* buttons: solid accent, no glow, clear focus */
+button.primary,a.primary,.primary{background:var(--accent)!important;color:var(--accent-ink);box-shadow:none!important;border-radius:10px}
+@media (hover:hover){button.primary:hover{filter:brightness(1.08)}}
+button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* top bar: a plain toolbar, not a glass pill */
+.topbar{border-radius:14px;background:var(--panel);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none}
+.topbar .brand::before,.brand::before{box-shadow:none}
+#topnav a.on{background:color-mix(in srgb,var(--accent) 14%,transparent);box-shadow:none;color:var(--ink)}
+/* "not backed up" is a warning, never a grey dot */
+.chip.sync.signin{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 55%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+.chip.sync.signin::before{background:var(--warn)!important}
+html.is-phone .topbar #sync.signin{border-width:1px;border-style:solid}
+.backup{display:flex;align-items:center;gap:14px;padding:12px 16px;border:1px solid color-mix(in srgb,var(--warn) 55%,transparent);background:color-mix(in srgb,var(--warn) 8%,var(--panel));border-radius:var(--r)}
+.backup p{margin:0;flex:1;font-size:14px;line-height:1.4}.backup b{color:var(--ink)}
+.backup a{white-space:nowrap;font-weight:600;color:var(--warn);text-decoration:none;border:1px solid currentColor;border-radius:8px;padding:7px 12px}
+.backup .short{display:none}
+html.is-phone .backup{padding:8px 10px 8px 12px;gap:10px}html.is-phone .backup p{font-size:13px}html.is-phone .backup .long{display:none}html.is-phone .backup .short{display:inline}html.is-phone .backup a{padding:6px 10px;font-size:13px}
+/* today: hero reads as one block; level path stays on one row on desktop */
+.today .eyebrow{color:var(--accent)}
+.lnode.next{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+@media (min-width:900px){html:not(.is-phone) .lnodes{grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-columns:none}
+  html:not(.is-phone) .lnode .lt{-webkit-line-clamp:3;min-height:3.75em}}
+/* lessons on desktop: text steps sit in a readable column instead of a 1100px-wide card */
+@media (min-width:900px){html:not(.is-phone) .step:not(.split){max-width:760px;margin-left:auto;margin-right:auto;width:100%;padding:28px 32px}
+  html:not(.is-phone) .step:not(.split) h2{font-size:26px;line-height:1.25}
+  html:not(.is-phone) .step:not(.split) button.opt{font-size:16px;padding:13px 16px}
+  html:not(.is-phone) .step:not(.split) .look,html:not(.is-phone) .step:not(.split) .lead{font-size:17px;line-height:1.55}
+  html:not(.is-phone) .shell>.sbar{max-width:760px;margin-left:auto;margin-right:auto;width:100%}
+  html:not(.is-phone) .shell>.sbar:has(+ .step.split){max-width:none}}
+.step{min-height:0}
+/* answer rows: calmer default, strong chosen state */
+button.opt{border-radius:10px}
+/* settings sheet: market switch now lives here */
+.looksheet .mktrow{display:flex;gap:8px;margin:4px 0 14px}.looksheet .mktrow .mkt{display:flex;width:100%}.looksheet .mktrow .mkt button{flex:1;justify-content:center}
+.looksheet .mkt span{display:inline!important}.looksheet .mkt button{gap:6px}.looksheet .row a.tvbtn{background:transparent!important;color:var(--ink)!important;border:1px solid var(--line);box-shadow:none}
+.looksheet h4{margin:14px 0 6px;font-size:13px;color:var(--muted);font-weight:600}
+/* restore card */
+.restore .lvpick{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.restore .lvpick button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 <header class="topbar"><span class="brand">Chart School</span><nav id="topnav" aria-label="Sections"></nav><span class="chip" id="streak"></span><button class="lookbtn" id="lookbtn" aria-label="Appearance: colours and dark mode" title="Colours and dark mode"></button><a class="chip sync" id="sync" href="#sync" hidden></a>
   <div class="themes" role="group" aria-label="Appearance"><button id="th-light" data-t="light">Light</button><button id="th-dark" data-t="dark">Dark</button><button id="th-auto" data-t="auto">Auto</button></div></header>
@@ -905,7 +959,7 @@ function mergeIn(o){if(!o||typeof o!=="object")return false;const before=JSON.st
   base.t=Math.max(mine.t||0,o.t||0);for(const k of Object.keys(state))delete state[k];Object.assign(state,base);setSnap();
   return JSON.stringify(state)!==before}
 function setSync(m){const changed=SY.mode!==m;SY.mode=m;const el=document.getElementById("sync");if(!el)return;el.hidden=false;el.className="chip sync "+m;
-  el.textContent={on:"Synced",start:"Connecting…",wait:"Offline, saved here",local:"Saved on this device",err:"Sync problem",full:"Sync storage full",native:"Old Mac app",signin:"Sign in to sync"}[m]||"";
+  el.textContent={on:"Synced",start:"Connecting…",wait:"Offline, saved here",local:"Saved on this device",err:"Sync problem",full:"Sync storage full",native:"Old Mac app",signin:"Not backed up"}[m]||"";
   if(changed&&(location.hash||"").slice(1)==="sync"&&typeof route==="function"&&!SESSION&&!TVS)route()}
 function cloudPush(){if(!SY.ref)return;clearTimeout(SY.timer);SY.timer=setTimeout(sendNow,1500)}
 async function sendNow(){clearTimeout(SY.timer);if(!SY.ref||!SY.ready)return;if(SY.busy){SY.again=true;return}
@@ -3512,7 +3566,7 @@ function levelPath(next){const lv=curLevel();if(HOME_LV==null||HOME_LV>PROGRAM.l
   panel.addEventListener("touchend",e=>{if(sx==null)return;const t=e.changedTouches[0];const dx=t.clientX-sx,dy=t.clientY-sy;sx=null;
     if(Math.abs(dx)>50&&Math.abs(dy)<40){const k=HOME_LV+(dx<0?1:-1);if(k>=1&&k<=PROGRAM.length){HOME_LV=k;sfx("tap");draw(dx<0?1:-1)}}},{passive:true});
   draw(0);return card}
-function homeView(m){const next=nextLesson();const due=dueCards().length;const lv=curLevel();const G=LEVELS[lv-1].gate;const lsDone=lvlLessonsDone(lv);
+function homeView(m){if(SBC&&!SB.sess&&hasProgress())m.append(backupBar());const next=nextLesson();const due=dueCards().length;const lv=curLevel();const G=LEVELS[lv-1].gate;const lsDone=lvlLessonsDone(lv);
   const plan=[];if(due)plan.push("🔁 "+Math.min(due,5)+" warm-up");const tb=throwbacks(next&&next.id,[],2).length;const tst=todayTest(lv);
   if(next){plan.push("📘 Lesson "+next.n+(state.pos[next.id]?" (continue)":""));if(tb)plan.push("↩ "+tb+" throwback"+(tb>1?"s":""))}
   else{if(tb)plan.push("↩ "+tb+" throwback"+(tb>1?"s":""));plan.push("📈 Mixed charts + a trade call");if(tst)plan.push("🏁 Level "+lv+" test")}
@@ -4943,16 +4997,34 @@ function installSteps(){const c=document.documentElement.classList;if(c.contains
       :[h("li",{},"In Safari choose ",h("b",{},"File → Add to Dock"),"."),h("li",{},"Open Chart School from the Dock from now on.")]))}
 const PALS=[["night","Night","#9a8cff","#1a1d3a"],["persimmon","Indigo & Persimmon","#e6661e","#0c2854"],["gold","Night & Gold","#e8c401","#1a1937"],["viridian","Ink & Viridian","#218d7c","#171519"],["plum","Plum & Orange","#eb8006","#38123f"],["rose","Midnight & Rose","#b14256","#161633"],["coral","Charcoal & Coral","#c56a53","#1b1a1f"],["black","Pure black","#9a8cff","#000000"]];
 /* Appearance: light / dark / auto plus a colour theme, previewed live as you tap */
-function openLook(){const ov=h("div",{class:"lookov",role:"dialog","aria-label":"Appearance"});const close=()=>{ov.remove();document.removeEventListener("keydown",esc)};const esc=e=>{if(e.key==="Escape")close()};
+function openLook(){const ov=h("div",{class:"lookov",role:"dialog","aria-label":"Settings"});const close=()=>{ov.remove();document.removeEventListener("keydown",esc)};const esc=e=>{if(e.key==="Escape")close()};
   const mode=h("div",{class:"lookmode"});[["dark","🌙 Dark"],["light","☀️ Light"],["auto","Auto"]].forEach(([t,l])=>mode.append(h("button",{class:(state.theme||"auto")===t?"on":"",on:{click:e=>{state.theme=t;applyTheme(t);save();[...mode.children].forEach(x=>x.classList.toggle("on",x===e.currentTarget));sfx("tap")}}},l)));
   const grid=h("div",{class:"palgrid"});PALS.forEach(([k,l,a,b])=>{const bg=b;
     grid.append(h("button",{class:"palbtn"+((state.pal||"night")===k?" on":""),on:{click:e=>{state.pal=k;applyTheme(state.theme||"auto");save();[...grid.children].forEach(x=>x.classList.toggle("on",x===e.currentTarget));sfx("tap")}}},h("span",{class:"sw",style:"background:"+bg+";--g:linear-gradient(90deg,"+a+","+b+")"}),l))});
-  ov.append(h("div",{class:"looksheet"},h("h3",{},"Appearance"),h("p",{class:"sub"},"Pick a mode and a colour. Charts keep green for up and red for down."),mode,grid,h("button",{class:"primary big done",on:{click:close}},"Done")));
+  ov.append(h("div",{class:"looksheet"},h("h3",{},"Settings"),h("h4",{},"Market"),h("div",{class:"mktrow"},mktSwitch()),h("h4",{},"Mode"),mode,h("h4",{},"Colour"),h("p",{class:"sub"},"Charts keep green for up and red for down."),grid,h("div",{class:"row",style:"margin-top:12px"},h("a",{href:"#sync",class:"tvbtn",on:{click:()=>close()}},SBC&&!SB.sess?"Back up my progress":"Account and backup")),h("button",{class:"primary big done",on:{click:close}},"Done")));
   ov.addEventListener("click",e=>{if(e.target===ov)close()});document.addEventListener("keydown",esc);document.body.append(ov)}
 function themeCard(){const row=h("div",{class:"themes",style:"margin:0;display:inline-flex"});
   ["light","dark","auto"].forEach(t=>row.append(h("button",{class:(state.theme||"auto")===t?"on":"",on:{click:e=>{state.theme=t;applyTheme(t);save();[...row.children].forEach(x=>x.classList.toggle("on",x===e.currentTarget))}}},t[0].toUpperCase()+t.slice(1))));
   return h("section",{class:"card apptheme"},h("h3",{},"Appearance"),row,h("div",{class:"row"},h("button",{on:{click:openLook}},"🎨 Colour themes")))}
 function soundCard(){const b=h("button",{on:{click:()=>{state.sound=state.sound===false;save();b.textContent=state.sound===false?"Sounds: off":"Sounds: on";if(state.sound!==false)sfx("lesson")}}},state.sound===false?"Sounds: off":"Sounds: on");return h("section",{class:"card"},h("h3",{},"Achievement sounds"),h("p",{class:"task"},"Little chimes for right answers and finished lessons. On iPhone, the silent switch mutes them."),b)}
+/* ---------- v3: backup warning + restore levels ---------- */
+function backupBar(){return h("div",{class:"backup",role:"status"},h("p",{},h("b",{},"Only saved in this browser. "),h("span",{class:"long"},"Sign in so a new phone, a cleared browser or a new web address can't lose your progress."),h("span",{class:"short"},"Sign in to keep it safe.")),h("a",{href:"#sync"},"Back it up"))}
+/* restore: only ever ADDS finished lessons and passed tests, never removes anything */
+function restoreCard(){let lv=0,extra=0;const max=LEVELS.length;const f=h("div",{hidden:""});
+  const pick=h("div",{class:"lvpick",role:"group","aria-label":"Levels passed"}),nx=h("div",{class:"lvpick",role:"group","aria-label":"Lessons done in the next level"});
+  const go=h("button",{class:"primary",on:{click:()=>{if(!lv)return;const add=[];
+    for(let n=1;n<=lv;n++){lvlLessons(n).forEach(L=>add.push(L.id));add.push(LEVELS[n-1].gate)}
+    lvlLessons(lv+1).slice(0,extra).forEach(L=>add.push(L.id));let k=0;
+    add.forEach(id=>{if(!state.done[id]){state.done[id]=true;delete state.pos[id];k++}});
+    LESSONS.forEach(L=>{if(state.done[L.id])unlockLesson(L.id)});for(let n=1;n<=lv;n++)lvlEnd(n);lvlCheck();save();sendNow();renderNav();
+    fb(f,"good",k?`Done. Added <b>${k}</b> finished lessons and tests. You're on <b>Level ${curLevel()}</b>. <a href="#home">Go to Today →</a>`:"Nothing to add: this was already saved.")}}},"Pick your level first");
+  const paint=()=>{pick.innerHTML="";for(let n=1;n<max;n++)pick.append(h("button",{class:lv===n?"on":"","aria-pressed":lv===n?"true":"false",on:{click:()=>{lv=n;extra=0;paint()}}},n===1?"Level 1":"Levels 1–"+n));
+    nx.innerHTML="";const ls=lv?lvlLessons(lv+1):[];nx.hidden=!lv;
+    if(lv){nx.append(h("span",{class:"task",style:"width:100%;margin:0"},"Lessons finished in Level "+(lv+1)+":"));for(let k=0;k<ls.length;k++)nx.append(h("button",{class:extra===k?"on":"","aria-pressed":extra===k?"true":"false",on:{click:()=>{extra=k;paint()}}},k===0?"None yet":"Up to Lesson "+ls[k-1].n))}
+    go.disabled=!lv;go.textContent=lv?("Restore: Level"+(lv>1?"s 1–"+lv:" 1")+" passed"+(extra?", Lessons to "+ls[extra-1].n+" done":"")):"Pick your level first"};
+  paint();
+  return h("section",{class:"card restore"},h("h3",{},"Restore my levels"),h("p",{class:"task"},"Lost your progress? Pick the highest level you passed. This only adds finished lessons and passed tests. It never removes anything, and memory rings start fresh."),
+    pick,nx,h("div",{class:"row"},go),f)}
 function sbView(m){const card=h("section",{class:"card"});m.append(card);setTimeout(()=>{m.append(themeCard());m.append(soundCard())},0);
   if(SB.sess){const lab={on:"Synced",start:"Connecting…",wait:"Offline right now",err:"Sync problem"}[SY.mode]||"Synced";
     card.append(h("div",{class:"eyebrow"},"Phone + Mac sync"),h("h2",{},lab),h("p",{class:"lead"},"Signed in as "+(sbName(SB.sess.email)||"you")+". Your progress saves to your account, so every device where you sign in picks up where you stopped."),
@@ -4966,6 +5038,7 @@ function sbView(m){const card=h("section",{class:"card"});m.append(card);setTime
     card.append(h("div",{class:"eyebrow"},"Phone + Mac sync"),h("h2",{},"Sign in to sync your progress"),h("p",{class:"lead"},"Use the same username and password on your phone and your Mac."),
       h("div",{class:"fields",style:"grid-template-columns:1fr"},h("label",{class:"f"},"Username",em),h("label",{class:"f"},"Password",pw)),
       h("div",{class:"row"},h("button",{class:"primary",on:{click:()=>go(false)}},"Sign in"),h("button",{on:{click:()=>go(true)}},"Create account")),f)}
+  m.append(restoreCard());
   const card2=h("section",{class:"card"});m.append(card2);const ta=h("textarea",{class:"synccode",rows:"3",placeholder:"Paste the code that starts with CS1."});const f2=h("div",{hidden:""});
   const out=h("textarea",{class:"synccode",readonly:"",rows:"3",hidden:""});const f3=h("div",{hidden:""});
   m.append(h("section",{class:"card"},h("h3",{},"Copy my progress"),h("p",{class:"task"},"Makes a code with all your progress, to paste into another Chart School."),
@@ -6456,7 +6529,7 @@ LESSONS.forEach(L=>{if(state.done[L.id])unlockLesson(L.id)});if(LESSONS.some(L=>
 let TEST_ON=false;
 function holdHistory(){try{history.pushState({cs:1},"",location.href)}catch(e){}}
 window.addEventListener("popstate",()=>{if(TEST_ON&&/^#gate/.test(location.hash)){holdHistory();return}if(SESSION||TVS){holdHistory();window.scrollTo(0,0);requestAnimationFrame(()=>{rerenderAll();try{fitPhone()}catch(e){}})}});
-{const sk=document.getElementById("streak");if(sk)sk.before(mktSwitch())}heroChart();
+heroChart();
 window.addEventListener("hashchange",route);route();startSync();mktPicker();
 
 })();
